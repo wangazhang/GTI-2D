@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 小地图组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .minimap-container {
+            position: relative;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.95), rgba(47, 79, 79, 0.8));
+            border: 2px solid rgba(0, 206, 209, 0.4);
+            box-shadow:
+                inset 0 0 20px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(0, 206, 209, 0.2);
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .minimap-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.6), transparent);
+            animation: radar-sweep 3s infinite;
+            z-index: 10;
+        }
+
+        @keyframes radar-sweep {
+            0% { transform: translateX(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        .minimap-canvas {
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 30% 70%, rgba(85, 107, 47, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(47, 79, 79, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, rgba(47, 79, 79, 0.6), rgba(85, 107, 47, 0.4));
+            position: relative;
+            cursor: grab;
+        }
+
+        .minimap-canvas.dragging {
+            cursor: grabbing;
+        }
+
+        .minimap-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .minimap-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+            z-index: 5;
+        }
+
+        .minimap-marker.player {
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #00CED1, #0a7377);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.8);
+            animation: player-pulse 2s infinite;
+        }
+
+        @keyframes player-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 206, 209, 0.8); }
+            50% { box-shadow: 0 0 20px rgba(0, 206, 209, 1); }
+        }
+
+        .minimap-marker.teammate {
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #228B22, #15803d);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(34, 139, 34, 0.6);
+        }
+
+        .minimap-marker.enemy {
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(circle, #FF6347, #DC143C);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 99, 71, 0.6);
+            animation: enemy-blink 1s infinite;
+        }
+
+        @keyframes enemy-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .minimap-marker.supply {
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFD700, #FFA500);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .minimap-marker.extraction {
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #00CED1, #0a7377);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            box-shadow: 0 0 15px rgba(0, 206, 209, 1);
+            animation: extraction-glow 1.5s infinite;
+        }
+
+        @keyframes extraction-glow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .minimap-marker.objective {
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FF6347, #DC143C);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            box-shadow: 0 0 12px rgba(255, 99, 71, 0.9);
+        }
+
+        .minimap-viewport {
+            position: absolute;
+            border: 2px solid rgba(0, 206, 209, 0.8);
+            background: rgba(0, 206, 209, 0.1);
+            pointer-events: none;
+            animation: viewport-pulse 3s infinite;
+        }
+
+        @keyframes viewport-pulse {
+            0%, 100% { border-color: rgba(0, 206, 209, 0.8); }
+            50% { border-color: rgba(0, 206, 209, 0.4); }
+        }
+
+        .minimap-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 20;
+        }
+
+        .minimap-control-btn {
+            width: 24px;
+            height: 24px;
+            background: rgba(47, 79, 79, 0.9);
+            border: 1px solid rgba(0, 206, 209, 0.4);
+            border-radius: 4px;
+            color: #00CED1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .minimap-control-btn:hover {
+            background: rgba(0, 206, 209, 0.2);
+            border-color: #00CED1;
+        }
+
+        .minimap-info {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: rgba(47, 79, 79, 0.9);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #00CED1;
+            z-index: 15;
+        }
+
+        .minimap-zone {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .safe-zone {
+            border: 2px solid rgba(34, 139, 34, 0.6);
+            background: rgba(34, 139, 34, 0.1);
+        }
+
+        .danger-zone {
+            border: 2px solid rgba(255, 99, 71, 0.6);
+            background: rgba(255, 99, 71, 0.1);
+            animation: danger-pulse 2s infinite;
+        }
+
+        @keyframes danger-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .minimap-legend {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(47, 79, 79, 0.9);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 4px;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            z-index: 15;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #00CED1;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-marker {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* 雷达扫描效果 */
+        .radar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                rgba(0, 206, 209, 0.2) 30deg,
+                transparent 60deg
+            );
+            border-radius: 50%;
+            animation: radar-spin 4s linear infinite;
+            pointer-events: none;
+            z-index: 8;
+            opacity: 0;
+        }
+
+        .radar-overlay.active {
+            opacity: 1;
+        }
+
+        @keyframes radar-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 路径追踪 */
+        .player-trail {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(0, 206, 209, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trail-fade 5s ease-out forwards;
+        }
+
+        @keyframes trail-fade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">小地图组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用小地图，支持缩放、拖拽和多种标记类型</p>
+        </div>
+
+        <!-- 演示区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 标准小地图 -->
+            <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+                <h3 class="text-xl font-bold text-cyber-400 mb-4">标准小地图</h3>
+                <div class="minimap" id="minimap1" data-size="300"></div>
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                    <button class="bg-cyber-600 text-white px-3 py-1 rounded text-sm" onclick="toggleRadar(0)">雷达扫描</button>
+                    <button class="bg-military-600 text-white px-3 py-1 rounded text-sm" onclick="addRandomEnemy(0)">添加敌人</button>
+                    <button class="bg-alert-600 text-white px-3 py-1 rounded text-sm" onclick="clearMarkers(0)">清除标记</button>
+                </div>
+            </div>
+
+            <!-- 圆形小地图 -->
+            <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+                <h3 class="text-xl font-bold text-cyber-400 mb-4">圆形小地图</h3>
+                <div class="minimap circular" id="minimap2" data-size="300"></div>
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                    <button class="bg-success-600 text-white px-3 py-1 rounded text-sm" onclick="addSupply(1)">添加物资</button>
+                    <button class="bg-cyber-600 text-white px-3 py-1 rounded text-sm" onclick="movePlayer(1)">移动玩家</button>
+                    <button class="bg-military-600 text-white px-3 py-1 rounded text-sm" onclick="toggleZone(1)">危险区域</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不同尺寸演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">不同尺寸演示</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">小型 (120px)</div>
+                    <div class="minimap mx-auto" data-size="120"></div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">中型 (180px)</div>
+                    <div class="minimap mx-auto" data-size="180"></div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">大型 (240px)</div>
+                    <div class="minimap mx-auto" data-size="240"></div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">特大 (300px)</div>
+                    <div class="minimap circular mx-auto" data-size="300"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建小地图实例
+const minimap = new Minimap('container-id', {
+    size: 300,              // 地图大小
+    shape: 'square',        // 形状: square, circle
+    zoomLevel: 1.0,         // 缩放级别
+    showGrid: true,         // 显示网格
+    showLegend: true,       // 显示图例
+    showInfo: true,         // 显示信息栏
+    enableDrag: true,       // 允许拖拽
+    enableZoom: true,       // 允许缩放
+    radarScan: false,       // 雷达扫描效果
+    playerTrail: true,      // 玩家轨迹
+    maxTrailLength: 20      // 最大轨迹长度
+});
+
+// 设置玩家位置
+minimap.setPlayerPosition(150, 150);
+
+// 添加标记
+minimap.addMarker('teammate', 100, 200, {
+    id: 'team1',
+    name: '队友Alpha',
+    health: 80
+});
+
+minimap.addMarker('enemy', 250, 100, {
+    id: 'enemy1',
+    name: '敌人',
+    detected: true
+});
+
+minimap.addMarker('supply', 200, 250, {
+    id: 'supply1',
+    type: '医疗包',
+    rarity: 'rare'
+});
+
+// 设置区域
+minimap.setZone('safe', 150, 150, 100);
+minimap.setZone('danger', 300, 200, 80);
+
+// 监听事件
+minimap.on('markerClick', (marker) => {
+    console.log('点击标记:', marker);
+});
+
+minimap.on('positionChange', (position) => {
+    console.log('位置变更:', position);
+});
+
+minimap.on('zoom', (level) => {
+    console.log('缩放级别:', level);
+});</code></pre>
+        </div>
+
+        <!-- 配置选项 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">配置选项</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">外观设置</h4>
+                    <ul class="space-y-2 text-tactical-300 text-sm">
+                        <li><code class="text-cyber-400">size</code>: 地图尺寸 (120-500px)</li>
+                        <li><code class="text-cyber-400">shape</code>: 形状 (square, circle)</li>
+                        <li><code class="text-cyber-400">showGrid</code>: 显示网格</li>
+                        <li><code class="text-cyber-400">showLegend</code>: 显示图例</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">功能设置</h4>
+                    <ul class="space-y-2 text-tactical-300 text-sm">
+                        <li><code class="text-cyber-400">enableDrag</code>: 启用拖拽</li>
+                        <li><code class="text-cyber-400">enableZoom</code>: 启用缩放</li>
+                        <li><code class="text-cyber-400">radarScan</code>: 雷达扫描</li>
+                        <li><code class="text-cyber-400">playerTrail</code>: 玩家轨迹</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Minimap - 小地图组件
+         */
+        class Minimap {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    size: 300,
+                    shape: 'square', // square, circle
+                    zoomLevel: 1.0,
+                    minZoom: 0.5,
+                    maxZoom: 3.0,
+                    showGrid: true,
+                    showLegend: true,
+                    showInfo: true,
+                    showControls: true,
+                    enableDrag: true,
+                    enableZoom: true,
+                    radarScan: false,
+                    playerTrail: true,
+                    maxTrailLength: 20,
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    offsetX: 0,
+                    offsetY: 0,
+                    isDragging: false,
+                    lastDragPos: { x: 0, y: 0 },
+                    playerPos: { x: 150, y: 150 },
+                    markers: new Map(),
+                    zones: new Map(),
+                    trail: [],
+                    radarActive: false
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.bindEvents();
+                this.initializeMarkers();
+            }
+
+            createElements() {
+                const size = this.config.size;
+                const borderRadius = this.config.shape === 'circle' ? '50%' : '8px';
+
+                this.container.innerHTML = `
+                    <div class="minimap-container relative" style="width: ${size}px; height: ${size}px; border-radius: ${borderRadius};">
+                        <!-- 地图画布 -->
+                        <div class="minimap-canvas">
+                            ${this.config.showGrid ? '<div class="minimap-grid"></div>' : ''}
+                            <div class="minimap-content relative w-full h-full">
+                                <!-- 标记容器 -->
+                                <div class="minimap-markers"></div>
+                                <!-- 玩家视口 -->
+                                <div class="minimap-viewport" style="width: 40px; height: 40px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- 雷达扫描 -->
+                        <div class="radar-overlay"></div>
+
+                        <!-- 控制按钮 -->
+                        ${this.config.showControls ? `
+                            <div class="minimap-controls">
+                                <div class="minimap-control-btn" data-action="zoom-in" title="放大">+</div>
+                                <div class="minimap-control-btn" data-action="zoom-out" title="缩小">-</div>
+                                <div class="minimap-control-btn" data-action="reset" title="重置">⌂</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 图例 -->
+                        ${this.config.showLegend && size >= 200 ? `
+                            <div class="minimap-legend">
+                                <div class="legend-item">
+                                    <div class="legend-marker" style="background: #00CED1;"></div>
+                                    <span>玩家</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-marker" style="background: #228B22;"></div>
+                                    <span>队友</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-marker" style="background: #FF6347;"></div>
+                                    <span>敌人</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-marker" style="background: #FFD700; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+                                    <span>物资</span>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 信息栏 -->
+                        ${this.config.showInfo ? `
+                            <div class="minimap-info">
+                                <div>缩放: <span class="zoom-level">1.0x</span></div>
+                                <div>坐标: <span class="coordinates">150, 150</span></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                this.elements = {
+                    container: this.container.querySelector('.minimap-container'),
+                    canvas: this.container.querySelector('.minimap-canvas'),
+                    content: this.container.querySelector('.minimap-content'),
+                    markers: this.container.querySelector('.minimap-markers'),
+                    viewport: this.container.querySelector('.minimap-viewport'),
+                    radar: this.container.querySelector('.radar-overlay'),
+                    controls: this.container.querySelector('.minimap-controls'),
+                    info: this.container.querySelector('.minimap-info'),
+                    zoomLevel: this.container.querySelector('.zoom-level'),
+                    coordinates: this.container.querySelector('.coordinates')
+                };
+
+                this.updateViewport();
+            }
+
+            bindEvents() {
+                // 拖拽事件
+                if (this.config.enableDrag) {
+                    this.elements.canvas.addEventListener('mousedown', this.handleDragStart.bind(this));
+                    document.addEventListener('mousemove', this.handleDragMove.bind(this));
+                    document.addEventListener('mouseup', this.handleDragEnd.bind(this));
+
+                    // 触摸事件
+                    this.elements.canvas.addEventListener('touchstart', this.handleDragStart.bind(this), { passive: false });
+                    document.addEventListener('touchmove', this.handleDragMove.bind(this), { passive: false });
+                    document.addEventListener('touchend', this.handleDragEnd.bind(this));
+                }
+
+                // 缩放事件
+                if (this.config.enableZoom) {
+                    this.elements.canvas.addEventListener('wheel', this.handleZoom.bind(this), { passive: false });
+                }
+
+                // 控制按钮
+                if (this.elements.controls) {
+                    this.elements.controls.addEventListener('click', this.handleControlClick.bind(this));
+                }
+
+                // 标记点击事件
+                this.elements.markers.addEventListener('click', this.handleMarkerClick.bind(this));
+            }
+
+            handleDragStart(e) {
+                e.preventDefault();
+                this.state.isDragging = true;
+                this.elements.canvas.classList.add('dragging');
+
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                this.state.lastDragPos = { x: clientX, y: clientY };
+            }
+
+            handleDragMove(e) {
+                if (!this.state.isDragging) return;
+                e.preventDefault();
+
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                const deltaX = clientX - this.state.lastDragPos.x;
+                const deltaY = clientY - this.state.lastDragPos.y;
+
+                this.state.offsetX += deltaX;
+                this.state.offsetY += deltaY;
+
+                this.updateTransform();
+                this.updateCoordinates();
+
+                this.state.lastDragPos = { x: clientX, y: clientY };
+            }
+
+            handleDragEnd(e) {
+                if (!this.state.isDragging) return;
+
+                this.state.isDragging = false;
+                this.elements.canvas.classList.remove('dragging');
+            }
+
+            handleZoom(e) {
+                e.preventDefault();
+
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, this.config.zoomLevel + delta));
+
+                if (newZoom !== this.config.zoomLevel) {
+                    this.config.zoomLevel = newZoom;
+                    this.updateTransform();
+                    this.updateZoomDisplay();
+                    this.emit('zoom', newZoom);
+                }
+            }
+
+            handleControlClick(e) {
+                const action = e.target.dataset.action;
+                if (!action) return;
+
+                switch (action) {
+                    case 'zoom-in':
+                        this.zoomIn();
+                        break;
+                    case 'zoom-out':
+                        this.zoomOut();
+                        break;
+                    case 'reset':
+                        this.reset();
+                        break;
+                }
+            }
+
+            handleMarkerClick(e) {
+                const markerId = e.target.dataset.markerId;
+                if (markerId && this.state.markers.has(markerId)) {
+                    const marker = this.state.markers.get(markerId);
+                    this.emit('markerClick', marker);
+                }
+            }
+
+            updateTransform() {
+                this.elements.content.style.transform = `
+                    translate(${this.state.offsetX}px, ${this.state.offsetY}px)
+                    scale(${this.config.zoomLevel})
+                `;
+            }
+
+            updateViewport() {
+                const x = this.state.playerPos.x - 20;
+                const y = this.state.playerPos.y - 20;
+                this.elements.viewport.style.left = x + 'px';
+                this.elements.viewport.style.top = y + 'px';
+            }
+
+            updateCoordinates() {
+                if (this.elements.coordinates) {
+                    const x = Math.round(this.state.playerPos.x - this.state.offsetX / this.config.zoomLevel);
+                    const y = Math.round(this.state.playerPos.y - this.state.offsetY / this.config.zoomLevel);
+                    this.elements.coordinates.textContent = `${x}, ${y}`;
+                }
+            }
+
+            updateZoomDisplay() {
+                if (this.elements.zoomLevel) {
+                    this.elements.zoomLevel.textContent = this.config.zoomLevel.toFixed(1) + 'x';
+                }
+            }
+
+            initializeMarkers() {
+                // 添加默认标记
+                this.addMarker('player', this.state.playerPos.x, this.state.playerPos.y, { id: 'player' });
+
+                // 添加一些示例标记
+                this.addMarker('teammate', 100, 200, { id: 'teammate1', name: '队友Alpha' });
+                this.addMarker('enemy', 250, 100, { id: 'enemy1', name: '敌方单位' });
+                this.addMarker('supply', 200, 250, { id: 'supply1', type: '医疗包' });
+                this.addMarker('extraction', 50, 50, { id: 'extraction1', name: '撤离点' });
+
+                // 设置安全区域
+                this.setZone('safe', 150, 150, 80);
+            }
+
+            // 公共API
+            addMarker(type, x, y, data = {}) {
+                const markerId = data.id || `${type}_${Date.now()}`;
+
+                const marker = document.createElement('div');
+                marker.className = `minimap-marker ${type}`;
+                marker.style.left = x + 'px';
+                marker.style.top = y + 'px';
+                marker.dataset.markerId = markerId;
+                marker.title = data.name || type;
+
+                this.elements.markers.appendChild(marker);
+
+                this.state.markers.set(markerId, {
+                    id: markerId,
+                    type,
+                    x,
+                    y,
+                    element: marker,
+                    ...data
+                });
+
+                this.emit('markerAdded', { id: markerId, type, x, y, ...data });
+                return markerId;
+            }
+
+            removeMarker(markerId) {
+                const marker = this.state.markers.get(markerId);
+                if (marker) {
+                    marker.element.remove();
+                    this.state.markers.delete(markerId);
+                    this.emit('markerRemoved', markerId);
+                }
+            }
+
+            moveMarker(markerId, x, y) {
+                const marker = this.state.markers.get(markerId);
+                if (marker) {
+                    marker.x = x;
+                    marker.y = y;
+                    marker.element.style.left = x + 'px';
+                    marker.element.style.top = y + 'px';
+
+                    this.emit('markerMoved', { id: markerId, x, y });
+                }
+            }
+
+            setPlayerPosition(x, y, recordTrail = true) {
+                this.state.playerPos = { x, y };
+
+                // 移动玩家标记
+                this.moveMarker('player', x, y);
+
+                // 更新视口
+                this.updateViewport();
+                this.updateCoordinates();
+
+                // 记录轨迹
+                if (recordTrail && this.config.playerTrail) {
+                    this.addTrailPoint(x, y);
+                }
+
+                this.emit('positionChange', { x, y });
+            }
+
+            addTrailPoint(x, y) {
+                const trail = document.createElement('div');
+                trail.className = 'player-trail';
+                trail.style.left = x + 'px';
+                trail.style.top = y + 'px';
+
+                this.elements.markers.appendChild(trail);
+                this.state.trail.push(trail);
+
+                // 限制轨迹长度
+                if (this.state.trail.length > this.config.maxTrailLength) {
+                    const oldTrail = this.state.trail.shift();
+                    oldTrail.remove();
+                }
+
+                // 自动清除轨迹点
+                setTimeout(() => {
+                    trail.remove();
+                    const index = this.state.trail.indexOf(trail);
+                    if (index > -1) {
+                        this.state.trail.splice(index, 1);
+                    }
+                }, 5000);
+            }
+
+            setZone(type, x, y, radius) {
+                const zoneId = `${type}_zone`;
+
+                let zone = this.state.zones.get(zoneId);
+                if (!zone) {
+                    const zoneElement = document.createElement('div');
+                    zoneElement.className = `minimap-zone ${type}-zone`;
+                    this.elements.content.appendChild(zoneElement);
+
+                    zone = {
+                        id: zoneId,
+                        type,
+                        element: zoneElement
+                    };
+                    this.state.zones.set(zoneId, zone);
+                }
+
+                zone.x = x;
+                zone.y = y;
+                zone.radius = radius;
+
+                zone.element.style.left = (x - radius) + 'px';
+                zone.element.style.top = (y - radius) + 'px';
+                zone.element.style.width = (radius * 2) + 'px';
+                zone.element.style.height = (radius * 2) + 'px';
+            }
+
+            removeZone(type) {
+                const zoneId = `${type}_zone`;
+                const zone = this.state.zones.get(zoneId);
+                if (zone) {
+                    zone.element.remove();
+                    this.state.zones.delete(zoneId);
+                }
+            }
+
+            toggleRadar() {
+                this.state.radarActive = !this.state.radarActive;
+                this.elements.radar.classList.toggle('active', this.state.radarActive);
+                this.emit('radarToggle', this.state.radarActive);
+            }
+
+            zoomIn() {
+                const newZoom = Math.min(this.config.maxZoom, this.config.zoomLevel + 0.2);
+                if (newZoom !== this.config.zoomLevel) {
+                    this.config.zoomLevel = newZoom;
+                    this.updateTransform();
+                    this.updateZoomDisplay();
+                    this.emit('zoom', newZoom);
+                }
+            }
+
+            zoomOut() {
+                const newZoom = Math.max(this.config.minZoom, this.config.zoomLevel - 0.2);
+                if (newZoom !== this.config.zoomLevel) {
+                    this.config.zoomLevel = newZoom;
+                    this.updateTransform();
+                    this.updateZoomDisplay();
+                    this.emit('zoom', newZoom);
+                }
+            }
+
+            reset() {
+                this.state.offsetX = 0;
+                this.state.offsetY = 0;
+                this.config.zoomLevel = 1.0;
+                this.updateTransform();
+                this.updateZoomDisplay();
+                this.updateCoordinates();
+                this.emit('reset');
+            }
+
+            clearMarkers(excludePlayer = true) {
+                const toRemove = [];
+                for (const [id, marker] of this.state.markers) {
+                    if (!excludePlayer || marker.type !== 'player') {
+                        toRemove.push(id);
+                    }
+                }
+                toRemove.forEach(id => this.removeMarker(id));
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        // 演示数据和控制函数
+        let minimaps = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化所有小地图
+            document.querySelectorAll('.minimap').forEach((container, index) => {
+                const size = parseInt(container.dataset.size) || 300;
+                const isCircular = container.classList.contains('circular');
+
+                const minimap = new Minimap(container, {
+                    size: size,
+                    shape: isCircular ? 'circle' : 'square',
+                    showLegend: size >= 200,
+                    showInfo: size >= 240,
+                    showControls: size >= 200
+                });
+
+                minimaps.push(minimap);
+
+                // 为前两个地图绑定特殊事件
+                if (index < 2) {
+                    minimap.on('markerClick', (marker) => {
+                        console.log(`地图${index + 1} - 点击标记:`, marker);
+                    });
+                }
+            });
+        });
+
+        // 演示控制函数
+        function toggleRadar(index) {
+            if (minimaps[index]) {
+                minimaps[index].toggleRadar();
+            }
+        }
+
+        function addRandomEnemy(index) {
+            if (minimaps[index]) {
+                const x = Math.random() * 250 + 25;
+                const y = Math.random() * 250 + 25;
+                minimaps[index].addMarker('enemy', x, y, {
+                    id: `enemy_${Date.now()}`,
+                    name: '敌方单位'
+                });
+            }
+        }
+
+        function clearMarkers(index) {
+            if (minimaps[index]) {
+                minimaps[index].clearMarkers();
+            }
+        }
+
+        function addSupply(index) {
+            if (minimaps[index]) {
+                const x = Math.random() * 250 + 25;
+                const y = Math.random() * 250 + 25;
+                minimaps[index].addMarker('supply', x, y, {
+                    id: `supply_${Date.now()}`,
+                    type: '补给箱'
+                });
+            }
+        }
+
+        function movePlayer(index) {
+            if (minimaps[index]) {
+                const x = Math.random() * 250 + 25;
+                const y = Math.random() * 250 + 25;
+                minimaps[index].setPlayerPosition(x, y);
+            }
+        }
+
+        function toggleZone(index) {
+            if (minimaps[index]) {
+                const hasZone = minimaps[index].state.zones.has('danger_zone');
+                if (hasZone) {
+                    minimaps[index].removeZone('danger');
+                } else {
+                    const x = Math.random() * 200 + 50;
+                    const y = Math.random() * 200 + 50;
+                    minimaps[index].setZone('danger', x, y, 60);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

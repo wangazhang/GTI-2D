@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 玩家信息卡片组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .player-card {
+            position: relative;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.9), rgba(47, 79, 79, 0.7));
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.6), transparent);
+            animation: scan-line 2s infinite;
+        }
+
+        @keyframes scan-line {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .player-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 206, 209, 0.6);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.2);
+        }
+
+        .player-card.selected {
+            border-color: #00CED1;
+            box-shadow: 0 0 20px rgba(0, 206, 209, 0.4);
+        }
+
+        .player-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 3px solid #00CED1;
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.3), rgba(47, 79, 79, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-avatar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background: linear-gradient(45deg, transparent, rgba(0, 206, 209, 0.3), transparent);
+            animation: avatar-rotate 3s linear infinite;
+        }
+
+        @keyframes avatar-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .player-status {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(47, 79, 79, 1);
+            z-index: 10;
+        }
+
+        .player-status.online {
+            background: #228B22;
+            box-shadow: 0 0 8px rgba(34, 139, 34, 0.8);
+            animation: online-pulse 2s infinite;
+        }
+
+        .player-status.away {
+            background: #FFD700;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+
+        .player-status.offline {
+            background: #808080;
+        }
+
+        .player-status.busy {
+            background: #FF6347;
+            box-shadow: 0 0 8px rgba(255, 99, 71, 0.8);
+        }
+
+        @keyframes online-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .player-name {
+            color: #00CED1;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(0, 206, 209, 0.5);
+        }
+
+        .player-rank {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+        }
+
+        .player-level {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .player-stats {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 206, 209, 0.2);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+        }
+
+        .stat-value {
+            color: #00CED1;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .team-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .team-alpha {
+            background: rgba(34, 139, 34, 0.8);
+            color: white;
+        }
+
+        .team-bravo {
+            background: rgba(255, 99, 71, 0.8);
+            color: white;
+        }
+
+        .team-neutral {
+            background: rgba(128, 128, 128, 0.8);
+            color: white;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 6px 8px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 1px solid rgba(0, 206, 209, 0.4);
+            border-radius: 4px;
+            color: #00CED1;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 206, 209, 0.3);
+            border-color: #00CED1;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: rgba(34, 139, 34, 0.3);
+            border-color: rgba(34, 139, 34, 0.6);
+            color: #228B22;
+        }
+
+        .action-btn.primary:hover {
+            background: rgba(34, 139, 34, 0.4);
+            border-color: #228B22;
+        }
+
+        .action-btn.danger {
+            background: rgba(255, 99, 71, 0.3);
+            border-color: rgba(255, 99, 71, 0.6);
+            color: #FF6347;
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(255, 99, 71, 0.4);
+            border-color: #FF6347;
+        }
+
+        .player-health-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6347, #FFD700, #228B22);
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .player-loadout {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .loadout-item {
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 1px solid rgba(0, 206, 209, 0.4);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .voice-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
+            background: rgba(34, 139, 34, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .voice-indicator.active {
+            opacity: 1;
+            animation: voice-pulse 1s infinite;
+        }
+
+        @keyframes voice-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .player-ping {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .ping-good {
+            color: #228B22;
+        }
+
+        .ping-medium {
+            color: #FFD700;
+        }
+
+        .ping-bad {
+            color: #FF6347;
+        }
+
+        /* 卡片尺寸变体 */
+        .player-card.compact {
+            padding: 8px;
+        }
+
+        .player-card.compact .player-avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .player-card.large {
+            padding: 16px;
+        }
+
+        .player-card.large .player-avatar {
+            width: 80px;
+            height: 80px;
+        }
+
+        /* 动画效果 */
+        .card-appear {
+            animation: card-slide-in 0.5s ease-out;
+        }
+
+        @keyframes card-slide-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .typing-indicator.active {
+            opacity: 1;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            background: #00CED1;
+            border-radius: 50%;
+            animation: typing-bounce 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">玩家信息卡片组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用玩家卡片，支持状态显示、队伍管理和交互操作</p>
+        </div>
+
+        <!-- 队伍列表演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">队伍管理</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Alpha队 -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-4 h-4 bg-success-500 rounded"></div>
+                        <h4 class="text-lg font-semibold text-success-400">Alpha队</h4>
+                        <span class="text-sm text-tactical-400">(4/5)</span>
+                    </div>
+                    <div id="team-alpha" class="space-y-3"></div>
+                </div>
+
+                <!-- Bravo队 -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-4 h-4 bg-alert-500 rounded"></div>
+                        <h4 class="text-lg font-semibold text-alert-400">Bravo队</h4>
+                        <span class="text-sm text-tactical-400">(3/5)</span>
+                    </div>
+                    <div id="team-bravo" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不同尺寸演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">卡片尺寸</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h4 class="text-sm text-tactical-300 mb-3">紧凑型</h4>
+                    <div id="compact-card"></div>
+                </div>
+                <div>
+                    <h4 class="text-sm text-tactical-300 mb-3">标准型</h4>
+                    <div id="standard-card"></div>
+                </div>
+                <div>
+                    <h4 class="text-sm text-tactical-300 mb-3">大型</h4>
+                    <div id="large-card"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 排行榜演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">排行榜</h3>
+            <div id="leaderboard" class="space-y-3"></div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建玩家卡片实例
+const playerCard = new PlayerCard('container-id', {
+    id: 'player_001',
+    name: 'ShadowStrike',
+    avatar: '🔫',
+    level: 25,
+    rank: 'Elite',
+    status: 'online',        // online, away, offline, busy
+    team: 'alpha',          // alpha, bravo, neutral
+    health: 85,             // 0-100
+    ping: 42,               // ms
+    kills: 15,
+    deaths: 3,
+    assists: 8,
+    score: 2450,
+    loadout: ['🔫', '🔪', '💊'], // 装备图标
+    showActions: true,      // 显示操作按钮
+    showStats: true,        // 显示战绩
+    showHealth: true,       // 显示血量
+    size: 'standard',       // compact, standard, large
+    selectable: true,       // 可选择
+    draggable: false        // 可拖拽
+});
+
+// 监听事件
+playerCard.on('click', (player) => {
+    console.log('玩家被点击:', player);
+});
+
+playerCard.on('action', ({ action, player }) => {
+    switch(action) {
+        case 'invite':
+            console.log('邀请玩家:', player.name);
+            break;
+        case 'kick':
+            console.log('踢出玩家:', player.name);
+            break;
+        case 'mute':
+            console.log('禁言玩家:', player.name);
+            break;
+        case 'profile':
+            console.log('查看资料:', player.name);
+            break;
+    }
+});
+
+// 更新玩家状态
+playerCard.setStatus('away');
+playerCard.setHealth(60);
+playerCard.setPing(85);
+playerCard.updateStats({
+    kills: 18,
+    deaths: 4,
+    score: 2850
+});
+
+// 显示语音指示
+playerCard.showVoiceActivity();
+
+// 显示打字指示
+playerCard.showTyping();
+
+// 选中玩家
+playerCard.select();
+
+// 设置队伍
+playerCard.setTeam('bravo');</code></pre>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">控制面板</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="addRandomPlayer()">添加随机玩家</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="toggleVoiceActivity()">切换语音</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="updateRandomStats()">更新统计</button>
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="clearPlayers()">清空列表</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * PlayerCard - 玩家信息卡片组件
+         */
+        class PlayerCard {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    id: '',
+                    name: 'Anonymous',
+                    avatar: '👤',
+                    level: 1,
+                    rank: 'Recruit',
+                    status: 'offline',
+                    team: 'neutral',
+                    health: 100,
+                    ping: 0,
+                    kills: 0,
+                    deaths: 0,
+                    assists: 0,
+                    score: 0,
+                    loadout: [],
+                    showActions: true,
+                    showStats: true,
+                    showHealth: false,
+                    showLoadout: false,
+                    showPing: true,
+                    size: 'standard',
+                    selectable: false,
+                    draggable: false,
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    selected: false,
+                    voiceActive: false,
+                    typing: false,
+                    lastSeen: new Date()
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            createElements() {
+                const sizeClass = this.config.size === 'compact' ? 'compact' :
+                                  this.config.size === 'large' ? 'large' : '';
+
+                this.container.innerHTML = `
+                    <div class="player-card ${sizeClass} rounded-lg p-3 card-appear relative cursor-pointer"
+                         draggable="${this.config.draggable}"
+                         data-player-id="${this.config.id}">
+
+                        <!-- 队伍指示器 -->
+                        <div class="team-indicator team-${this.config.team}">${this.config.team}</div>
+
+                        <!-- 语音指示器 -->
+                        <div class="voice-indicator">🎤</div>
+
+                        <!-- 打字指示器 -->
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+
+                        <!-- 延迟显示 -->
+                        ${this.config.showPing ? `<div class="player-ping">${this.config.ping}ms</div>` : ''}
+
+                        <!-- 主要信息区域 -->
+                        <div class="flex items-start gap-3">
+                            <!-- 头像 -->
+                            <div class="player-avatar-container relative">
+                                <div class="player-avatar">
+                                    ${this.config.avatar}
+                                </div>
+                                <div class="player-status ${this.config.status}"></div>
+                            </div>
+
+                            <!-- 玩家信息 -->
+                            <div class="flex-1 min-w-0">
+                                <div class="player-name truncate">${this.config.name}</div>
+                                <div class="player-rank">${this.config.rank}</div>
+                                <div class="player-level mt-1">Lv.${this.config.level}</div>
+
+                                <!-- 血量条 -->
+                                ${this.config.showHealth ? `
+                                    <div class="player-health-bar">
+                                        <div class="health-fill" style="width: ${this.config.health}%"></div>
+                                    </div>
+                                ` : ''}
+
+                                <!-- 装备显示 -->
+                                ${this.config.showLoadout && this.config.loadout.length > 0 ? `
+                                    <div class="player-loadout">
+                                        ${this.config.loadout.map(item => `<div class="loadout-item">${item}</div>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- 战绩统计 -->
+                        ${this.config.showStats ? `
+                            <div class="player-stats mt-3">
+                                <div class="stat-row">
+                                    <span class="stat-label">K/D/A</span>
+                                    <span class="stat-value">${this.config.kills}/${this.config.deaths}/${this.config.assists}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">得分</span>
+                                    <span class="stat-value">${this.config.score.toLocaleString()}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">K/D比</span>
+                                    <span class="stat-value">${this.getKDRatio()}</span>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 操作按钮 -->
+                        ${this.config.showActions ? `
+                            <div class="player-actions">
+                                <div class="action-btn primary" data-action="invite">邀请</div>
+                                <div class="action-btn" data-action="profile">资料</div>
+                                <div class="action-btn" data-action="mute">禁言</div>
+                                <div class="action-btn danger" data-action="kick">踢出</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                this.elements = {
+                    card: this.container.querySelector('.player-card'),
+                    avatar: this.container.querySelector('.player-avatar'),
+                    status: this.container.querySelector('.player-status'),
+                    name: this.container.querySelector('.player-name'),
+                    rank: this.container.querySelector('.player-rank'),
+                    level: this.container.querySelector('.player-level'),
+                    healthBar: this.container.querySelector('.player-health-bar'),
+                    healthFill: this.container.querySelector('.health-fill'),
+                    stats: this.container.querySelector('.player-stats'),
+                    actions: this.container.querySelector('.player-actions'),
+                    teamIndicator: this.container.querySelector('.team-indicator'),
+                    voiceIndicator: this.container.querySelector('.voice-indicator'),
+                    typingIndicator: this.container.querySelector('.typing-indicator'),
+                    pingIndicator: this.container.querySelector('.player-ping')
+                };
+            }
+
+            bindEvents() {
+                if (this.config.selectable) {
+                    this.elements.card.addEventListener('click', this.handleClick.bind(this));
+                }
+
+                if (this.config.draggable) {
+                    this.elements.card.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    this.elements.card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                }
+
+                if (this.elements.actions) {
+                    this.elements.actions.addEventListener('click', this.handleActionClick.bind(this));
+                }
+            }
+
+            handleClick(e) {
+                e.stopPropagation();
+                this.toggle();
+                this.emit('click', this.getPlayerData());
+            }
+
+            handleDragStart(e) {
+                e.dataTransfer.setData('application/json', JSON.stringify(this.getPlayerData()));
+                e.dataTransfer.effectAllowed = 'move';
+                this.emit('dragStart', this.getPlayerData());
+            }
+
+            handleDragEnd(e) {
+                this.emit('dragEnd', this.getPlayerData());
+            }
+
+            handleActionClick(e) {
+                e.stopPropagation();
+                const action = e.target.dataset.action;
+                if (action) {
+                    this.emit('action', { action, player: this.getPlayerData() });
+                }
+            }
+
+            updateDisplay() {
+                // 更新状态指示器
+                if (this.elements.status) {
+                    this.elements.status.className = `player-status ${this.config.status}`;
+                }
+
+                // 更新队伍指示器
+                if (this.elements.teamIndicator) {
+                    this.elements.teamIndicator.className = `team-indicator team-${this.config.team}`;
+                    this.elements.teamIndicator.textContent = this.config.team.toUpperCase();
+                }
+
+                // 更新血量条
+                if (this.elements.healthFill) {
+                    this.elements.healthFill.style.width = this.config.health + '%';
+                }
+
+                // 更新延迟显示
+                if (this.elements.pingIndicator) {
+                    this.elements.pingIndicator.textContent = `${this.config.ping}ms`;
+                    this.elements.pingIndicator.className = `player-ping ${this.getPingClass()}`;
+                }
+
+                // 更新统计信息
+                if (this.elements.stats) {
+                    const statRows = this.elements.stats.querySelectorAll('.stat-row');
+                    if (statRows[0]) {
+                        const kdaValue = statRows[0].querySelector('.stat-value');
+                        if (kdaValue) kdaValue.textContent = `${this.config.kills}/${this.config.deaths}/${this.config.assists}`;
+                    }
+                    if (statRows[1]) {
+                        const scoreValue = statRows[1].querySelector('.stat-value');
+                        if (scoreValue) scoreValue.textContent = this.config.score.toLocaleString();
+                    }
+                    if (statRows[2]) {
+                        const kdValue = statRows[2].querySelector('.stat-value');
+                        if (kdValue) kdValue.textContent = this.getKDRatio();
+                    }
+                }
+            }
+
+            getPingClass() {
+                if (this.config.ping <= 50) return 'ping-good';
+                if (this.config.ping <= 100) return 'ping-medium';
+                return 'ping-bad';
+            }
+
+            getKDRatio() {
+                if (this.config.deaths === 0) {
+                    return this.config.kills > 0 ? this.config.kills.toFixed(1) : '0.0';
+                }
+                return (this.config.kills / this.config.deaths).toFixed(1);
+            }
+
+            getStatusDisplay() {
+                const statuses = {
+                    online: '在线',
+                    away: '离开',
+                    offline: '离线',
+                    busy: '忙碌'
+                };
+                return statuses[this.config.status] || this.config.status;
+            }
+
+            // 公共API
+            select() {
+                this.state.selected = true;
+                this.elements.card.classList.add('selected');
+                this.emit('select', this.getPlayerData());
+            }
+
+            deselect() {
+                this.state.selected = false;
+                this.elements.card.classList.remove('selected');
+                this.emit('deselect', this.getPlayerData());
+            }
+
+            toggle() {
+                if (this.state.selected) {
+                    this.deselect();
+                } else {
+                    this.select();
+                }
+            }
+
+            setStatus(status) {
+                this.config.status = status;
+                this.updateDisplay();
+                this.emit('statusChange', { status, player: this.getPlayerData() });
+            }
+
+            setHealth(health) {
+                this.config.health = Math.max(0, Math.min(100, health));
+                this.updateDisplay();
+                this.emit('healthChange', { health: this.config.health, player: this.getPlayerData() });
+            }
+
+            setPing(ping) {
+                this.config.ping = Math.max(0, ping);
+                this.updateDisplay();
+                this.emit('pingChange', { ping: this.config.ping, player: this.getPlayerData() });
+            }
+
+            setTeam(team) {
+                this.config.team = team;
+                this.updateDisplay();
+                this.emit('teamChange', { team, player: this.getPlayerData() });
+            }
+
+            updateStats(newStats) {
+                Object.assign(this.config, newStats);
+                this.updateDisplay();
+                this.emit('statsUpdate', { stats: newStats, player: this.getPlayerData() });
+            }
+
+            showVoiceActivity() {
+                this.state.voiceActive = true;
+                if (this.elements.voiceIndicator) {
+                    this.elements.voiceIndicator.classList.add('active');
+                }
+                this.emit('voiceStart', this.getPlayerData());
+            }
+
+            hideVoiceActivity() {
+                this.state.voiceActive = false;
+                if (this.elements.voiceIndicator) {
+                    this.elements.voiceIndicator.classList.remove('active');
+                }
+                this.emit('voiceEnd', this.getPlayerData());
+            }
+
+            showTyping() {
+                this.state.typing = true;
+                if (this.elements.typingIndicator) {
+                    this.elements.typingIndicator.classList.add('active');
+                }
+
+                // 自动隐藏打字指示器
+                setTimeout(() => {
+                    this.hideTyping();
+                }, 3000);
+
+                this.emit('typingStart', this.getPlayerData());
+            }
+
+            hideTyping() {
+                this.state.typing = false;
+                if (this.elements.typingIndicator) {
+                    this.elements.typingIndicator.classList.remove('active');
+                }
+                this.emit('typingEnd', this.getPlayerData());
+            }
+
+            getPlayerData() {
+                return {
+                    ...this.config,
+                    selected: this.state.selected,
+                    voiceActive: this.state.voiceActive,
+                    typing: this.state.typing,
+                    lastSeen: this.state.lastSeen
+                };
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        // 全局变量
+        let playerCards = [];
+        let selectedPlayer = null;
+
+        // 示例玩家数据
+        const samplePlayers = {
+            alpha: [
+                {
+                    id: 'player_001',
+                    name: 'ShadowStrike',
+                    avatar: '🔫',
+                    level: 25,
+                    rank: 'Elite',
+                    status: 'online',
+                    team: 'alpha',
+                    health: 85,
+                    ping: 42,
+                    kills: 15,
+                    deaths: 3,
+                    assists: 8,
+                    score: 2450,
+                    loadout: ['🔫', '🔪', '💊']
+                },
+                {
+                    id: 'player_002',
+                    name: 'PhoenixRising',
+                    avatar: '🔥',
+                    level: 18,
+                    rank: 'Veteran',
+                    status: 'away',
+                    team: 'alpha',
+                    health: 92,
+                    ping: 28,
+                    kills: 12,
+                    deaths: 2,
+                    assists: 15,
+                    score: 2180,
+                    loadout: ['🏹', '💣', '🛡️']
+                }
+            ],
+            bravo: [
+                {
+                    id: 'player_003',
+                    name: 'IceStorm',
+                    avatar: '❄️',
+                    level: 22,
+                    rank: 'Specialist',
+                    status: 'online',
+                    team: 'bravo',
+                    health: 78,
+                    ping: 56,
+                    kills: 18,
+                    deaths: 5,
+                    assists: 6,
+                    score: 2890,
+                    loadout: ['🎯', '⚡', '🧬']
+                },
+                {
+                    id: 'player_004',
+                    name: 'NightHawk',
+                    avatar: '🦅',
+                    level: 30,
+                    rank: 'Commander',
+                    status: 'busy',
+                    team: 'bravo',
+                    health: 64,
+                    ping: 35,
+                    kills: 22,
+                    deaths: 4,
+                    assists: 12,
+                    score: 3520,
+                    loadout: ['🎭', '🔮', '⚔️']
+                }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTeams();
+            initializeSizeDemo();
+            initializeLeaderboard();
+        });
+
+        function initializeTeams() {
+            // Alpha队
+            const alphaContainer = document.getElementById('team-alpha');
+            samplePlayers.alpha.forEach(playerData => {
+                const cardContainer = document.createElement('div');
+                alphaContainer.appendChild(cardContainer);
+
+                const card = new PlayerCard(cardContainer, {
+                    ...playerData,
+                    selectable: true,
+                    showHealth: true,
+                    showLoadout: true
+                });
+
+                playerCards.push(card);
+                bindPlayerEvents(card);
+            });
+
+            // Bravo队
+            const bravoContainer = document.getElementById('team-bravo');
+            samplePlayers.bravo.forEach(playerData => {
+                const cardContainer = document.createElement('div');
+                bravoContainer.appendChild(cardContainer);
+
+                const card = new PlayerCard(cardContainer, {
+                    ...playerData,
+                    selectable: true,
+                    showHealth: true,
+                    showLoadout: true
+                });
+
+                playerCards.push(card);
+                bindPlayerEvents(card);
+            });
+        }
+
+        function initializeSizeDemo() {
+            const sizeConfigs = [
+                { id: 'compact-card', size: 'compact' },
+                { id: 'standard-card', size: 'standard' },
+                { id: 'large-card', size: 'large' }
+            ];
+
+            sizeConfigs.forEach(config => {
+                const container = document.getElementById(config.id);
+                new PlayerCard(container, {
+                    id: 'demo_' + config.size,
+                    name: 'Demo Player',
+                    avatar: '🎮',
+                    level: 15,
+                    rank: 'Demo',
+                    status: 'online',
+                    team: 'neutral',
+                    health: 75,
+                    ping: 45,
+                    kills: 10,
+                    deaths: 2,
+                    assists: 5,
+                    score: 1500,
+                    size: config.size,
+                    showActions: config.size !== 'compact',
+                    showHealth: true,
+                    showStats: config.size !== 'compact'
+                });
+            });
+        }
+
+        function initializeLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+            const allPlayers = [...samplePlayers.alpha, ...samplePlayers.bravo];
+
+            // 按分数排序
+            allPlayers.sort((a, b) => b.score - a.score);
+
+            allPlayers.forEach((playerData, index) => {
+                const cardContainer = document.createElement('div');
+                leaderboard.appendChild(cardContainer);
+
+                new PlayerCard(cardContainer, {
+                    ...playerData,
+                    rank: `#${index + 1} ${playerData.rank}`,
+                    size: 'compact',
+                    showActions: false,
+                    showHealth: false,
+                    showLoadout: false
+                });
+            });
+        }
+
+        function bindPlayerEvents(card) {
+            card.on('click', (player) => {
+                // 取消其他玩家的选中状态
+                playerCards.forEach(otherCard => {
+                    if (otherCard !== card && otherCard.state.selected) {
+                        otherCard.deselect();
+                    }
+                });
+                selectedPlayer = player;
+                console.log('选中玩家:', player.name);
+            });
+
+            card.on('action', ({ action, player }) => {
+                console.log(`对 ${player.name} 执行操作: ${action}`);
+                handlePlayerAction(action, player, card);
+            });
+        }
+
+        function handlePlayerAction(action, player, card) {
+            switch (action) {
+                case 'invite':
+                    console.log(`邀请 ${player.name} 加入队伍`);
+                    break;
+                case 'kick':
+                    console.log(`踢出玩家 ${player.name}`);
+                    break;
+                case 'mute':
+                    console.log(`禁言玩家 ${player.name}`);
+                    break;
+                case 'profile':
+                    console.log(`查看 ${player.name} 的资料`);
+                    break;
+            }
+        }
+
+        // 控制函数
+        function addRandomPlayer() {
+            const names = ['DragonSlayer', 'StealthMaster', 'BoomOperator', 'QuickScope', 'TacticalPro'];
+            const avatars = ['⚡', '🐉', '🎯', '💀', '👑', '🔥', '💎', '🌟'];
+            const statuses = ['online', 'away', 'busy'];
+            const teams = ['alpha', 'bravo'];
+
+            const randomPlayer = {
+                id: `player_${Date.now()}`,
+                name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random() * 100),
+                avatar: avatars[Math.floor(Math.random() * avatars.length)],
+                level: Math.floor(Math.random() * 50) + 1,
+                rank: 'Recruit',
+                status: statuses[Math.floor(Math.random() * statuses.length)],
+                team: teams[Math.floor(Math.random() * teams.length)],
+                health: Math.floor(Math.random() * 100) + 1,
+                ping: Math.floor(Math.random() * 150) + 20,
+                kills: Math.floor(Math.random() * 25),
+                deaths: Math.floor(Math.random() * 10) + 1,
+                assists: Math.floor(Math.random() * 20),
+                score: Math.floor(Math.random() * 5000) + 500,
+                loadout: ['🔫', '💊', '🔪']
+            };
+
+            const teamContainer = document.getElementById(randomPlayer.team === 'alpha' ? 'team-alpha' : 'team-bravo');
+            const cardContainer = document.createElement('div');
+            teamContainer.appendChild(cardContainer);
+
+            const card = new PlayerCard(cardContainer, {
+                ...randomPlayer,
+                selectable: true,
+                showHealth: true,
+                showLoadout: true
+            });
+
+            playerCards.push(card);
+            bindPlayerEvents(card);
+        }
+
+        function toggleVoiceActivity() {
+            if (selectedPlayer && playerCards.length > 0) {
+                const card = playerCards.find(c => c.config.id === selectedPlayer.id);
+                if (card) {
+                    if (card.state.voiceActive) {
+                        card.hideVoiceActivity();
+                    } else {
+                        card.showVoiceActivity();
+                        setTimeout(() => card.hideVoiceActivity(), 3000);
+                    }
+                }
+            } else {
+                // 随机选择一个在线玩家显示语音活动
+                const onlinePlayers = playerCards.filter(c => c.config.status === 'online');
+                if (onlinePlayers.length > 0) {
+                    const randomPlayer = onlinePlayers[Math.floor(Math.random() * onlinePlayers.length)];
+                    randomPlayer.showVoiceActivity();
+                    setTimeout(() => randomPlayer.hideVoiceActivity(), 2000);
+                }
+            }
+        }
+
+        function updateRandomStats() {
+            playerCards.forEach(card => {
+                if (Math.random() < 0.3) { // 30% 几率更新
+                    const newStats = {
+                        kills: card.config.kills + Math.floor(Math.random() * 3),
+                        deaths: card.config.deaths + (Math.random() < 0.2 ? 1 : 0),
+                        assists: card.config.assists + Math.floor(Math.random() * 2),
+                        score: card.config.score + Math.floor(Math.random() * 500) + 50,
+                        ping: Math.floor(Math.random() * 150) + 20,
+                        health: Math.max(20, card.config.health + Math.floor(Math.random() * 21) - 10)
+                    };
+                    card.updateStats(newStats);
+                    card.setHealth(newStats.health);
+                    card.setPing(newStats.ping);
+                }
+            });
+        }
+
+        function clearPlayers() {
+            document.getElementById('team-alpha').innerHTML = '';
+            document.getElementById('team-bravo').innerHTML = '';
+            playerCards = [];
+            selectedPlayer = null;
+        }
+    </script>
+</body>
+</html>

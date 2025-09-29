@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 游戏主菜单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'bounce-subtle': 'bounce-subtle 2s infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        'bounce-subtle': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-tactical-900 via-military-900 to-tactical-800 font-military text-white overflow-x-hidden">
+    <!-- 动态背景效果 -->
+    <div class="fixed inset-0 opacity-20">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1920')] bg-cover bg-center bg-fixed opacity-40"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-military-900/90 via-transparent to-cyber-900/40"></div>
+        <div class="absolute inset-0">
+            <div class="absolute top-20 left-10 w-2 h-2 bg-cyber-400 rounded-full animate-pulse"></div>
+            <div class="absolute top-40 right-20 w-1 h-1 bg-military-400 rounded-full animate-pulse-slow"></div>
+            <div class="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-success-400 rounded-full animate-bounce-subtle"></div>
+        </div>
+    </div>
+
+    <!-- 顶部状态栏 -->
+    <div class="relative z-50 border-b border-military-600/30 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="../index.html" class="flex items-center space-x-2 text-tactical-300 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span class="text-sm">返回导航</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- 在线状态 -->
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-success-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-tactical-300">在线 2,847</span>
+                    </div>
+
+                    <!-- 系统时间 -->
+                    <div class="text-sm text-tactical-400 font-mono" id="current-time">
+                        20:45:32
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <main class="relative z-10 min-h-screen flex flex-col">
+        <!-- Logo区域 -->
+        <div class="text-center py-8">
+            <div class="inline-block">
+                <h1 class="text-6xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-cyber-400 via-military-300 to-cyber-400 bg-clip-text text-transparent animate-glow">
+                    GTI-2D
+                </h1>
+                <p class="text-xl text-tactical-200 mb-2">战术对抗</p>
+                <div class="w-32 h-0.5 bg-gradient-to-r from-transparent via-cyber-400 to-transparent mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- 玩家信息卡片 -->
+        <div class="container mx-auto px-4 mb-8">
+            <div class="max-w-md mx-auto bg-gradient-to-r from-military-800/40 to-tactical-800/40 rounded-2xl border border-military-600/30 backdrop-blur-sm p-6">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cyber-500 to-military-500 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-white">指挥官_Alpha</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-tactical-400">等级 23</span>
+                            <div class="flex space-x-1">
+                                <div class="w-3 h-1 bg-cyber-400 rounded-full"></div>
+                                <div class="w-3 h-1 bg-cyber-400 rounded-full"></div>
+                                <div class="w-3 h-1 bg-cyber-400 rounded-full"></div>
+                                <div class="w-3 h-1 bg-tactical-600 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-tactical-400">战斗力</div>
+                        <div class="text-lg font-bold text-cyber-400">4,250</div>
+                    </div>
+                </div>
+
+                <!-- 经验条 -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-tactical-400 mb-1">
+                        <span>经验值</span>
+                        <span>2,340 / 3,000</span>
+                    </div>
+                    <div class="w-full bg-tactical-700 rounded-full h-2">
+                        <div class="bg-gradient-to-r from-success-500 to-cyber-400 h-2 rounded-full transition-all duration-1000" style="width: 78%"></div>
+                    </div>
+                </div>
+
+                <!-- 每日任务提示 -->
+                <div class="bg-success-900/30 border border-success-600/30 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm text-white">每日任务</span>
+                        </div>
+                        <div class="text-xs text-success-400">3/5 完成</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主菜单按钮组 -->
+        <div class="container mx-auto px-4 flex-1">
+            <div class="max-w-lg mx-auto space-y-4">
+                <!-- 快速匹配 - 主要按钮 -->
+                <button onclick="quickMatch()" class="w-full group relative overflow-hidden bg-gradient-to-r from-cyber-600 to-cyber-500 hover:from-cyber-500 hover:to-cyber-400 text-white font-bold py-6 px-8 rounded-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl animate-glow">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <div class="flex items-center justify-center space-x-3">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span class="text-2xl">快速匹配</span>
+                    </div>
+                    <div class="text-sm text-cyber-100 mt-2">立即开始 3v3v3 对战</div>
+                </button>
+
+                <!-- 房间功能 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="createRoom()" class="group bg-gradient-to-r from-military-700 to-military-600 hover:from-military-600 hover:to-military-500 text-white font-semibold py-4 px-6 rounded-xl transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>创建房间</span>
+                        </div>
+                    </button>
+
+                    <button onclick="joinRoom()" class="group bg-gradient-to-r from-military-700 to-military-600 hover:from-military-600 hover:to-military-500 text-white font-semibold py-4 px-6 rounded-xl transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>加入房间</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- 社交功能 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="friendsMenu()" class="group bg-gradient-to-r from-tactical-700 to-tactical-600 hover:from-tactical-600 hover:to-tactical-500 text-white font-semibold py-4 px-6 rounded-xl transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span>好友</span>
+                            <div class="w-2 h-2 bg-alert-500 rounded-full absolute -top-1 -right-1 animate-pulse"></div>
+                        </div>
+                    </button>
+
+                    <button onclick="leaderboard()" class="group bg-gradient-to-r from-tactical-700 to-tactical-600 hover:from-tactical-600 hover:to-tactical-500 text-white font-semibold py-4 px-6 rounded-xl transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span>排行榜</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- 底部功能 -->
+                <div class="grid grid-cols-3 gap-4">
+                    <button onclick="settings()" class="group bg-gradient-to-r from-tactical-700/60 to-tactical-600/60 hover:from-tactical-600/80 hover:to-tactical-500/80 text-white font-medium py-3 px-4 rounded-lg transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="text-sm">设置</span>
+                        </div>
+                    </button>
+
+                    <button onclick="help()" class="group bg-gradient-to-r from-tactical-700/60 to-tactical-600/60 hover:from-tactical-600/80 hover:to-tactical-500/80 text-white font-medium py-3 px-4 rounded-lg transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm">帮助</span>
+                        </div>
+                    </button>
+
+                    <button onclick="share()" class="group bg-gradient-to-r from-success-700/60 to-success-600/60 hover:from-success-600/80 hover:to-success-500/80 text-white font-medium py-3 px-4 rounded-lg transform transition-all duration-300 hover:scale-105">
+                        <div class="flex flex-col items-center space-y-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+                            </svg>
+                            <span class="text-sm">分享</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部状态栏 -->
+        <div class="container mx-auto px-4 py-6 mt-8">
+            <div class="max-w-lg mx-auto bg-gradient-to-r from-tactical-800/30 to-military-800/30 rounded-xl border border-tactical-600/20 p-4">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-success-400 rounded-full animate-pulse"></div>
+                            <span class="text-tactical-300">服务器正常</span>
+                        </div>
+                        <div class="text-tactical-400">
+                            延迟: <span class="text-success-400 font-mono">23ms</span>
+                        </div>
+                    </div>
+                    <div class="text-tactical-400 font-mono">
+                        GTI-2D v1.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 通知弹窗模板 -->
+    <div id="notification" class="fixed top-4 right-4 z-50 bg-gradient-to-r from-cyber-600 to-cyber-500 text-white p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300">
+        <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="notification-text">通知内容</span>
+        </div>
+    </div>
+
+    <script>
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('zh-CN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = time;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 通知功能
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notification-text');
+
+            text.textContent = message;
+
+            // 根据类型设置颜色
+            if (type === 'success') {
+                notification.className = notification.className.replace('from-cyber-600 to-cyber-500', 'from-success-600 to-success-500');
+            } else if (type === 'warning') {
+                notification.className = notification.className.replace('from-cyber-600 to-cyber-500', 'from-alert-600 to-alert-500');
+            }
+
+            // 显示通知
+            notification.style.transform = 'translateX(0)';
+
+            // 3秒后隐藏
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                // 重置颜色
+                setTimeout(() => {
+                    notification.className = notification.className.replace(/from-\w+-600 to-\w+-500/, 'from-cyber-600 to-cyber-500');
+                }, 300);
+            }, 3000);
+        }
+
+        // 菜单功能
+        function quickMatch() {
+            showNotification('正在寻找匹配对象...', 'info');
+            setTimeout(() => {
+                window.location.href = 'matchmaking.html';
+            }, 1500);
+        }
+
+        function createRoom() {
+            showNotification('创建房间功能开发中...', 'warning');
+        }
+
+        function joinRoom() {
+            const roomCode = prompt('请输入房间号:');
+            if (roomCode) {
+                showNotification(`正在加入房间 ${roomCode}...`, 'info');
+                setTimeout(() => {
+                    window.location.href = 'lobby.html?room=' + roomCode;
+                }, 1500);
+            }
+        }
+
+        function friendsMenu() {
+            showNotification('好友系统开发中...', 'warning');
+        }
+
+        function leaderboard() {
+            showNotification('排行榜功能开发中...', 'warning');
+        }
+
+        function settings() {
+            showNotification('设置界面开发中...', 'warning');
+        }
+
+        function help() {
+            showNotification('帮助系统开发中...', 'warning');
+        }
+
+        function share() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'GTI-2D 战术对抗游戏',
+                    text: '来一起体验紧张刺激的3v3v3战术对抗！',
+                    url: window.location.href
+                }).then(() => {
+                    showNotification('分享成功!', 'success');
+                }).catch(() => {
+                    showNotification('分享已取消', 'info');
+                });
+            } else {
+                // 复制链接到剪贴板
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showNotification('链接已复制到剪贴板!', 'success');
+                });
+            }
+        }
+
+        // 页面加载完成后的欢迎消息
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                showNotification('欢迎回来，指挥官！', 'success');
+            }, 1000);
+        });
+
+        // 触摸优化 - 防止双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 按钮触摸反馈
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+
+            button.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

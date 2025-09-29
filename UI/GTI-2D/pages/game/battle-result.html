@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GTI-2D 战斗结算界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'slide-down': 'slideDown 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'victory-glow': 'victoryGlow 2s ease-in-out infinite',
+                        'defeat-pulse': 'defeatPulse 1.5s ease-in-out infinite',
+                        'counter-up': 'counterUp 1s ease-out forwards',
+                        'reward-drop': 'rewardDrop 0.8s ease-out forwards',
+                        'xp-fill': 'xpFill 2s ease-out forwards',
+                        'rank-shine': 'rankShine 3s ease-in-out infinite',
+                        'countdown-tick': 'countdownTick 1s ease-in-out',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        victoryGlow: {
+                            '0%, 100%': {
+                                'box-shadow': '0 0 20px rgba(34, 139, 34, 0.6), 0 0 40px rgba(34, 139, 34, 0.3)',
+                                'text-shadow': '0 0 10px rgba(34, 139, 34, 0.8)'
+                            },
+                            '50%': {
+                                'box-shadow': '0 0 40px rgba(34, 139, 34, 0.9), 0 0 80px rgba(34, 139, 34, 0.5)',
+                                'text-shadow': '0 0 20px rgba(34, 139, 34, 1)'
+                            }
+                        },
+                        defeatPulse: {
+                            '0%, 100%': {
+                                'box-shadow': '0 0 15px rgba(255, 99, 71, 0.6), 0 0 30px rgba(255, 99, 71, 0.3)',
+                                'text-shadow': '0 0 8px rgba(255, 99, 71, 0.8)'
+                            },
+                            '50%': {
+                                'box-shadow': '0 0 30px rgba(255, 99, 71, 0.9), 0 0 60px rgba(255, 99, 71, 0.5)',
+                                'text-shadow': '0 0 16px rgba(255, 99, 71, 1)'
+                            }
+                        },
+                        counterUp: {
+                            '0%': { transform: 'translateY(20px) scale(0.5)', opacity: '0' },
+                            '50%': { transform: 'translateY(-5px) scale(1.1)', opacity: '0.8' },
+                            '100%': { transform: 'translateY(0) scale(1)', opacity: '1' }
+                        },
+                        rewardDrop: {
+                            '0%': { transform: 'translateY(-50px) scale(0.8)', opacity: '0' },
+                            '50%': { transform: 'translateY(5px) scale(1.05)', opacity: '0.9' },
+                            '100%': { transform: 'translateY(0) scale(1)', opacity: '1' }
+                        },
+                        xpFill: {
+                            '0%': { width: '0%' },
+                            '100%': { width: 'var(--xp-width)' }
+                        },
+                        rankShine: {
+                            '0%, 100%': {
+                                'background-position': '-100% center'
+                            },
+                            '50%': {
+                                'background-position': '200% center'
+                            }
+                        },
+                        countdownTick: {
+                            '0%': { transform: 'scale(1)', opacity: '1' },
+                            '50%': { transform: 'scale(1.2)', opacity: '0.7' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow-x: hidden;
+            position: relative;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        /* 胜利状态样式 */
+        .victory-state {
+            background: linear-gradient(135deg, rgba(34, 139, 34, 0.1), rgba(0, 206, 209, 0.05));
+        }
+
+        .victory-text {
+            background: linear-gradient(45deg, #228B22, #00CED1, #228B22);
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rankShine 3s ease-in-out infinite;
+        }
+
+        /* 失败状态样式 */
+        .defeat-state {
+            background: linear-gradient(135deg, rgba(255, 99, 71, 0.1), rgba(139, 69, 19, 0.05));
+        }
+
+        .defeat-text {
+            color: #FF6347;
+            text-shadow: 0 0 10px rgba(255, 99, 71, 0.6);
+        }
+
+        /* 统计数字动画 */
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 经验条样式 */
+        .xp-bar {
+            background: linear-gradient(90deg,
+                rgba(0, 206, 209, 0.3) 0%,
+                rgba(0, 206, 209, 0.6) 50%,
+                rgba(0, 206, 209, 0.9) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .xp-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 30px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: xp-shine 2s ease-in-out infinite;
+        }
+
+        @keyframes xp-shine {
+            0% { left: -30px; }
+            100% { left: 100%; }
+        }
+
+        /* 奖励物品卡片 */
+        .reward-item {
+            backdrop-filter: blur(8px);
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reward-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: reward-shine 2s ease-in-out infinite;
+        }
+
+        @keyframes reward-shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* 稀有度边框 */
+        .rarity-common {
+            border-color: #6B7280;
+            background: linear-gradient(135deg, rgba(107, 114, 128, 0.1), rgba(107, 114, 128, 0.05));
+        }
+
+        .rarity-uncommon {
+            border-color: #10B981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        }
+
+        .rarity-rare {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+        }
+
+        .rarity-epic {
+            border-color: #8B5CF6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .rarity-legendary {
+            border-color: #F59E0B;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+
+        /* 队友列表样式 */
+        .teammate-card {
+            backdrop-filter: blur(6px);
+            background: rgba(47, 79, 79, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teammate-card.mvp {
+            border-color: #F59E0B;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .teammate-card.mvp::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent);
+            animation: mvp-shine 3s ease-in-out infinite;
+        }
+
+        @keyframes mvp-shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* 倒计时样式 */
+        .countdown-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #00CED1;
+            text-shadow: 0 0 20px rgba(0, 206, 209, 0.6);
+        }
+
+        .countdown-number.warning {
+            color: #FF6347;
+            text-shadow: 0 0 20px rgba(255, 99, 71, 0.6);
+        }
+
+        /* 分享按钮特殊样式 */
+        .share-button {
+            background: linear-gradient(135deg, #1DA1F2, #1991DA);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .share-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .share-button:hover::before {
+            left: 100%;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 640px) {
+            .result-container {
+                padding: 16px 12px;
+            }
+
+            .stat-card {
+                padding: 16px 12px;
+            }
+
+            .teammate-card {
+                padding: 12px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 640px) {
+            .result-container {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-white font-military">
+    <!-- 动态背景 -->
+    <div class="fixed inset-0" id="backgroundLayer">
+        <div class="absolute inset-0 victory-state" id="backgroundGradient">
+            <div class="absolute inset-0" style="background-image: linear-gradient(rgba(0, 206, 209, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 206, 209, 0.03) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        </div>
+    </div>
+
+    <!-- 主要内容容器 -->
+    <div class="relative z-10 min-h-screen result-container p-6">
+        <!-- 战斗结果标题 -->
+        <div class="text-center mb-8 animate-slide-down">
+            <h1 class="text-6xl font-black mb-4 victory-text animate-victory-glow" id="resultTitle">
+                胜利！
+            </h1>
+            <p class="text-xl text-tactical-400" id="resultSubtitle">
+                任务完成 - Alpha Squad
+            </p>
+            <div class="text-sm text-tactical-500 mt-2" id="missionDetails">
+                渗透敌方基地 • 用时 07:34 • 完美撤离
+            </div>
+        </div>
+
+        <!-- 个人数据统计 -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- 击杀数 -->
+            <div class="stat-card bg-tactical-800/60 rounded-lg p-6 border border-alert-500/30 backdrop-filter backdrop-blur-md text-center animate-slide-up" style="animation-delay: 0.1s">
+                <div class="text-3xl mb-2">🎯</div>
+                <div class="text-3xl font-mono font-bold text-alert-400 stat-number mb-2" data-target="12" data-prefix="">0</div>
+                <div class="text-sm text-tactical-400">击杀</div>
+            </div>
+
+            <!-- 助攻数 -->
+            <div class="stat-card bg-tactical-800/60 rounded-lg p-6 border border-cyber-500/30 backdrop-filter backdrop-blur-md text-center animate-slide-up" style="animation-delay: 0.2s">
+                <div class="text-3xl mb-2">🤝</div>
+                <div class="text-3xl font-mono font-bold text-cyber-400 stat-number mb-2" data-target="5" data-prefix="">0</div>
+                <div class="text-sm text-tactical-400">助攻</div>
+            </div>
+
+            <!-- 生存时间 -->
+            <div class="stat-card bg-tactical-800/60 rounded-lg p-6 border border-success-500/30 backdrop-filter backdrop-blur-md text-center animate-slide-up" style="animation-delay: 0.3s">
+                <div class="text-3xl mb-2">⏱️</div>
+                <div class="text-xl font-mono font-bold text-success-400 stat-number mb-2">07:34</div>
+                <div class="text-sm text-tactical-400">生存时间</div>
+            </div>
+
+            <!-- 经验获得 -->
+            <div class="stat-card bg-tactical-800/60 rounded-lg p-6 border border-military-500/30 backdrop-filter backdrop-blur-md text-center animate-slide-up" style="animation-delay: 0.4s">
+                <div class="text-3xl mb-2">⭐</div>
+                <div class="text-3xl font-mono font-bold text-military-400 stat-number mb-2" data-target="2450" data-prefix="+">0</div>
+                <div class="text-sm text-tactical-400">经验值</div>
+            </div>
+        </div>
+
+        <!-- 等级和经验进度 -->
+        <div class="bg-tactical-800/60 rounded-lg p-6 border border-cyber-500/30 backdrop-filter backdrop-blur-md mb-8 animate-slide-up" style="animation-delay: 0.5s">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-cyber-400/20 rounded-full flex items-center justify-center border-2 border-cyber-400">
+                        <span class="text-2xl font-bold text-cyber-400">26</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-cyber-400">等级提升！</h3>
+                        <p class="text-sm text-tactical-400">Level 25 → Level 26</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-tactical-400">距离下级</div>
+                    <div class="text-lg font-mono text-cyber-400">1,250 / 3,000 XP</div>
+                </div>
+            </div>
+
+            <!-- 经验进度条 -->
+            <div class="relative">
+                <div class="w-full bg-tactical-700 rounded-full h-4 overflow-hidden">
+                    <div class="xp-bar h-full rounded-full animate-xp-fill"
+                         style="--xp-width: 41.7%; width: 0%"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-semibold text-white drop-shadow-lg">+2,450 XP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 获得奖励 -->
+        <div class="mb-8 animate-slide-up" style="animation-delay: 0.6s">
+            <h2 class="text-2xl font-bold text-military-300 mb-4 text-center">战利品</h2>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <!-- 传奇武器 -->
+                <div class="reward-item rarity-legendary rounded-lg p-4 text-center animate-reward-drop" style="animation-delay: 0.1s">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <div class="text-sm font-bold text-amber-400 mb-1">巴雷特狙击枪</div>
+                    <div class="text-xs text-tactical-400">传奇</div>
+                </div>
+
+                <!-- 史诗护甲 -->
+                <div class="reward-item rarity-epic rounded-lg p-4 text-center animate-reward-drop" style="animation-delay: 0.2s">
+                    <div class="text-3xl mb-2">🛡️</div>
+                    <div class="text-sm font-bold text-purple-400 mb-1">钛合金战甲</div>
+                    <div class="text-xs text-tactical-400">史诗</div>
+                </div>
+
+                <!-- 稀有消耗品 -->
+                <div class="reward-item rarity-rare rounded-lg p-4 text-center animate-reward-drop" style="animation-delay: 0.3s">
+                    <div class="text-3xl mb-2">💊</div>
+                    <div class="text-sm font-bold text-blue-400 mb-1">高级医疗包</div>
+                    <div class="text-xs text-tactical-400">稀有 x3</div>
+                </div>
+
+                <!-- 游戏币 -->
+                <div class="reward-item rarity-uncommon rounded-lg p-4 text-center animate-reward-drop" style="animation-delay: 0.4s">
+                    <div class="text-3xl mb-2">🪙</div>
+                    <div class="text-sm font-bold text-green-400 mb-1">作战资金</div>
+                    <div class="text-xs text-tactical-400">+1,500</div>
+                </div>
+
+                <!-- 材料 -->
+                <div class="reward-item rarity-common rounded-lg p-4 text-center animate-reward-drop" style="animation-delay: 0.5s">
+                    <div class="text-3xl mb-2">🔩</div>
+                    <div class="text-sm font-bold text-gray-400 mb-1">精密零件</div>
+                    <div class="text-xs text-tactical-400">普通 x8</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 队友表现 -->
+        <div class="mb-8 animate-slide-up" style="animation-delay: 0.7s">
+            <h2 class="text-2xl font-bold text-military-300 mb-4 text-center">队伍表现</h2>
+
+            <div class="space-y-4">
+                <!-- MVP玩家 -->
+                <div class="teammate-card mvp rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <div class="w-12 h-12 bg-amber-400/20 rounded-full flex items-center justify-center border-2 border-amber-400">
+                                    <span class="text-xl">👑</span>
+                                </div>
+                                <div class="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-xs font-bold text-black">
+                                    MVP
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-amber-400">TacticalGamer</h3>
+                                <p class="text-sm text-tactical-400">你</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-alert-400">12</div>
+                                <div class="text-xs text-tactical-500">击杀</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-cyber-400">5</div>
+                                <div class="text-xs text-tactical-500">助攻</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-success-400">0</div>
+                                <div class="text-xs text-tactical-500">死亡</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 队友2 -->
+                <div class="teammate-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-success-400/20 rounded-full flex items-center justify-center border-2 border-success-400">
+                                <span class="text-xl">👤</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-tactical-200">Alpha_Sniper</h3>
+                                <p class="text-sm text-tactical-400">队友</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-alert-400">8</div>
+                                <div class="text-xs text-tactical-500">击杀</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-cyber-400">3</div>
+                                <div class="text-xs text-tactical-500">助攻</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-success-400">1</div>
+                                <div class="text-xs text-tactical-500">死亡</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 队友3 -->
+                <div class="teammate-card rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-cyber-400/20 rounded-full flex items-center justify-center border-2 border-cyber-400">
+                                <span class="text-xl">👤</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-tactical-200">BravoSupport</h3>
+                                <p class="text-sm text-tactical-400">队友</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-alert-400">6</div>
+                                <div class="text-xs text-tactical-500">击杀</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-cyber-400">7</div>
+                                <div class="text-xs text-tactical-500">助攻</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-success-400">2</div>
+                                <div class="text-xs text-tactical-500">死亡</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮区域 -->
+        <div class="space-y-4 animate-slide-up" style="animation-delay: 0.8s">
+            <!-- 分享到微信 -->
+            <button id="shareBtn" class="w-full py-4 share-button text-white rounded-lg font-semibold text-lg transition-all duration-200 hover:shadow-lg">
+                <div class="flex items-center justify-center space-x-3">
+                    <span class="text-2xl">📱</span>
+                    <span>分享到微信朋友圈</span>
+                </div>
+            </button>
+
+            <!-- 主要操作按钮 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button id="continueBtn" class="py-4 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg font-semibold text-lg transition-all duration-200 hover:shadow-lg">
+                    继续游戏
+                </button>
+
+                <button id="menuBtn" class="py-4 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 border border-tactical-500 rounded-lg font-semibold text-lg transition-all duration-200 hover:shadow-lg">
+                    返回主菜单
+                </button>
+            </div>
+
+            <!-- 自动匹配倒计时 -->
+            <div class="bg-tactical-800/60 rounded-lg p-4 border border-cyber-500/30 backdrop-filter backdrop-blur-md text-center" id="autoMatchContainer">
+                <div class="flex items-center justify-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-tactical-400">自动匹配：</span>
+                        <div class="countdown-number" id="countdown">30</div>
+                        <span class="text-tactical-400">秒</span>
+                    </div>
+                    <button id="cancelAutoMatch" class="px-4 py-2 bg-alert-700 hover:bg-alert-600 text-white rounded transition-colors text-sm">
+                        取消
+                    </button>
+                </div>
+
+                <!-- 倒计时进度条 -->
+                <div class="mt-3 w-full bg-tactical-700 rounded-full h-2 overflow-hidden">
+                    <div class="bg-cyber-400 h-full rounded-full transition-all ease-linear" id="countdownBar" style="width: 100%; transition-duration: 30s; transition-timing-function: linear;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 粒子效果容器 -->
+    <div id="particleContainer" class="fixed inset-0 pointer-events-none z-20">
+        <!-- 粒子将通过JavaScript动态生成 -->
+    </div>
+
+    <!-- 通知消息 -->
+    <div id="notifications" class="fixed top-4 right-4 space-y-2 z-30">
+        <!-- 通知将通过JavaScript动态添加 -->
+    </div>
+
+    <script>
+        // 战斗结果数据
+        const battleResult = {
+            victory: true,
+            missionName: "渗透敌方基地",
+            duration: "07:34",
+            evacuationStatus: "完美撤离",
+            playerStats: {
+                kills: 12,
+                assists: 5,
+                deaths: 0,
+                xpGained: 2450,
+                oldLevel: 25,
+                newLevel: 26,
+                currentXP: 1250,
+                maxXP: 3000
+            },
+            rewards: [
+                { name: "巴雷特狙击枪", rarity: "legendary", icon: "🎯" },
+                { name: "钛合金战甲", rarity: "epic", icon: "🛡️" },
+                { name: "高级医疗包", rarity: "rare", icon: "💊", quantity: 3 },
+                { name: "作战资金", rarity: "uncommon", icon: "🪙", quantity: 1500 },
+                { name: "精密零件", rarity: "common", icon: "🔩", quantity: 8 }
+            ],
+            teammates: [
+                {
+                    name: "TacticalGamer",
+                    isPlayer: true,
+                    isMVP: true,
+                    kills: 12,
+                    assists: 5,
+                    deaths: 0
+                },
+                {
+                    name: "Alpha_Sniper",
+                    isPlayer: false,
+                    isMVP: false,
+                    kills: 8,
+                    assists: 3,
+                    deaths: 1
+                },
+                {
+                    name: "BravoSupport",
+                    isPlayer: false,
+                    isMVP: false,
+                    kills: 6,
+                    assists: 7,
+                    deaths: 2
+                }
+            ]
+        };
+
+        // 自动匹配倒计时
+        let autoMatchCountdown = 30;
+        let countdownInterval = null;
+        let isAutoMatchCanceled = false;
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            setupBattleResult();
+            startAnimations();
+            setupEventListeners();
+            startAutoMatchCountdown();
+            createParticleEffect();
+        });
+
+        function setupBattleResult() {
+            const { victory, missionName, duration, evacuationStatus, playerStats } = battleResult;
+
+            // 设置背景状态
+            const backgroundGradient = document.getElementById('backgroundGradient');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const missionDetails = document.getElementById('missionDetails');
+
+            if (victory) {
+                backgroundGradient.className = 'absolute inset-0 victory-state';
+                resultTitle.textContent = '胜利！';
+                resultTitle.className = 'text-6xl font-black mb-4 victory-text animate-victory-glow';
+                resultSubtitle.textContent = `任务完成 - Alpha Squad`;
+                missionDetails.textContent = `${missionName} • 用时 ${duration} • ${evacuationStatus}`;
+            } else {
+                backgroundGradient.className = 'absolute inset-0 defeat-state';
+                resultTitle.textContent = '失败';
+                resultTitle.className = 'text-6xl font-black mb-4 defeat-text animate-defeat-pulse';
+                resultSubtitle.textContent = `任务失败 - Alpha Squad`;
+                missionDetails.textContent = `${missionName} • 用时 ${duration} • 任务失败`;
+            }
+
+            // 更新等级信息（如果有提升）
+            if (playerStats.newLevel > playerStats.oldLevel) {
+                const xpProgress = (playerStats.currentXP / playerStats.maxXP) * 100;
+                document.documentElement.style.setProperty('--xp-width', `${xpProgress}%`);
+            }
+        }
+
+        function startAnimations() {
+            // 启动数字动画
+            animateStatNumbers();
+
+            // 启动经验条动画
+            setTimeout(() => {
+                const xpBar = document.querySelector('.xp-bar');
+                if (xpBar) {
+                    xpBar.style.width = xpBar.style.getPropertyValue('--xp-width') || '41.7%';
+                }
+            }, 1500);
+        }
+
+        function animateStatNumbers() {
+            const statNumbers = document.querySelectorAll('.stat-number');
+
+            statNumbers.forEach((element, index) => {
+                const target = parseInt(element.dataset.target);
+                const prefix = element.dataset.prefix || '';
+                let current = 0;
+                const increment = Math.ceil(target / 50);
+                const duration = 1000;
+                const stepTime = duration / (target / increment);
+
+                setTimeout(() => {
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+
+                        element.textContent = prefix + current.toLocaleString();
+                        element.style.animation = 'counter-up 0.1s ease-out';
+
+                        // 重置动画
+                        setTimeout(() => {
+                            element.style.animation = '';
+                        }, 100);
+                    }, stepTime);
+                }, index * 200);
+            });
+        }
+
+        function startAutoMatchCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            const countdownBar = document.getElementById('countdownBar');
+
+            countdownInterval = setInterval(() => {
+                if (isAutoMatchCanceled) {
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                autoMatchCountdown--;
+                countdownElement.textContent = autoMatchCountdown;
+
+                // 更新进度条
+                const progress = (autoMatchCountdown / 30) * 100;
+                countdownBar.style.width = `${progress}%`;
+
+                // 添加动画效果
+                if (autoMatchCountdown <= 10) {
+                    countdownElement.classList.add('warning', 'animate-countdown-tick');
+                } else {
+                    countdownElement.classList.remove('warning');
+                }
+
+                // 倒计时结束
+                if (autoMatchCountdown <= 0) {
+                    clearInterval(countdownInterval);
+                    startNewGame();
+                }
+            }, 1000);
+
+            // 启动进度条动画
+            setTimeout(() => {
+                countdownBar.style.width = '0%';
+            }, 100);
+        }
+
+        function setupEventListeners() {
+            // 分享按钮
+            document.getElementById('shareBtn').addEventListener('click', () => {
+                shareToWeChat();
+            });
+
+            // 继续游戏按钮
+            document.getElementById('continueBtn').addEventListener('click', () => {
+                isAutoMatchCanceled = true;
+                startNewGame();
+            });
+
+            // 返回主菜单按钮
+            document.getElementById('menuBtn').addEventListener('click', () => {
+                isAutoMatchCanceled = true;
+                returnToMenu();
+            });
+
+            // 取消自动匹配按钮
+            document.getElementById('cancelAutoMatch').addEventListener('click', () => {
+                cancelAutoMatch();
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'Enter':
+                    case ' ':
+                        e.preventDefault();
+                        isAutoMatchCanceled = true;
+                        startNewGame();
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        cancelAutoMatch();
+                        break;
+                    case 'm':
+                    case 'M':
+                        isAutoMatchCanceled = true;
+                        returnToMenu();
+                        break;
+                    case 's':
+                    case 'S':
+                        shareToWeChat();
+                        break;
+                }
+            });
+        }
+
+        function shareToWeChat() {
+            const { victory, playerStats } = battleResult;
+            const resultText = victory ? '胜利' : '失败';
+            const shareText = `GTI-2D战斗${resultText}！击杀: ${playerStats.kills} | 助攻: ${playerStats.assists} | 获得经验: ${playerStats.xpGained}`;
+
+            // 模拟分享功能
+            if (navigator.share) {
+                navigator.share({
+                    title: 'GTI-2D 战斗结果',
+                    text: shareText,
+                    url: window.location.href
+                }).then(() => {
+                    showNotification('分享成功', 'success');
+                }).catch(() => {
+                    copyToClipboard(shareText);
+                });
+            } else {
+                copyToClipboard(shareText);
+            }
+
+            // 触觉反馈
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('已复制到剪贴板', 'success');
+                });
+            } else {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('已复制到剪贴板', 'success');
+            }
+        }
+
+        function startNewGame() {
+            showNotification('正在匹配新游戏...', 'info');
+
+            // 添加加载效果
+            const continueBtn = document.getElementById('continueBtn');
+            const originalText = continueBtn.textContent;
+            continueBtn.textContent = '匹配中...';
+            continueBtn.disabled = true;
+            continueBtn.style.opacity = '0.6';
+
+            setTimeout(() => {
+                // 这里可以添加跳转到游戏的逻辑
+                showNotification('找到对手！准备开始新游戏', 'success');
+
+                // 模拟跳转
+                setTimeout(() => {
+                    // window.location.href = 'battle-hud.html';
+                    showNotification('游戏即将开始...', 'info');
+                }, 1000);
+            }, 2000);
+        }
+
+        function returnToMenu() {
+            showNotification('返回主菜单', 'info');
+
+            // 添加淡出效果
+            document.body.style.opacity = '0.5';
+            document.body.style.transition = 'opacity 0.5s ease';
+
+            setTimeout(() => {
+                // 这里可以添加跳转到主菜单的逻辑
+                // window.location.href = '../menu/main.html';
+                showNotification('已返回主菜单', 'info');
+                document.body.style.opacity = '1';
+            }, 500);
+        }
+
+        function cancelAutoMatch() {
+            isAutoMatchCanceled = true;
+            clearInterval(countdownInterval);
+
+            const autoMatchContainer = document.getElementById('autoMatchContainer');
+            const countdownElement = document.getElementById('countdown');
+            const countdownBar = document.getElementById('countdownBar');
+
+            // 更新UI状态
+            countdownElement.textContent = '已取消';
+            countdownElement.classList.remove('warning', 'animate-countdown-tick');
+            countdownBar.style.width = '0%';
+            countdownBar.style.backgroundColor = '#64748b';
+
+            // 更新容器样式
+            autoMatchContainer.style.opacity = '0.6';
+
+            showNotification('已取消自动匹配', 'info');
+
+            // 触觉反馈
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function createParticleEffect() {
+            // 只在胜利时创建粒子效果
+            if (!battleResult.victory) return;
+
+            const container = document.getElementById('particleContainer');
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                createParticle(container, i);
+            }
+        }
+
+        function createParticle(container, index) {
+            const particle = document.createElement('div');
+            particle.className = 'absolute w-2 h-2 bg-cyber-400 rounded-full opacity-70';
+
+            // 随机位置
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+
+            // 随机动画延迟
+            particle.style.animationDelay = `${index * 0.1}s`;
+            particle.style.animation = 'float 3s ease-in-out infinite';
+
+            container.appendChild(particle);
+
+            // 随机改变颜色
+            const colors = ['bg-cyber-400', 'bg-success-400', 'bg-military-400'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            particle.classList.remove('bg-cyber-400');
+            particle.classList.add(randomColor);
+
+            // 定期移动粒子
+            setInterval(() => {
+                const newX = Math.random() * window.innerWidth;
+                const newY = Math.random() * window.innerHeight;
+                particle.style.transition = 'all 5s ease-in-out';
+                particle.style.left = `${newX}px`;
+                particle.style.top = `${newY}px`;
+            }, 5000 + Math.random() * 3000);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `bg-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-500/90 rounded-lg px-4 py-2 border border-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-400 backdrop-filter backdrop-blur-md animate-slide-down`;
+            notification.innerHTML = `
+                <div class="text-sm text-white font-semibold">${message}</div>
+            `;
+
+            document.getElementById('notifications').appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 防止意外刷新
+        window.addEventListener('beforeunload', (e) => {
+            if (!isAutoMatchCanceled && autoMatchCountdown > 0) {
+                e.preventDefault();
+                e.returnValue = '你确定要离开吗？自动匹配将被取消。';
+            }
+        });
+
+        // 处理页面可见性变化
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // 页面隐藏时暂停倒计时
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+            } else {
+                // 页面显示时恢复倒计时
+                if (!isAutoMatchCanceled && autoMatchCountdown > 0) {
+                    startAutoMatchCountdown();
+                }
+            }
+        });
+
+        console.log('GTI-2D Battle Result initialized');
+    </script>
+</body>
+</html>

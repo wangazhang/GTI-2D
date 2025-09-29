@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏设置 - GTI-2D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4', 100: '#e9ebe4', 200: '#d4d7ca', 300: '#b6bca7',
+                            400: '#95a082', 500: '#7a8564', 600: '#616b4f', 700: '#556B2F',
+                            800: '#485a28', 900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff', 100: '#ccf7fe', 200: '#9aeffd', 300: '#58e1fa',
+                            400: '#00CED1', 500: '#00b4b8', 600: '#039094', 700: '#0a7377',
+                            800: '#115e61', 900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2', 100: '#fdeee4', 200: '#fadac4', 300: '#f6bf99',
+                            400: '#f1976c', 500: '#FF6347', 600: '#dd4e2f', 700: '#b63e25',
+                            800: '#943525', 900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#228B22', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#2F4F4F',
+                            800: '#1e293b', 900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(0, 206, 209, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .setting-card {
+            transition: all 0.3s ease;
+        }
+
+        .setting-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.1);
+        }
+
+        /* Custom slider styles */
+        .slider {
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #475569;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00CED1;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 206, 209, 0.8);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00CED1;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
+        }
+
+        .control-button {
+            min-width: 120px;
+            min-height: 48px;
+            border: 2px solid #475569;
+            transition: all 0.3s ease;
+        }
+
+        .control-button.active {
+            border-color: #00CED1;
+            background: rgba(0, 206, 209, 0.1);
+            color: #00CED1;
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.3);
+        }
+
+        .control-button:hover {
+            border-color: #00CED1;
+            transform: translateY(-1px);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: #475569;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #00CED1;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        .quality-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .quality-low { background: #ef4444; }
+        .quality-medium { background: #f59e0b; }
+        .quality-high { background: #10b981; }
+        .quality-auto { background: #6366f1; }
+
+        .network-status {
+            animation: pulse 2s infinite;
+        }
+
+        .storage-bar {
+            background: linear-gradient(to right, #10b981 0%, #f59e0b 70%, #ef4444 90%);
+            height: 8px;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .storage-used {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button onclick="history.back()" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">游戏设置</h1>
+                        <p class="text-xs text-tactical-400">Game Settings</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="text-xs text-tactical-400" id="saveStatus">已保存</div>
+                    <button id="resetBtn" class="px-4 py-2 bg-alert-600 hover:bg-alert-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                        重置默认
+                    </button>
+                    <button id="saveBtn" class="px-4 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                        保存设置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Audio Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">🔊</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">音频设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Master Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">主音量</label>
+                            <span class="text-sm font-mono text-cyber-400" id="masterVolumeValue">80%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="80" class="w-full slider" id="masterVolume">
+                    </div>
+
+                    <!-- Music Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">背景音乐</label>
+                            <span class="text-sm font-mono text-cyber-400" id="musicVolumeValue">60%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="60" class="w-full slider" id="musicVolume">
+                    </div>
+
+                    <!-- SFX Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">音效音量</label>
+                            <span class="text-sm font-mono text-cyber-400" id="sfxVolumeValue">90%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="90" class="w-full slider" id="sfxVolume">
+                    </div>
+
+                    <!-- Voice Chat Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">语音聊天</label>
+                            <span class="text-sm font-mono text-cyber-400" id="voiceVolumeValue">70%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="70" class="w-full slider" id="voiceVolume">
+                    </div>
+
+                    <!-- Audio Settings Toggles -->
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">3D音效</span>
+                            <div class="toggle-switch active" data-setting="3d-audio"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">环境音效</span>
+                            <div class="toggle-switch active" data-setting="ambient-sound"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">脚步声增强</span>
+                            <div class="toggle-switch" data-setting="footstep-enhance"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphics Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">🎨</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">画面设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Quality Preset -->
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">画质预设</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium flex items-center" data-quality="auto">
+                                <div class="quality-indicator quality-auto"></div>
+                                自动
+                            </button>
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium flex items-center" data-quality="low">
+                                <div class="quality-indicator quality-low"></div>
+                                低
+                            </button>
+                            <button class="control-button active bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium flex items-center" data-quality="medium">
+                                <div class="quality-indicator quality-medium"></div>
+                                中
+                            </button>
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium flex items-center" data-quality="high">
+                                <div class="quality-indicator quality-high"></div>
+                                高
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Frame Rate -->
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">帧率限制</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-fps="30">30 FPS</button>
+                            <button class="control-button active bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-fps="60">60 FPS</button>
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-fps="120">120 FPS</button>
+                        </div>
+                    </div>
+
+                    <!-- Resolution -->
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">分辨率</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="auto">自动检测</option>
+                            <option value="1920x1080">1920 × 1080</option>
+                            <option value="1366x768">1366 × 768</option>
+                            <option value="1280x720">1280 × 720</option>
+                        </select>
+                    </div>
+
+                    <!-- Graphics Toggles -->
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">阴影效果</span>
+                            <div class="toggle-switch active" data-setting="shadows"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">粒子效果</span>
+                            <div class="toggle-switch active" data-setting="particles"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">抗锯齿</span>
+                            <div class="toggle-switch" data-setting="antialiasing"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">垂直同步</span>
+                            <div class="toggle-switch" data-setting="vsync"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">🎮</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">操作设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Touch Sensitivity -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">触摸灵敏度</label>
+                            <span class="text-sm font-mono text-cyber-400" id="touchSensitivityValue">7</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="7" class="w-full slider" id="touchSensitivity">
+                    </div>
+
+                    <!-- Movement Sensitivity -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">移动灵敏度</label>
+                            <span class="text-sm font-mono text-cyber-400" id="moveSensitivityValue">6</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="6" class="w-full slider" id="moveSensitivity">
+                    </div>
+
+                    <!-- Fire Button Layout -->
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">射击按钮布局</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="control-button active bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium" data-layout="right">
+                                右侧
+                            </button>
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-3 text-sm font-medium" data-layout="left">
+                                左侧
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Button Size -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-sm font-semibold text-tactical-200">按钮大小</label>
+                            <span class="text-sm font-mono text-cyber-400" id="buttonSizeValue">中</span>
+                        </div>
+                        <input type="range" min="1" max="3" value="2" class="w-full slider" id="buttonSize">
+                    </div>
+
+                    <!-- Control Toggles -->
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">振动反馈</span>
+                            <div class="toggle-switch active" data-setting="vibration"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">自动射击</span>
+                            <div class="toggle-switch" data-setting="auto-fire"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">自动拾取</span>
+                            <div class="toggle-switch active" data-setting="auto-pickup"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language & Accessibility -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <!-- Language Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">🌍</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">语言设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">游戏语言</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="zh-CN" selected>中文 (简体)</option>
+                            <option value="zh-TW">中文 (繁體)</option>
+                            <option value="en-US">English</option>
+                            <option value="ja-JP">日本語</option>
+                            <option value="ko-KR">한국어</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">语音语言</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="zh-CN" selected>中文</option>
+                            <option value="en-US">English</option>
+                            <option value="ja-JP">日本語</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">显示翻译提示</span>
+                            <div class="toggle-switch active" data-setting="translation-tips"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessibility Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">♿</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">无障碍设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">字体大小</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-font="small">小</button>
+                            <button class="control-button active bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-font="normal">中</button>
+                            <button class="control-button bg-tactical-700 text-tactical-200 rounded-lg p-2 text-sm font-medium" data-font="large">大</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">色盲模式</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="none" selected>正常色彩</option>
+                            <option value="protanopia">红色盲</option>
+                            <option value="deuteranopia">绿色盲</option>
+                            <option value="tritanopia">蓝色盲</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">高对比度模式</span>
+                            <div class="toggle-switch" data-setting="high-contrast"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">减少动画效果</span>
+                            <div class="toggle-switch" data-setting="reduce-motion"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">屏幕阅读器支持</span>
+                            <div class="toggle-switch" data-setting="screen-reader"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network & Storage -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <!-- Network Settings -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">📶</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">网络设置</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Network Status -->
+                    <div class="bg-tactical-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-semibold text-tactical-200">网络状态</span>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-success-500 rounded-full network-status mr-2"></div>
+                                <span class="text-sm text-success-400">连接正常</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-tactical-400">延迟</span>
+                                <div class="font-mono text-cyber-400">23ms</div>
+                            </div>
+                            <div>
+                                <span class="text-tactical-400">服务器</span>
+                                <div class="font-mono text-cyber-400">华东-1</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-3">服务器选择</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="auto" selected>自动选择</option>
+                            <option value="east-1">华东-1 (23ms)</option>
+                            <option value="north-1">华北-1 (45ms)</option>
+                            <option value="south-1">华南-1 (67ms)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">数据节省模式</span>
+                            <div class="toggle-switch" data-setting="data-saver"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">仅WiFi下载</span>
+                            <div class="toggle-switch active" data-setting="wifi-only"></div>
+                        </div>
+                    </div>
+
+                    <button class="w-full py-3 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold">
+                        🔧 网络诊断
+                    </button>
+                </div>
+            </div>
+
+            <!-- Storage & Cache -->
+            <div class="setting-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-military-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-cyber-400 text-xl">💾</span>
+                    </div>
+                    <h2 class="text-xl font-semibold text-military-300">存储管理</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Storage Usage -->
+                    <div class="bg-tactical-700 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm font-semibold text-tactical-200">存储使用情况</span>
+                            <span class="text-sm text-tactical-400">2.3GB / 8GB</span>
+                        </div>
+                        <div class="storage-bar mb-3">
+                            <div class="storage-used" style="width: 28.75%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <span class="text-tactical-400">游戏文件</span>
+                                <div class="font-mono text-tactical-200">1.8GB</div>
+                            </div>
+                            <div>
+                                <span class="text-tactical-400">缓存数据</span>
+                                <div class="font-mono text-tactical-200">512MB</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cache Management -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-semibold text-tactical-200">图片缓存</div>
+                                <div class="text-xs text-tactical-400">256MB</div>
+                            </div>
+                            <button class="px-3 py-1 bg-tactical-700 hover:bg-tactical-600 text-tactical-300 rounded text-sm transition-colors">
+                                清理
+                            </button>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-semibold text-tactical-200">音频缓存</div>
+                                <div class="text-xs text-tactical-400">128MB</div>
+                            </div>
+                            <button class="px-3 py-1 bg-tactical-700 hover:bg-tactical-600 text-tactical-300 rounded text-sm transition-colors">
+                                清理
+                            </button>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-semibold text-tactical-200">临时文件</div>
+                                <div class="text-xs text-tactical-400">89MB</div>
+                            </div>
+                            <button class="px-3 py-1 bg-tactical-700 hover:bg-tactical-600 text-tactical-300 rounded text-sm transition-colors">
+                                清理
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="w-full py-3 bg-alert-600 hover:bg-alert-700 text-white rounded-lg transition-colors font-semibold">
+                        🗑️ 清理所有缓存
+                    </button>
+
+                    <div class="space-y-4 pt-4 border-t border-tactical-700">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-200">自动清理缓存</span>
+                            <div class="toggle-switch active" data-setting="auto-clean"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tactical-900/80 backdrop-blur-sm hidden">
+        <div class="bg-tactical-800 rounded-lg border border-alert-400/30 max-w-md w-full animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-alert-500/20 rounded-full flex items-center justify-center mr-3">
+                        <span class="text-alert-400 text-xl">⚠️</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-alert-400">重置设置</h3>
+                </div>
+
+                <p class="text-tactical-200 mb-6">
+                    您确定要重置所有设置到默认值吗？此操作无法撤销。
+                </p>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeResetModal()" class="px-4 py-2 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button onclick="confirmReset()" class="px-6 py-2 bg-alert-600 hover:bg-alert-700 text-white rounded-lg transition-colors font-semibold">
+                        确认重置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Settings object to store current values
+        const settings = {
+            audio: {
+                masterVolume: 80,
+                musicVolume: 60,
+                sfxVolume: 90,
+                voiceVolume: 70,
+                '3d-audio': true,
+                'ambient-sound': true,
+                'footstep-enhance': false
+            },
+            graphics: {
+                quality: 'medium',
+                fps: 60,
+                shadows: true,
+                particles: true,
+                antialiasing: false,
+                vsync: false
+            },
+            controls: {
+                touchSensitivity: 7,
+                moveSensitivity: 6,
+                layout: 'right',
+                buttonSize: 2,
+                vibration: true,
+                'auto-fire': false,
+                'auto-pickup': true
+            }
+        };
+
+        // Initialize settings
+        function initializeSettings() {
+            // Initialize sliders
+            const sliders = ['masterVolume', 'musicVolume', 'sfxVolume', 'voiceVolume', 'touchSensitivity', 'moveSensitivity', 'buttonSize'];
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider);
+                if (element) {
+                    element.addEventListener('input', (e) => {
+                        updateSliderValue(slider, e.target.value);
+                    });
+                }
+            });
+
+            // Initialize toggle switches
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    toggle.classList.toggle('active');
+                    markAsUnsaved();
+                });
+            });
+
+            // Initialize control buttons
+            document.querySelectorAll('.control-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const group = e.target.closest('.grid');
+                    group.querySelectorAll('.control-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    markAsUnsaved();
+                });
+            });
+        }
+
+        function updateSliderValue(sliderId, value) {
+            const valueElement = document.getElementById(sliderId + 'Value');
+            if (valueElement) {
+                switch (sliderId) {
+                    case 'masterVolume':
+                    case 'musicVolume':
+                    case 'sfxVolume':
+                    case 'voiceVolume':
+                        valueElement.textContent = value + '%';
+                        break;
+                    case 'touchSensitivity':
+                    case 'moveSensitivity':
+                        valueElement.textContent = value;
+                        break;
+                    case 'buttonSize':
+                        const sizes = ['小', '中', '大'];
+                        valueElement.textContent = sizes[value - 1];
+                        break;
+                }
+            }
+            markAsUnsaved();
+        }
+
+        function markAsUnsaved() {
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.textContent = '未保存';
+            saveStatus.className = 'text-xs text-alert-400';
+        }
+
+        function markAsSaved() {
+            const saveStatus = document.getElementById('saveStatus');
+            saveStatus.textContent = '已保存';
+            saveStatus.className = 'text-xs text-success-400';
+        }
+
+        // Save settings
+        function saveSettings() {
+            // Simulate saving to localStorage or server
+            localStorage.setItem('gti2d-settings', JSON.stringify(settings));
+
+            markAsSaved();
+
+            // Show temporary success message
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '已保存';
+            saveBtn.classList.remove('bg-success-600', 'hover:bg-success-700');
+            saveBtn.classList.add('bg-success-500');
+
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.classList.remove('bg-success-500');
+                saveBtn.classList.add('bg-success-600', 'hover:bg-success-700');
+            }, 2000);
+        }
+
+        // Reset settings
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function confirmReset() {
+            // Reset all settings to defaults
+            // This would reload the page or reset all form values
+            location.reload();
+        }
+
+        // Clear cache functions
+        function clearCache(type) {
+            console.log(`Clearing ${type} cache...`);
+            // Simulate cache clearing
+            setTimeout(() => {
+                alert(`${type} 缓存已清理`);
+            }, 500);
+        }
+
+        function clearAllCache() {
+            console.log('Clearing all cache...');
+            // Simulate clearing all cache
+            setTimeout(() => {
+                alert('所有缓存已清理完成');
+                // Update storage display
+                const storageUsed = document.querySelector('.storage-used');
+                storageUsed.style.width = '15%';
+            }, 1000);
+        }
+
+        // Network diagnostics
+        function runNetworkDiagnostics() {
+            console.log('Running network diagnostics...');
+            alert('网络诊断功能开发中...');
+        }
+
+        // Event listeners
+        document.getElementById('saveBtn').addEventListener('click', saveSettings);
+        document.getElementById('resetBtn').addEventListener('click', openResetModal);
+
+        // Close modal on background click
+        document.getElementById('resetModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeResetModal();
+            }
+        });
+
+        // Add event listeners for cache clearing
+        document.querySelectorAll('button').forEach(button => {
+            if (button.textContent.includes('清理') && !button.textContent.includes('清理所有')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const cacheType = e.target.closest('.flex').querySelector('.text-sm').textContent;
+                    clearCache(cacheType);
+                });
+            } else if (button.textContent.includes('清理所有缓存')) {
+                button.addEventListener('click', clearAllCache);
+            } else if (button.textContent.includes('网络诊断')) {
+                button.addEventListener('click', runNetworkDiagnostics);
+            }
+        });
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', initializeSettings);
+
+        // Auto-save functionality (optional)
+        let autoSaveTimer;
+        function scheduleAutoSave() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(saveSettings, 30000); // Auto-save after 30 seconds of inactivity
+        }
+
+        // Add auto-save to all interactive elements
+        document.addEventListener('input', scheduleAutoSave);
+        document.addEventListener('change', scheduleAutoSave);
+
+        console.log('Game Settings Loaded');
+    </script>
+</body>
+</html>

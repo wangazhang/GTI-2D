@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 游戏通知组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .notification-container {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+
+        .notification-container.top-right {
+            top: 20px;
+            right: 20px;
+        }
+
+        .notification-container.top-left {
+            top: 20px;
+            left: 20px;
+        }
+
+        .notification-container.bottom-right {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .notification-container.bottom-left {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .notification-container.center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Toast 通知 */
+        .notification-toast {
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.95), rgba(47, 79, 79, 0.9));
+            border: 2px solid rgba(0, 206, 209, 0.4);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            min-width: 300px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            pointer-events: all;
+            position: relative;
+            overflow: hidden;
+            animation: toast-slide-in 0.3s ease-out;
+        }
+
+        @keyframes toast-slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-toast.removing {
+            animation: toast-slide-out 0.3s ease-in;
+        }
+
+        @keyframes toast-slide-out {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        .notification-toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--notification-color, #00CED1), transparent, var(--notification-color, #00CED1));
+            animation: notification-scan 2s infinite;
+        }
+
+        @keyframes notification-scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 通知类型样式 */
+        .notification-kill { --notification-color: #FF6347; border-color: rgba(255, 99, 71, 0.6); }
+        .notification-achievement { --notification-color: #FFD700; border-color: rgba(255, 215, 0, 0.6); }
+        .notification-item { --notification-color: #228B22; border-color: rgba(34, 139, 34, 0.6); }
+        .notification-system { --notification-color: #00CED1; border-color: rgba(0, 206, 209, 0.6); }
+        .notification-warning { --notification-color: #FFA500; border-color: rgba(255, 165, 0, 0.6); }
+        .notification-error { --notification-color: #DC143C; border-color: rgba(220, 20, 60, 0.6); }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 206, 209, 0.2);
+            border: 1px solid var(--notification-color, #00CED1);
+            border-radius: 50%;
+            color: var(--notification-color, #00CED1);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            color: var(--notification-color, #00CED1);
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .notification-message {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* 浮动数字 */
+        .floating-number {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.2rem;
+            pointer-events: none;
+            z-index: 1001;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .floating-damage {
+            color: #FF6347;
+            animation: float-damage 1.5s ease-out forwards;
+        }
+
+        .floating-heal {
+            color: #228B22;
+            animation: float-heal 1.5s ease-out forwards;
+        }
+
+        .floating-critical {
+            color: #FFD700;
+            font-size: 1.5rem;
+            animation: float-critical 1.8s ease-out forwards;
+        }
+
+        .floating-xp {
+            color: #00CED1;
+            animation: float-xp 2s ease-out forwards;
+        }
+
+        @keyframes float-damage {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(-60px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0.8);
+            }
+        }
+
+        @keyframes float-heal {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.3);
+            }
+        }
+
+        @keyframes float-critical {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.8) rotate(-5deg);
+            }
+            30% {
+                transform: translateY(-20px) scale(1.3) rotate(5deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-120px) scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes float-xp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) translateX(-50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px) translateX(-50%) scale(1.1);
+            }
+        }
+
+        /* 进度条通知 */
+        .notification-progress {
+            margin-top: 8px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--notification-color, #00CED1), transparent);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* 系统消息 */
+        .system-message {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.95), rgba(47, 79, 79, 0.85));
+            border: 2px solid rgba(0, 206, 209, 0.6);
+            border-radius: 12px;
+            padding: 16px 24px;
+            color: #00CED1;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 1002;
+            animation: system-message-appear 0.5s ease-out;
+        }
+
+        @keyframes system-message-appear {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+
+        .system-message.removing {
+            animation: system-message-disappear 0.5s ease-in;
+        }
+
+        @keyframes system-message-disappear {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-30px) scale(0.9);
+            }
+        }
+
+        /* 击杀条 */
+        .kill-feed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            z-index: 999;
+        }
+
+        .kill-item {
+            background: linear-gradient(135deg, rgba(255, 99, 71, 0.9), rgba(255, 99, 71, 0.7));
+            border: 1px solid rgba(255, 99, 71, 0.8);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: white;
+            animation: kill-feed-slide 0.3s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes kill-feed-slide {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .kill-item.removing {
+            animation: kill-feed-out 0.3s ease-in;
+        }
+
+        @keyframes kill-feed-out {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        .kill-weapon {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* 队友状态通知 */
+        .teammate-status {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.9), rgba(47, 79, 79, 0.8));
+            border: 2px solid rgba(34, 139, 34, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 200px;
+            backdrop-filter: blur(8px);
+            z-index: 998;
+            animation: teammate-status-slide 0.4s ease-out;
+        }
+
+        @keyframes teammate-status-slide {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .teammate-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #228B22, #32CD32);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 成就解锁 */
+        .achievement-unlock {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.95), rgba(255, 165, 0, 0.9));
+            border: 3px solid #FFD700;
+            border-radius: 12px;
+            padding: 20px;
+            color: #000;
+            text-align: center;
+            z-index: 1003;
+            animation: achievement-appear 0.6s ease-out;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        @keyframes achievement-appear {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+        }
+
+        .achievement-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .achievement-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .achievement-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .notification-toast {
+                min-width: 280px;
+                max-width: calc(100vw - 40px);
+            }
+
+            .kill-feed {
+                width: calc(100vw - 40px);
+                right: 20px;
+            }
+
+            .system-message {
+                max-width: calc(100vw - 40px);
+                margin: 0 20px;
+            }
+        }
+
+        /* 自定义滚动条 */
+        .notification-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .notification-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .notification-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 206, 209, 0.5);
+            border-radius: 2px;
+        }
+
+        /* 振动效果 */
+        .notification-shake {
+            animation: notification-shake 0.5s ease-in-out;
+        }
+
+        @keyframes notification-shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">游戏通知组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用通知系统，支持多种通知类型和动画效果</p>
+        </div>
+
+        <!-- 通知类型演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">通知类型</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="showKillNotification()">击杀通知</button>
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="showItemNotification()">装备获得</button>
+                <button class="bg-yellow-600 text-white px-4 py-2 rounded" onclick="showAchievementNotification()">成就解锁</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="showSystemNotification()">系统消息</button>
+                <button class="bg-orange-600 text-white px-4 py-2 rounded" onclick="showWarningNotification()">警告提示</button>
+                <button class="bg-purple-600 text-white px-4 py-2 rounded" onclick="showTeammateNotification()">队友状态</button>
+            </div>
+        </div>
+
+        <!-- 浮动数字演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">浮动数字</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="showDamageNumber()">伤害数字</button>
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="showHealNumber()">治疗数字</button>
+                <button class="bg-yellow-600 text-white px-4 py-2 rounded" onclick="showCriticalNumber()">暴击数字</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="showXPNumber()">经验值</button>
+            </div>
+            <div id="floating-demo" class="relative mt-8 h-32 bg-tactical-700 rounded border-2 border-dashed border-tactical-500 flex items-center justify-center">
+                <span class="text-tactical-300">点击上方按钮查看浮动数字效果</span>
+            </div>
+        </div>
+
+        <!-- 击杀条演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">击杀条</h3>
+            <div class="flex flex-wrap gap-4">
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="addKillFeed('player', 'enemy')">玩家击杀</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="addKillFeed('teammate', 'enemy')">队友助攻</button>
+                <button class="bg-purple-600 text-white px-4 py-2 rounded" onclick="addKillFeed('player', 'player', true)">爆头击杀</button>
+                <button class="bg-tactical-600 text-white px-4 py-2 rounded" onclick="clearKillFeed()">清除击杀条</button>
+            </div>
+        </div>
+
+        <!-- 通知位置设置 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">通知位置设置</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <button class="bg-tactical-600 text-white px-3 py-2 rounded text-sm" onclick="setNotificationPosition('top-left')">左上角</button>
+                <button class="bg-tactical-600 text-white px-3 py-2 rounded text-sm" onclick="setNotificationPosition('top-right')">右上角</button>
+                <button class="bg-tactical-600 text-white px-3 py-2 rounded text-sm" onclick="setNotificationPosition('bottom-left')">左下角</button>
+                <button class="bg-tactical-600 text-white px-3 py-2 rounded text-sm" onclick="setNotificationPosition('bottom-right')">右下角</button>
+                <button class="bg-tactical-600 text-white px-3 py-2 rounded text-sm" onclick="setNotificationPosition('center')">居中</button>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建通知系统实例
+const notificationSystem = new NotificationSystem({
+    position: 'top-right',      // 通知位置
+    maxNotifications: 5,        // 最大显示数量
+    defaultDuration: 4000,      // 默认显示时间
+    enableSound: true,          // 启用音效
+    enableHaptic: true          // 启用震动
+});
+
+// 显示各种类型的通知
+notificationSystem.showKill('ShadowStrike', 'Enemy01', '🔫');
+notificationSystem.showItem('AK-47 突击步枪', 'rare', '🔫');
+notificationSystem.showAchievement('首次击杀', '获得你的第一个击杀', '🎯');
+notificationSystem.showSystem('游戏开始', '准备战斗！');
+notificationSystem.showWarning('血量过低', '注意寻找掩体');
+
+// 显示浮动数字
+notificationSystem.showFloatingNumber({
+    x: 500,
+    y: 300,
+    value: -45,
+    type: 'damage',
+    critical: false
+});
+
+notificationSystem.showFloatingNumber({
+    x: 400,
+    y: 250,
+    value: 25,
+    type: 'heal'
+});
+
+// 显示进度通知
+const progressNotification = notificationSystem.showProgress({
+    title: '匹配中',
+    message: '正在寻找玩家...',
+    progress: 0,
+    type: 'system'
+});
+
+// 更新进度
+progressNotification.updateProgress(75);
+
+// 监听通知事件
+notificationSystem.on('notificationShow', (notification) => {
+    console.log('显示通知:', notification);
+});
+
+notificationSystem.on('notificationClose', (notification) => {
+    console.log('关闭通知:', notification);
+});
+
+// 队友状态通知
+notificationSystem.showTeammateStatus({
+    name: 'PhoenixRising',
+    status: 'revived',
+    message: '队友已复活'
+});
+
+// 批量通知
+notificationSystem.showBatch([
+    { type: 'kill', killer: 'Player1', victim: 'Enemy1' },
+    { type: 'item', name: '医疗包', rarity: 'common' },
+    { type: 'system', message: '区域即将缩圈' }
+]);</code></pre>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">控制面板</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="showRandomNotifications()">随机通知</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="showProgressDemo()">进度演示</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="showBatchDemo()">批量通知</button>
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="clearAllNotifications()">清除全部</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">音效设置</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="enable-sound" checked class="form-checkbox text-cyber-500">
+                            <span class="text-tactical-300">启用音效</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="enable-haptic" checked class="form-checkbox text-cyber-500">
+                            <span class="text-tactical-300">启用振动</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">显示设置</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2">
+                            <span class="text-tactical-300 w-20">持续时间:</span>
+                            <input type="range" id="duration-slider" min="1000" max="10000" value="4000"
+                                   class="flex-1" onchange="updateDuration(this.value)">
+                            <span class="text-cyber-400 w-12" id="duration-text">4s</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <span class="text-tactical-300 w-20">最大数量:</span>
+                            <input type="range" id="max-notifications" min="1" max="10" value="5"
+                                   class="flex-1" onchange="updateMaxNotifications(this.value)">
+                            <span class="text-cyber-400 w-12" id="max-text">5</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification-container" class="notification-container top-right"></div>
+    <div id="kill-feed-container" class="kill-feed"></div>
+
+    <script>
+        /**
+         * NotificationSystem - 游戏通知系统
+         */
+        class NotificationSystem {
+            constructor(options = {}) {
+                this.config = {
+                    position: 'top-right',
+                    maxNotifications: 5,
+                    defaultDuration: 4000,
+                    enableSound: true,
+                    enableHaptic: true,
+                    enableFloatingNumbers: true,
+                    autoRemove: true,
+                    ...options
+                };
+
+                this.notifications = [];
+                this.floatingNumbers = [];
+                this.killFeed = [];
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createContainers();
+                this.bindEvents();
+            }
+
+            createContainers() {
+                // 主通知容器
+                this.container = document.getElementById('notification-container');
+                if (!this.container) {
+                    this.container = document.createElement('div');
+                    this.container.id = 'notification-container';
+                    this.container.className = `notification-container ${this.config.position}`;
+                    document.body.appendChild(this.container);
+                }
+
+                // 击杀条容器
+                this.killFeedContainer = document.getElementById('kill-feed-container');
+                if (!this.killFeedContainer) {
+                    this.killFeedContainer = document.createElement('div');
+                    this.killFeedContainer.id = 'kill-feed-container';
+                    this.killFeedContainer.className = 'kill-feed';
+                    document.body.appendChild(this.killFeedContainer);
+                }
+            }
+
+            bindEvents() {
+                // 处理通知点击关闭
+                this.container.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('notification-close')) {
+                        const notification = e.target.closest('.notification-toast');
+                        if (notification) {
+                            this.removeNotification(notification);
+                        }
+                    }
+                });
+            }
+
+            // 显示Toast通知
+            showToast(options = {}) {
+                const {
+                    type = 'system',
+                    title = '',
+                    message = '',
+                    icon = '📢',
+                    duration = this.config.defaultDuration,
+                    closable = true,
+                    progress = null
+                } = options;
+
+                const notification = document.createElement('div');
+                notification.className = `notification-toast notification-${type}`;
+                notification.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="notification-icon">${icon}</div>
+                        <div class="notification-content">
+                            ${title ? `<div class="notification-title">${title}</div>` : ''}
+                            <div class="notification-message">${message}</div>
+                            ${progress !== null ? `
+                                <div class="notification-progress">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${closable ? '<div class="notification-close">×</div>' : ''}
+                    </div>
+                `;
+
+                this.addNotification(notification, duration);
+
+                // 音效和振动
+                this.playNotificationEffects(type);
+
+                this.emit('notificationShow', { type, title, message });
+
+                return {
+                    element: notification,
+                    updateProgress: (progress) => {
+                        const progressFill = notification.querySelector('.progress-fill');
+                        if (progressFill) {
+                            progressFill.style.width = progress + '%';
+                        }
+                    },
+                    close: () => this.removeNotification(notification)
+                };
+            }
+
+            // 显示击杀通知
+            showKill(killer, victim, weapon = '🔫', isHeadshot = false) {
+                const message = isHeadshot ? `爆头击杀` : `击杀了`;
+                return this.showToast({
+                    type: 'kill',
+                    icon: weapon,
+                    title: '击杀',
+                    message: `${killer} ${message} ${victim}`,
+                    duration: 3000
+                });
+            }
+
+            // 显示装备获得通知
+            showItem(itemName, rarity = 'common', icon = '📦') {
+                const rarityText = {
+                    'common': '普通',
+                    'uncommon': '精良',
+                    'rare': '稀有',
+                    'epic': '史诗',
+                    'legendary': '传说'
+                };
+
+                return this.showToast({
+                    type: 'item',
+                    icon: icon,
+                    title: '装备获得',
+                    message: `${rarityText[rarity]} ${itemName}`,
+                    duration: 4000
+                });
+            }
+
+            // 显示成就解锁
+            showAchievement(title, description, icon = '🏆') {
+                // 显示大型成就弹窗
+                const achievement = document.createElement('div');
+                achievement.className = 'achievement-unlock';
+                achievement.innerHTML = `
+                    <div class="achievement-icon">${icon}</div>
+                    <div class="achievement-title">成就解锁</div>
+                    <div class="achievement-title">${title}</div>
+                    <div class="achievement-description">${description}</div>
+                `;
+
+                document.body.appendChild(achievement);
+
+                setTimeout(() => {
+                    achievement.classList.add('removing');
+                    setTimeout(() => {
+                        document.body.removeChild(achievement);
+                    }, 500);
+                }, 3000);
+
+                this.playNotificationEffects('achievement');
+                this.emit('achievementUnlock', { title, description });
+
+                return achievement;
+            }
+
+            // 显示系统消息
+            showSystem(message, duration = 3000) {
+                const systemMessage = document.createElement('div');
+                systemMessage.className = 'system-message';
+                systemMessage.textContent = message;
+
+                document.body.appendChild(systemMessage);
+
+                setTimeout(() => {
+                    systemMessage.classList.add('removing');
+                    setTimeout(() => {
+                        document.body.removeChild(systemMessage);
+                    }, 500);
+                }, duration);
+
+                this.playNotificationEffects('system');
+                return systemMessage;
+            }
+
+            // 显示警告通知
+            showWarning(title, message, shake = false) {
+                const notification = this.showToast({
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: title,
+                    message: message,
+                    duration: 5000
+                });
+
+                if (shake && this.config.enableHaptic) {
+                    notification.element.classList.add('notification-shake');
+                    if (navigator.vibrate) {
+                        navigator.vibrate([100, 50, 100]);
+                    }
+                }
+
+                return notification;
+            }
+
+            // 显示队友状态
+            showTeammateStatus(options = {}) {
+                const {
+                    name = '队友',
+                    status = 'info',
+                    message = '',
+                    avatar = '👤'
+                } = options;
+
+                const teammateStatus = document.createElement('div');
+                teammateStatus.className = 'teammate-status';
+                teammateStatus.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="teammate-avatar">${avatar}</div>
+                        <div>
+                            <div class="font-bold text-success-400">${name}</div>
+                            <div class="text-sm text-tactical-300">${message}</div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(teammateStatus);
+
+                setTimeout(() => {
+                    teammateStatus.style.animation = 'teammate-status-slide 0.3s ease-in reverse';
+                    setTimeout(() => {
+                        document.body.removeChild(teammateStatus);
+                    }, 300);
+                }, 4000);
+
+                return teammateStatus;
+            }
+
+            // 显示浮动数字
+            showFloatingNumber(options = {}) {
+                const {
+                    x = 0,
+                    y = 0,
+                    value = 0,
+                    type = 'damage',
+                    critical = false
+                } = options;
+
+                const floatingNumber = document.createElement('div');
+                floatingNumber.className = `floating-number floating-${critical ? 'critical' : type}`;
+                floatingNumber.textContent = value > 0 ? `+${value}` : value;
+                floatingNumber.style.left = x + 'px';
+                floatingNumber.style.top = y + 'px';
+
+                document.body.appendChild(floatingNumber);
+                this.floatingNumbers.push(floatingNumber);
+
+                const duration = critical ? 1800 : type === 'xp' ? 2000 : 1500;
+                setTimeout(() => {
+                    document.body.removeChild(floatingNumber);
+                    this.floatingNumbers = this.floatingNumbers.filter(num => num !== floatingNumber);
+                }, duration);
+
+                return floatingNumber;
+            }
+
+            // 添加击杀条目
+            addKillFeed(killer, victim, weapon = '🔫', isHeadshot = false) {
+                const killItem = document.createElement('div');
+                killItem.className = 'kill-item';
+                killItem.innerHTML = `
+                    <span class="font-bold text-cyber-400">${killer}</span>
+                    <div class="kill-weapon">${weapon}</div>
+                    ${isHeadshot ? '<span class="text-yellow-400">💀</span>' : ''}
+                    <span class="font-bold text-alert-300">${victim}</span>
+                `;
+
+                this.killFeedContainer.appendChild(killItem);
+                this.killFeed.push(killItem);
+
+                // 限制击杀条数量
+                if (this.killFeed.length > 5) {
+                    const oldItem = this.killFeed.shift();
+                    this.removeKillFeedItem(oldItem);
+                }
+
+                // 自动移除
+                setTimeout(() => {
+                    this.removeKillFeedItem(killItem);
+                }, 8000);
+            }
+
+            removeKillFeedItem(item) {
+                if (item && item.parentNode) {
+                    item.classList.add('removing');
+                    setTimeout(() => {
+                        if (item.parentNode) {
+                            item.parentNode.removeChild(item);
+                        }
+                        this.killFeed = this.killFeed.filter(feedItem => feedItem !== item);
+                    }, 300);
+                }
+            }
+
+            addNotification(notification, duration) {
+                this.container.appendChild(notification);
+                this.notifications.push(notification);
+
+                // 限制通知数量
+                if (this.notifications.length > this.config.maxNotifications) {
+                    const oldNotification = this.notifications.shift();
+                    this.removeNotification(oldNotification);
+                }
+
+                // 自动移除
+                if (this.config.autoRemove && duration > 0) {
+                    setTimeout(() => {
+                        this.removeNotification(notification);
+                    }, duration);
+                }
+            }
+
+            removeNotification(notification) {
+                if (notification && notification.parentNode) {
+                    notification.classList.add('removing');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                        this.notifications = this.notifications.filter(notif => notif !== notification);
+                    }, 300);
+
+                    this.emit('notificationClose', notification);
+                }
+            }
+
+            playNotificationEffects(type) {
+                // 音效
+                if (this.config.enableSound) {
+                    // 这里可以播放不同类型的音效
+                    // audioManager.play(`notification_${type}.wav`);
+                }
+
+                // 振动
+                if (this.config.enableHaptic && navigator.vibrate) {
+                    const vibrationPatterns = {
+                        kill: [100],
+                        achievement: [100, 50, 100, 50, 100],
+                        item: [50],
+                        system: [30],
+                        warning: [200],
+                        error: [300]
+                    };
+
+                    navigator.vibrate(vibrationPatterns[type] || [50]);
+                }
+            }
+
+            // 批量显示通知
+            showBatch(notifications, delay = 500) {
+                notifications.forEach((notif, index) => {
+                    setTimeout(() => {
+                        switch (notif.type) {
+                            case 'kill':
+                                this.showKill(notif.killer, notif.victim, notif.weapon, notif.isHeadshot);
+                                break;
+                            case 'item':
+                                this.showItem(notif.name, notif.rarity, notif.icon);
+                                break;
+                            case 'achievement':
+                                this.showAchievement(notif.title, notif.description, notif.icon);
+                                break;
+                            case 'system':
+                                this.showSystem(notif.message, notif.duration);
+                                break;
+                            case 'warning':
+                                this.showWarning(notif.title, notif.message, notif.shake);
+                                break;
+                            default:
+                                this.showToast(notif);
+                                break;
+                        }
+                    }, index * delay);
+                });
+            }
+
+            // 清除所有通知
+            clearAll() {
+                this.notifications.forEach(notification => {
+                    this.removeNotification(notification);
+                });
+
+                this.killFeed.forEach(item => {
+                    this.removeKillFeedItem(item);
+                });
+
+                this.floatingNumbers.forEach(number => {
+                    if (number.parentNode) {
+                        number.parentNode.removeChild(number);
+                    }
+                });
+                this.floatingNumbers = [];
+            }
+
+            // 设置位置
+            setPosition(position) {
+                this.config.position = position;
+                this.container.className = `notification-container ${position}`;
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        // 全局通知系统实例
+        let notificationSystem;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            notificationSystem = new NotificationSystem();
+
+            // 绑定事件监听
+            notificationSystem.on('notificationShow', (notification) => {
+                console.log('显示通知:', notification);
+            });
+
+            notificationSystem.on('achievementUnlock', (achievement) => {
+                console.log('成就解锁:', achievement);
+            });
+        });
+
+        // 演示函数
+        function showKillNotification() {
+            const killers = ['ShadowStrike', 'PhoenixRising', 'IceStorm', 'NightHawk'];
+            const victims = ['Enemy01', 'Enemy02', 'Enemy03', 'Sniper99'];
+            const weapons = ['🔫', '🏹', '💣', '🗡️', '⚡'];
+
+            const killer = killers[Math.floor(Math.random() * killers.length)];
+            const victim = victims[Math.floor(Math.random() * victims.length)];
+            const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+            const isHeadshot = Math.random() < 0.3;
+
+            notificationSystem.showKill(killer, victim, weapon, isHeadshot);
+        }
+
+        function showItemNotification() {
+            const items = [
+                { name: 'AK-47 突击步枪', rarity: 'rare', icon: '🔫' },
+                { name: '战术护甲', rarity: 'epic', icon: '🛡️' },
+                { name: '医疗包', rarity: 'common', icon: '💊' },
+                { name: '狙击镜', rarity: 'uncommon', icon: '🔭' },
+                { name: '传说之刃', rarity: 'legendary', icon: '⚔️' }
+            ];
+
+            const item = items[Math.floor(Math.random() * items.length)];
+            notificationSystem.showItem(item.name, item.rarity, item.icon);
+        }
+
+        function showAchievementNotification() {
+            const achievements = [
+                { title: '首次击杀', description: '获得你的第一个击杀', icon: '🎯' },
+                { title: '神枪手', description: '连续10次爆头击杀', icon: '🏹' },
+                { title: '生存专家', description: '在一局游戏中存活20分钟', icon: '⏰' },
+                { title: '团队合作', description: '协助队友完成任务', icon: '🤝' },
+                { title: '装备收集者', description: '收集50件稀有装备', icon: '📦' }
+            ];
+
+            const achievement = achievements[Math.floor(Math.random() * achievements.length)];
+            notificationSystem.showAchievement(achievement.title, achievement.description, achievement.icon);
+        }
+
+        function showSystemNotification() {
+            const messages = [
+                '游戏即将开始，请做好准备',
+                '安全区域即将缩小',
+                '补给箱已投放到地图',
+                '警告：敌人接近',
+                '队友请求支援'
+            ];
+
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            notificationSystem.showSystem(message);
+        }
+
+        function showWarningNotification() {
+            const warnings = [
+                { title: '生命值过低', message: '请尽快寻找医疗用品' },
+                { title: '弹药不足', message: '当前弹药量过低' },
+                { title: '装备耐久度', message: '装备即将损坏' },
+                { title: '网络延迟', message: '检测到网络不稳定' }
+            ];
+
+            const warning = warnings[Math.floor(Math.random() * warnings.length)];
+            notificationSystem.showWarning(warning.title, warning.message, true);
+        }
+
+        function showTeammateNotification() {
+            const teammates = [
+                { name: 'PhoenixRising', status: 'revived', message: '队友已复活', avatar: '🔥' },
+                { name: 'IceStorm', status: 'downed', message: '队友需要救援', avatar: '❄️' },
+                { name: 'NightHawk', status: 'heal', message: '队友正在治疗', avatar: '🦅' },
+                { name: 'ShadowStrike', status: 'kill', message: '队友击杀敌人', avatar: '⚡' }
+            ];
+
+            const teammate = teammates[Math.floor(Math.random() * teammates.length)];
+            notificationSystem.showTeammateStatus(teammate);
+        }
+
+        function showDamageNumber() {
+            const demoArea = document.getElementById('floating-demo');
+            const rect = demoArea.getBoundingClientRect();
+            const x = rect.left + Math.random() * rect.width;
+            const y = rect.top + Math.random() * rect.height;
+            const damage = Math.floor(Math.random() * 100) + 10;
+
+            notificationSystem.showFloatingNumber({
+                x: x,
+                y: y,
+                value: -damage,
+                type: 'damage'
+            });
+        }
+
+        function showHealNumber() {
+            const demoArea = document.getElementById('floating-demo');
+            const rect = demoArea.getBoundingClientRect();
+            const x = rect.left + Math.random() * rect.width;
+            const y = rect.top + Math.random() * rect.height;
+            const heal = Math.floor(Math.random() * 50) + 10;
+
+            notificationSystem.showFloatingNumber({
+                x: x,
+                y: y,
+                value: heal,
+                type: 'heal'
+            });
+        }
+
+        function showCriticalNumber() {
+            const demoArea = document.getElementById('floating-demo');
+            const rect = demoArea.getBoundingClientRect();
+            const x = rect.left + Math.random() * rect.width;
+            const y = rect.top + Math.random() * rect.height;
+            const damage = Math.floor(Math.random() * 200) + 100;
+
+            notificationSystem.showFloatingNumber({
+                x: x,
+                y: y,
+                value: -damage,
+                type: 'damage',
+                critical: true
+            });
+        }
+
+        function showXPNumber() {
+            const demoArea = document.getElementById('floating-demo');
+            const rect = demoArea.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const xp = Math.floor(Math.random() * 500) + 50;
+
+            notificationSystem.showFloatingNumber({
+                x: x,
+                y: y,
+                value: xp,
+                type: 'xp'
+            });
+        }
+
+        function addKillFeed(killer, victim, isHeadshot = false) {
+            const weapons = ['🔫', '🏹', '💣', '🗡️'];
+            const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+
+            if (killer === 'player') killer = 'ShadowStrike';
+            if (killer === 'teammate') killer = 'PhoenixRising';
+            if (victim === 'enemy') victim = 'Enemy0' + Math.floor(Math.random() * 9 + 1);
+            if (victim === 'player') victim = 'IceStorm';
+
+            notificationSystem.addKillFeed(killer, victim, weapon, isHeadshot);
+        }
+
+        function clearKillFeed() {
+            notificationSystem.killFeed.forEach(item => {
+                notificationSystem.removeKillFeedItem(item);
+            });
+        }
+
+        function setNotificationPosition(position) {
+            notificationSystem.setPosition(position);
+        }
+
+        function showRandomNotifications() {
+            const types = ['kill', 'item', 'system', 'warning'];
+            const count = Math.floor(Math.random() * 3) + 2;
+
+            for (let i = 0; i < count; i++) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                setTimeout(() => {
+                    switch (type) {
+                        case 'kill': showKillNotification(); break;
+                        case 'item': showItemNotification(); break;
+                        case 'system': showSystemNotification(); break;
+                        case 'warning': showWarningNotification(); break;
+                    }
+                }, i * 800);
+            }
+        }
+
+        function showProgressDemo() {
+            const progressNotification = notificationSystem.showToast({
+                type: 'system',
+                icon: '⏳',
+                title: '匹配中',
+                message: '正在寻找玩家...',
+                progress: 0,
+                duration: 0,
+                closable: false
+            });
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progressNotification.close();
+                        notificationSystem.showSystem('匹配成功！准备进入游戏');
+                    }, 500);
+                }
+                progressNotification.updateProgress(progress);
+            }, 300);
+        }
+
+        function showBatchDemo() {
+            const batch = [
+                { type: 'kill', killer: 'ShadowStrike', victim: 'Enemy01', weapon: '🔫' },
+                { type: 'item', name: '稀有护甲', rarity: 'rare', icon: '🛡️' },
+                { type: 'system', message: '区域即将缩圈，请注意安全！' },
+                { type: 'achievement', title: '连环杀手', description: '短时间内击杀多个敌人', icon: '💀' }
+            ];
+
+            notificationSystem.showBatch(batch, 600);
+        }
+
+        function clearAllNotifications() {
+            notificationSystem.clearAll();
+        }
+
+        function updateDuration(value) {
+            notificationSystem.config.defaultDuration = parseInt(value);
+            document.getElementById('duration-text').textContent = Math.round(value / 1000) + 's';
+        }
+
+        function updateMaxNotifications(value) {
+            notificationSystem.config.maxNotifications = parseInt(value);
+            document.getElementById('max-text').textContent = value;
+        }
+    </script>
+</body>
+</html>

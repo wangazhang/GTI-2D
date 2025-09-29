@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 战术对抗游戏 - 项目导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-tactical-900 via-military-900 to-tactical-800 font-military text-white overflow-x-hidden">
+    <!-- 动态背景效果 -->
+    <div class="fixed inset-0 opacity-10">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1920')] bg-cover bg-center bg-fixed opacity-30"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-military-900/80 via-transparent to-cyber-900/30"></div>
+    </div>
+
+    <!-- 顶部导航条 -->
+    <nav class="relative z-50 border-b border-military-600/30 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cyber-400 to-military-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">GTI</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">GTI-2D 战术对抗游戏</h1>
+                        <p class="text-sm text-tactical-300">项目导航中心</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2 text-sm">
+                        <span class="text-success-400">●</span>
+                        <span class="text-tactical-300">系统就绪</span>
+                    </div>
+                    <div class="px-3 py-1 bg-military-700/50 rounded-full text-xs font-mono">
+                        v1.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="relative z-10 container mx-auto px-4 py-8">
+        <!-- 项目介绍卡片 -->
+        <div class="mb-12">
+            <div class="bg-gradient-to-r from-military-800/40 to-tactical-800/40 rounded-2xl border border-military-600/30 backdrop-blur-sm p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyber-400 to-military-300 bg-clip-text text-transparent">
+                        GTI-2D
+                    </h2>
+                    <p class="text-xl text-tactical-200 mb-2">多人实时战术对抗游戏</p>
+                    <p class="text-tactical-400 max-w-2xl mx-auto">
+                        基于现代军事战术的2D多人对抗游戏，支持9人同时游戏（3队，每队3人），
+                        融合策略部署、团队协作和实时对抗元素。
+                    </p>
+                </div>
+
+                <!-- 特性展示 -->
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyber-500 to-cyber-600 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-cyber-300 mb-2">多人协作</h3>
+                        <p class="text-sm text-tactical-400">9人同时在线，3队对抗，团队协作制胜</p>
+                    </div>
+
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-military-500 to-military-600 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-military-300 mb-2">战术策略</h3>
+                        <p class="text-sm text-tactical-400">基于真实军事战术，策略为王</p>
+                    </div>
+
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-success-500 to-success-600 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-success-300 mb-2">实时对抗</h3>
+                        <p class="text-sm text-tactical-400">毫秒级响应，紧张刺激的实时战斗</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航菜单 -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <!-- 游戏页面 -->
+            <div class="group">
+                <h3 class="text-xl font-bold mb-4 text-cyber-300 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-9-4V8a3 3 0 016 0v2M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    游戏页面
+                </h3>
+                <div class="space-y-3">
+                    <a href="pages/menu/main-menu.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-cyber-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">游戏主菜单</h4>
+                                <p class="text-sm text-tactical-400">游戏入口，快速匹配和房间管理</p>
+                            </div>
+                            <svg class="w-5 h-5 text-cyber-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+
+                    <a href="pages/menu/matchmaking.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-cyber-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">匹配界面</h4>
+                                <p class="text-sm text-tactical-400">寻找对手，组建队伍</p>
+                            </div>
+                            <svg class="w-5 h-5 text-cyber-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+
+                    <a href="pages/menu/lobby.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-cyber-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">房间大厅</h4>
+                                <p class="text-sm text-tactical-400">游戏准备，装备配置</p>
+                            </div>
+                            <svg class="w-5 h-5 text-cyber-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 设计系统 -->
+            <div class="group">
+                <h3 class="text-xl font-bold mb-4 text-military-300 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+                    </svg>
+                    设计系统
+                </h3>
+                <div class="space-y-3">
+                    <a href="design-system/design-guide.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-military-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">设计指南</h4>
+                                <p class="text-sm text-tactical-400">设计原则和风格指导</p>
+                            </div>
+                            <svg class="w-5 h-5 text-military-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+
+                    <a href="design-system/colors.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-military-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">色彩系统</h4>
+                                <p class="text-sm text-tactical-400">军事战术色彩方案</p>
+                            </div>
+                            <svg class="w-5 h-5 text-military-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+
+                    <a href="design-system/components.html" class="block p-4 bg-gradient-to-r from-military-800/30 to-tactical-700/30 rounded-xl border border-military-600/20 hover:border-military-400/40 transition-all duration-300 group-hover:transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">组件库</h4>
+                                <p class="text-sm text-tactical-400">可复用UI组件集合</p>
+                            </div>
+                            <svg class="w-5 h-5 text-military-400 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 技术文档 -->
+            <div class="group md:col-span-2 lg:col-span-1">
+                <h3 class="text-xl font-bold mb-4 text-success-300 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    技术规范
+                </h3>
+                <div class="space-y-3">
+                    <div class="p-4 bg-gradient-to-r from-success-900/30 to-tactical-700/30 rounded-xl border border-success-600/20">
+                        <h4 class="font-semibold text-white mb-2">技术栈</h4>
+                        <div class="space-y-1 text-sm text-tactical-400">
+                            <p>• HTML5 + Tailwind CSS</p>
+                            <p>• 原生JavaScript</p>
+                            <p>• 移动端优先设计</p>
+                            <p>• 响应式布局</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-gradient-to-r from-success-900/30 to-tactical-700/30 rounded-xl border border-success-600/20">
+                        <h4 class="font-semibold text-white mb-2">特性支持</h4>
+                        <div class="space-y-1 text-sm text-tactical-400">
+                            <p>• 触摸优化交互</p>
+                            <p>• 无障碍支持</p>
+                            <p>• 快速加载优化</p>
+                            <p>• 跨设备兼容</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="bg-gradient-to-r from-tactical-800/40 to-military-800/40 rounded-2xl border border-tactical-600/30 backdrop-blur-sm p-8">
+            <h3 class="text-2xl font-bold mb-6 text-center text-cyber-300">快速开始</h3>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-white">游戏体验流程</h4>
+                    <ol class="space-y-2 text-tactical-300">
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-cyber-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">1</span>
+                            <span>访问游戏主菜单，查看整体界面设计</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-cyber-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">2</span>
+                            <span>体验匹配系统，了解队伍组建流程</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-cyber-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">3</span>
+                            <span>进入房间大厅，查看团队协作界面</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-cyber-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">4</span>
+                            <span>所有页面支持移动端触摸操作</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 text-white">设计系统参考</h4>
+                    <ol class="space-y-2 text-tactical-300">
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-military-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">1</span>
+                            <span>查看设计指南，了解视觉风格理念</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-military-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">2</span>
+                            <span>参考色彩系统，使用统一配色方案</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-military-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">3</span>
+                            <span>使用组件库，保持界面一致性</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-military-500 text-white text-sm font-bold rounded-full mr-3 mt-0.5">4</span>
+                            <span>遵循军事战术风格设计原则</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部信息 -->
+    <footer class="relative z-10 border-t border-military-600/30 mt-16">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center text-sm text-tactical-400">
+                <div class="mb-2 md:mb-0">
+                    <span>GTI-2D 战术对抗游戏 © 2024</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span>基于现代军事战术设计</span>
+                    <span class="text-success-400">●</span>
+                    <span>移动端优先</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

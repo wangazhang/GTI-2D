@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - GTI-2D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4', 100: '#e9ebe4', 200: '#d4d7ca', 300: '#b6bca7',
+                            400: '#95a082', 500: '#7a8564', 600: '#616b4f', 700: '#556B2F',
+                            800: '#485a28', 900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff', 100: '#ccf7fe', 200: '#9aeffd', 300: '#58e1fa',
+                            400: '#00CED1', 500: '#00b4b8', 600: '#039094', 700: '#0a7377',
+                            800: '#115e61', 900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2', 100: '#fdeee4', 200: '#fadac4', 300: '#f6bf99',
+                            400: '#f1976c', 500: '#FF6347', 600: '#dd4e2f', 700: '#b63e25',
+                            800: '#943525', 900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#228B22', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#2F4F4F',
+                            800: '#1e293b', 900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'level-up': 'levelUp 1s ease-out',
+                        'exp-fill': 'expFill 2s ease-out',
+                        'skill-pulse': 'skillPulse 1.5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(0, 206, 209, 0.8)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        levelUp: {
+                            '0%': { transform: 'scale(1)', color: '#cbd5e1' },
+                            '50%': { transform: 'scale(1.2)', color: '#ffd700' },
+                            '100%': { transform: 'scale(1)', color: '#00CED1' }
+                        },
+                        expFill: {
+                            '0%': { width: '0%' },
+                            '100%': { width: 'var(--exp-width)' }
+                        },
+                        skillPulse: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+                            '50%': { transform: 'scale(1.05)', opacity: '0.8' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .profile-card {
+            transition: all 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.1);
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            font-weight: bold;
+            text-shadow: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .exp-bar {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #475569;
+        }
+
+        .exp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00CED1, #58e1fa);
+            border-radius: 12px;
+            position: relative;
+            transition: width 2s ease-out;
+        }
+
+        .exp-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .skill-tree {
+            position: relative;
+        }
+
+        .skill-node {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skill-node.unlocked {
+            background: linear-gradient(135deg, #00CED1, #0a7377);
+            border: 3px solid #58e1fa;
+            box-shadow: 0 0 15px rgba(0, 206, 209, 0.6);
+        }
+
+        .skill-node.locked {
+            background: #475569;
+            border: 3px solid #64748b;
+            opacity: 0.6;
+        }
+
+        .skill-node.available {
+            background: linear-gradient(135deg, #556B2F, #7a8564);
+            border: 3px solid #95a082;
+            animation: skill-pulse 1.5s ease-in-out infinite;
+        }
+
+        .skill-node:hover {
+            transform: scale(1.1);
+        }
+
+        .achievement-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .achievement-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.1), rgba(85, 107, 47, 0.1));
+            border: 1px solid rgba(0, 206, 209, 0.3);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+        }
+
+        .avatar-frame {
+            position: relative;
+            border: 4px solid #00CED1;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #556B2F, #00CED1);
+            padding: 4px;
+        }
+
+        .avatar-frame::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00CED1, #556B2F, #00CED1);
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .rank-emblem {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #0f172a;
+        }
+
+        .rank-bronze { background: linear-gradient(135deg, #cd7f32, #d97706); color: white; }
+        .rank-silver { background: linear-gradient(135deg, #c0c0c0, #e5e7eb); color: #000; }
+        .rank-gold { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #000; }
+        .rank-platinum { background: linear-gradient(135deg, #e5e7eb, #a1a1aa); color: #000; }
+        .rank-diamond { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button onclick="history.back()" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">个人资料</h1>
+                        <p class="text-xs text-tactical-400">Player Profile</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="shareProfileBtn" class="px-4 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg transition-colors font-semibold text-sm">
+                        🔗 分享资料
+                    </button>
+                    <button id="editProfileBtn" class="px-4 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                        ✏️ 编辑资料
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Profile Header -->
+        <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6 mb-6">
+            <div class="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <!-- Avatar Section -->
+                <div class="flex flex-col items-center">
+                    <div class="avatar-frame relative">
+                        <div class="w-32 h-32 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center text-4xl font-bold text-white">
+                            战
+                        </div>
+                        <div class="rank-emblem rank-gold">🏆</div>
+                    </div>
+                    <div class="level-badge px-4 py-2 rounded-full text-lg mt-4">
+                        等级 25
+                    </div>
+                </div>
+
+                <!-- Basic Info -->
+                <div class="flex-1 text-center lg:text-left">
+                    <div class="mb-4">
+                        <h2 class="text-3xl font-bold text-tactical-100 mb-2">战术大师</h2>
+                        <p class="text-tactical-400 mb-2">ID: GTI2024001</p>
+                        <div class="flex items-center justify-center lg:justify-start space-x-4 text-sm">
+                            <span class="flex items-center">
+                                <span class="w-2 h-2 bg-success-500 rounded-full mr-2"></span>
+                                在线
+                            </span>
+                            <span class="text-tactical-400">最后在线: 刚刚</span>
+                            <span class="text-tactical-400">注册时间: 2024-01-15</span>
+                        </div>
+                    </div>
+
+                    <!-- Experience Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">经验值</span>
+                            <span class="text-sm font-mono text-cyber-400">12,450 / 15,000</span>
+                        </div>
+                        <div class="exp-bar h-6">
+                            <div class="exp-fill" style="width: 83%"></div>
+                        </div>
+                        <div class="text-xs text-tactical-400 mt-1">距离下一级还需 2,550 经验值</div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="stat-card p-4 rounded-lg text-center">
+                            <div class="text-2xl font-mono font-bold text-success-400">1,247</div>
+                            <div class="text-xs text-tactical-400 uppercase">击杀数</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-lg text-center">
+                            <div class="text-2xl font-mono font-bold text-cyber-400">78.5%</div>
+                            <div class="text-xs text-tactical-400 uppercase">胜率</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-lg text-center">
+                            <div class="text-2xl font-mono font-bold text-military-400">142</div>
+                            <div class="text-xs text-tactical-400 uppercase">排名</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-lg text-center">
+                            <div class="text-2xl font-mono font-bold text-alert-400">48h</div>
+                            <div class="text-xs text-tactical-400 uppercase">游戏时长</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column - Skills & Stats -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Skill Tree -->
+                <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-military-300">技能树</h3>
+                        <div class="text-sm text-tactical-400">
+                            可用技能点: <span class="text-cyber-400 font-mono">3</span>
+                        </div>
+                    </div>
+
+                    <div class="skill-tree">
+                        <div class="grid grid-cols-5 gap-6 mb-8">
+                            <!-- Combat Skills Row -->
+                            <div class="col-span-5 text-center mb-4">
+                                <h4 class="text-lg font-semibold text-alert-400">战斗技能</h4>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node unlocked" data-skill="weapon-mastery">
+                                    <span class="text-2xl">🔫</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>武器精通</div>
+                                    <div class="text-cyber-400">MAX</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node unlocked" data-skill="rapid-fire">
+                                    <span class="text-2xl">⚡</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>快速射击</div>
+                                    <div class="text-cyber-400">3/5</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node available" data-skill="critical-hit">
+                                    <span class="text-2xl">💥</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>暴击强化</div>
+                                    <div class="text-yellow-400">可升级</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node locked" data-skill="explosive">
+                                    <span class="text-2xl">💣</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-500">
+                                    <div>爆炸专家</div>
+                                    <div>已锁定</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node locked" data-skill="ultimate">
+                                    <span class="text-2xl">🌟</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-500">
+                                    <div>终极技能</div>
+                                    <div>已锁定</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-5 gap-6">
+                            <!-- Survival Skills Row -->
+                            <div class="col-span-5 text-center mb-4">
+                                <h4 class="text-lg font-semibold text-success-400">生存技能</h4>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node unlocked" data-skill="health-boost">
+                                    <span class="text-2xl">❤️</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>生命强化</div>
+                                    <div class="text-cyber-400">2/3</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node unlocked" data-skill="armor">
+                                    <span class="text-2xl">🛡️</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>护甲精通</div>
+                                    <div class="text-cyber-400">MAX</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node available" data-skill="stealth">
+                                    <span class="text-2xl">👤</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-300">
+                                    <div>隐身术</div>
+                                    <div class="text-yellow-400">可升级</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node locked" data-skill="heal">
+                                    <span class="text-2xl">💊</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-500">
+                                    <div>医疗专精</div>
+                                    <div>已锁定</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="skill-node locked" data-skill="resurrection">
+                                    <span class="text-2xl">🔄</span>
+                                </div>
+                                <div class="text-xs text-center mt-2 text-tactical-500">
+                                    <div>战场复活</div>
+                                    <div>已锁定</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Statistics -->
+                <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                    <h3 class="text-xl font-semibold text-military-300 mb-6">详细统计</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Combat Stats -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-alert-400 mb-4">战斗数据</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">总击杀数</span>
+                                    <span class="font-mono text-success-400">1,247</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">死亡次数</span>
+                                    <span class="font-mono text-alert-400">268</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">K/D 比率</span>
+                                    <span class="font-mono text-cyber-400">4.65</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">爆头率</span>
+                                    <span class="font-mono text-military-400">34.2%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">命中率</span>
+                                    <span class="font-mono text-cyber-400">67.8%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">最高连杀</span>
+                                    <span class="font-mono text-success-400">18</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Game Stats -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-success-400 mb-4">游戏数据</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">总场次</span>
+                                    <span class="font-mono text-tactical-200">456</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">胜利场次</span>
+                                    <span class="font-mono text-success-400">358</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">胜率</span>
+                                    <span class="font-mono text-success-400">78.5%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">平均生存时间</span>
+                                    <span class="font-mono text-cyber-400">8:34</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">最长生存</span>
+                                    <span class="font-mono text-military-400">23:45</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tactical-300">获得奖牌</span>
+                                    <span class="font-mono text-yellow-400">147</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Achievements & Activities -->
+            <div class="space-y-6">
+                <!-- Achievements -->
+                <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-military-300">成就系统</h3>
+                        <div class="text-sm text-tactical-400">
+                            <span class="text-cyber-400 font-mono">23</span> / 50
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Achievement Item -->
+                        <div class="achievement-card bg-tactical-700 rounded-lg p-4 border border-success-400/30">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🏆</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-success-400">初出茅庐</div>
+                                    <div class="text-xs text-tactical-400">完成第一场游戏</div>
+                                    <div class="text-xs text-success-400 mt-1">已解锁 • +100 XP</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card bg-tactical-700 rounded-lg p-4 border border-cyber-400/30">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-cyber-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🎯</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-cyber-400">神枪手</div>
+                                    <div class="text-xs text-tactical-400">单场游戏20次爆头</div>
+                                    <div class="text-xs text-cyber-400 mt-1">已解锁 • +250 XP</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card bg-tactical-700 rounded-lg p-4 border border-military-400/30">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-military-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">⚔️</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-military-400">连杀狂魔</div>
+                                    <div class="text-xs text-tactical-400">达成15连杀</div>
+                                    <div class="text-xs text-military-400 mt-1">已解锁 • +500 XP</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card bg-tactical-700 rounded-lg p-4 border border-tactical-600 opacity-60">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-tactical-600 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl opacity-50">🌟</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-tactical-400">传奇战士</div>
+                                    <div class="text-xs text-tactical-500">达到100胜</div>
+                                    <div class="text-xs text-tactical-500 mt-1">进度: 89/100</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-2 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                            查看全部成就
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                    <h3 class="text-xl font-semibold text-military-300 mb-6">最近活动</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 p-3 bg-tactical-700 rounded-lg">
+                            <div class="w-8 h-8 bg-success-500/20 rounded-full flex items-center justify-center">
+                                <span class="text-success-400 text-sm">🏆</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-tactical-200">获得胜利</div>
+                                <div class="text-xs text-tactical-400">团队竞技模式 • 2分钟前</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-tactical-700 rounded-lg">
+                            <div class="w-8 h-8 bg-cyber-400/20 rounded-full flex items-center justify-center">
+                                <span class="text-cyber-400 text-sm">⬆️</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-tactical-200">等级提升</div>
+                                <div class="text-xs text-tactical-400">升级到25级 • 15分钟前</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-tactical-700 rounded-lg">
+                            <div class="w-8 h-8 bg-military-400/20 rounded-full flex items-center justify-center">
+                                <span class="text-military-400 text-sm">🎖️</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-tactical-200">解锁成就</div>
+                                <div class="text-xs text-tactical-400">连杀狂魔 • 1小时前</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-tactical-700 rounded-lg">
+                            <div class="w-8 h-8 bg-alert-400/20 rounded-full flex items-center justify-center">
+                                <span class="text-alert-400 text-sm">👥</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-tactical-200">添加好友</div>
+                                <div class="text-xs text-tactical-400">狙击精英 • 2小时前</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Favorite Weapons -->
+                <div class="profile-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                    <h3 class="text-xl font-semibold text-military-300 mb-6">常用武器</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-tactical-700 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🔫</span>
+                                <div>
+                                    <div class="font-semibold text-tactical-200">AK-47</div>
+                                    <div class="text-xs text-tactical-400">456 击杀 • 78% 命中率</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-mono text-success-400">87%</div>
+                                <div class="text-xs text-tactical-400">使用率</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-tactical-700 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🔫</span>
+                                <div>
+                                    <div class="font-semibold text-tactical-200">AWP</div>
+                                    <div class="text-xs text-tactical-400">234 击杀 • 89% 命中率</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-mono text-success-400">23%</div>
+                                <div class="text-xs text-tactical-400">使用率</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 bg-tactical-700 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">💣</span>
+                                <div>
+                                    <div class="font-semibold text-tactical-200">手榴弹</div>
+                                    <div class="text-xs text-tactical-400">89 击杀 • 67% 命中率</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-mono text-success-400">12%</div>
+                                <div class="text-xs text-tactical-400">使用率</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tactical-900/80 backdrop-blur-sm hidden">
+        <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-cyber-400">编辑个人资料</h3>
+                    <button onclick="closeEditModal()" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                        <span class="text-tactical-400">✕</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-2">昵称</label>
+                        <input type="text" value="战术大师" placeholder="输入新昵称..."
+                               class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-2">个人签名</label>
+                        <textarea placeholder="输入个人签名..." rows="3"
+                                  class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors resize-none">追求完美的战术执行</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-2">展示徽章</label>
+                        <select class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                            <option value="gold">🏆 黄金勋章</option>
+                            <option value="silver">🥈 白银勋章</option>
+                            <option value="bronze">🥉 青铜勋章</option>
+                            <option value="none">无徽章</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-semibold text-tactical-200">隐私设置</label>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-300">公开游戏统计</span>
+                            <div class="toggle-switch active" data-setting="public-stats"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-300">允许好友邀请</span>
+                            <div class="toggle-switch active" data-setting="friend-invite"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-tactical-300">显示在线状态</span>
+                            <div class="toggle-switch active" data-setting="online-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeEditModal()" class="px-4 py-2 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button onclick="saveProfile()" class="px-6 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold">
+                        保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Profile Modal -->
+    <div id="shareModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tactical-900/80 backdrop-blur-sm hidden">
+        <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-cyber-400">分享个人资料</h3>
+                    <button onclick="closeShareModal()" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                        <span class="text-tactical-400">✕</span>
+                    </button>
+                </div>
+
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-2xl">战</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-tactical-100 mb-1">战术大师</h4>
+                    <p class="text-sm text-tactical-400">等级 25 • 排名 #142</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button class="w-full py-3 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">📱</span>
+                        分享到微信好友
+                    </button>
+                    <button class="w-full py-3 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">🏃</span>
+                        分享到朋友圈
+                    </button>
+                    <button class="w-full py-3 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">📋</span>
+                        复制个人链接
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle switch functionality
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+
+        // Skill tree interactions
+        document.querySelectorAll('.skill-node').forEach(node => {
+            node.addEventListener('click', () => {
+                const skill = node.dataset.skill;
+                if (node.classList.contains('available')) {
+                    upgradeSkill(skill, node);
+                } else if (node.classList.contains('unlocked')) {
+                    showSkillInfo(skill);
+                }
+            });
+        });
+
+        function upgradeSkill(skill, node) {
+            // Simulate skill upgrade
+            const confirmUpgrade = confirm('是否花费 1 技能点升级此技能？');
+            if (confirmUpgrade) {
+                // Update skill point counter
+                const skillPointsElement = document.querySelector('.text-cyber-400.font-mono');
+                const currentPoints = parseInt(skillPointsElement.textContent);
+                if (currentPoints > 0) {
+                    skillPointsElement.textContent = currentPoints - 1;
+
+                    // Upgrade skill
+                    node.classList.remove('available');
+                    node.classList.add('unlocked');
+
+                    // Add upgrade animation
+                    node.style.animation = 'level-up 1s ease-out';
+                    setTimeout(() => {
+                        node.style.animation = '';
+                    }, 1000);
+
+                    alert(`${skill} 技能升级成功！`);
+                }
+            }
+        }
+
+        function showSkillInfo(skill) {
+            alert(`${skill} 技能详细信息\n\n这里会显示技能的详细描述和当前等级效果。`);
+        }
+
+        // Modal functions
+        function openEditModal() {
+            document.getElementById('editModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function saveProfile() {
+            // Simulate saving profile changes
+            alert('个人资料已保存！');
+            closeEditModal();
+        }
+
+        // Event listeners
+        document.getElementById('editProfileBtn').addEventListener('click', openEditModal);
+        document.getElementById('shareProfileBtn').addEventListener('click', openShareModal);
+
+        // Close modals on background click
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeEditModal();
+            }
+        });
+
+        document.getElementById('shareModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeShareModal();
+            }
+        });
+
+        // Experience bar animation
+        function animateExpBar() {
+            const expFill = document.querySelector('.exp-fill');
+            expFill.style.width = '0%';
+            setTimeout(() => {
+                expFill.style.width = '83%';
+            }, 500);
+        }
+
+        // Simulate level up
+        function simulateLevelUp() {
+            const levelBadge = document.querySelector('.level-badge');
+            const currentLevel = parseInt(levelBadge.textContent.match(/\d+/)[0]);
+
+            levelBadge.style.animation = 'level-up 1s ease-out';
+            setTimeout(() => {
+                levelBadge.textContent = `等级 ${currentLevel + 1}`;
+                levelBadge.style.animation = '';
+            }, 500);
+        }
+
+        // Initialize animations on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(animateExpBar, 1000);
+
+            // Simulate random activities
+            setInterval(() => {
+                if (Math.random() > 0.95) {
+                    addRecentActivity();
+                }
+            }, 10000);
+        });
+
+        function addRecentActivity() {
+            const activities = [
+                { icon: '🏆', text: '获得胜利', detail: '团队竞技模式 • 刚刚' },
+                { icon: '🎯', text: '完成击杀', detail: '完成5连杀 • 1分钟前' },
+                { icon: '🎖️', text: '获得奖牌', detail: 'MVP奖牌 • 2分钟前' }
+            ];
+
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            console.log(`新活动: ${activity.text} - ${activity.detail}`);
+        }
+
+        console.log('Player Profile Loaded');
+    </script>
+</body>
+</html>

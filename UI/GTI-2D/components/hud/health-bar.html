@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 血量条组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .health-bar-container {
+            font-family: 'Courier New', monospace;
+        }
+
+        .health-bar {
+            position: relative;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.8), rgba(47, 79, 79, 0.6));
+            border: 2px solid rgba(0, 206, 209, 0.4);
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.3),
+                0 0 15px rgba(0, 206, 209, 0.2);
+            overflow: hidden;
+        }
+
+        .health-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.5), transparent);
+            animation: scan 2s infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .health-fill {
+            height: 100%;
+            transition: width 0.5s ease, background-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg,
+                transparent 25%,
+                rgba(255, 255, 255, 0.1) 25%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 50%,
+                transparent 75%,
+                rgba(255, 255, 255, 0.1) 75%
+            );
+            background-size: 20px 20px;
+            animation: stripe-move 1s linear infinite;
+        }
+
+        @keyframes stripe-move {
+            0% { transform: translateX(-20px); }
+            100% { transform: translateX(0); }
+        }
+
+        .health-critical {
+            animation: critical-flash 0.5s infinite alternate;
+        }
+
+        @keyframes critical-flash {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.3); }
+        }
+
+        .armor-segment {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.6), rgba(0, 206, 209, 0.8));
+            border-right: 1px solid rgba(0, 206, 209, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .armor-segment.broken {
+            background: linear-gradient(135deg, rgba(255, 99, 71, 0.3), rgba(255, 99, 71, 0.5));
+            animation: armor-break 0.5s ease-out;
+        }
+
+        @keyframes armor-break {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .damage-number {
+            position: absolute;
+            font-weight: bold;
+            pointer-events: none;
+            animation: damage-float 1s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes damage-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-30px) scale(1.2);
+            }
+        }
+
+        .heal-number {
+            color: #228B22;
+            animation: heal-float 1s ease-out forwards;
+        }
+
+        @keyframes heal-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-30px) scale(1.2);
+            }
+        }
+
+        .shield-bar {
+            position: absolute;
+            top: -4px;
+            left: -2px;
+            right: -2px;
+            height: 4px;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(0, 206, 209, 0.8),
+                transparent
+            );
+            border-radius: 2px;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            z-index: 15;
+        }
+
+        /* 不同血量状态的颜色 */
+        .health-high { background: linear-gradient(135deg, #228B22, #32CD32); }
+        .health-medium { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .health-low { background: linear-gradient(135deg, #FF6347, #DC143C); }
+        .health-critical { background: linear-gradient(135deg, #8B0000, #FF0000); }
+
+        /* 护甲条样式 */
+        .armor-bar {
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.9), rgba(47, 79, 79, 0.7));
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            margin-top: 2px;
+        }
+
+        .armor-fill {
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.7), rgba(0, 206, 209, 0.9));
+            height: 100%;
+            transition: width 0.4s ease;
+        }
+
+        /* 垂直布局血量条 */
+        .health-vertical {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+        }
+
+        .health-vertical .health-fill {
+            transform: rotate(180deg);
+        }
+
+        /* 圆形血量条 */
+        .health-circular {
+            position: relative;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #228B22 0deg,
+                #FFD700 120deg,
+                #FF6347 240deg,
+                transparent 360deg
+            );
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(0, 206, 209, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(0, 206, 209, 0.8);
+            }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">血量条组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用血量条，支持护甲显示、动画效果和状态提示</p>
+        </div>
+
+        <!-- 演示区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 标准血量条 -->
+            <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+                <h3 class="text-xl font-bold text-cyber-400 mb-4">标准血量条</h3>
+                <div class="space-y-4">
+                    <div class="health-bar-container">
+                        <div class="health-bar-component" data-health="75" data-max-health="100" data-armor="50" data-max-armor="100">
+                            <div class="health-bar rounded h-8">
+                                <div class="health-fill rounded"></div>
+                                <div class="health-text text-sm">75 / 100</div>
+                            </div>
+                            <div class="armor-bar rounded h-2">
+                                <div class="armor-fill rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="bg-alert-600 text-white px-3 py-1 rounded text-sm" onclick="takeDamage(0, 25)">受伤 -25</button>
+                        <button class="bg-success-600 text-white px-3 py-1 rounded text-sm" onclick="heal(0, 20)">治疗 +20</button>
+                        <button class="bg-cyber-600 text-white px-3 py-1 rounded text-sm" onclick="repairArmor(0, 30)">修复护甲 +30</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 带状态图标的血量条 -->
+            <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+                <h3 class="text-xl font-bold text-cyber-400 mb-4">带状态图标</h3>
+                <div class="space-y-4">
+                    <div class="health-bar-container">
+                        <div class="health-bar-component" data-health="25" data-max-health="100" data-armor="0" data-max-armor="100">
+                            <div class="health-bar rounded h-8 relative">
+                                <div class="health-fill rounded"></div>
+                                <div class="health-text text-sm">25 / 100</div>
+                                <div class="status-icon">
+                                    <div class="w-full h-full bg-alert-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white text-xs">!</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="armor-bar rounded h-2">
+                                <div class="armor-fill rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="bg-alert-600 text-white px-3 py-1 rounded text-sm" onclick="takeDamage(1, 15)">受伤 -15</button>
+                        <button class="bg-success-600 text-white px-3 py-1 rounded text-sm" onclick="heal(1, 25)">治疗 +25</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不同样式演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">不同样式演示</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 小型血量条 -->
+                <div class="space-y-2">
+                    <div class="text-sm text-tactical-300">小型血量条</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar-component" data-health="90" data-max-health="100">
+                            <div class="health-bar rounded h-4">
+                                <div class="health-fill rounded"></div>
+                                <div class="health-text text-xs">90</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中型血量条 -->
+                <div class="space-y-2">
+                    <div class="text-sm text-tactical-300">中型血量条</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar-component" data-health="60" data-max-health="100" data-armor="75" data-max-armor="100">
+                            <div class="health-bar rounded h-6">
+                                <div class="health-fill rounded"></div>
+                                <div class="health-text text-xs">60/100</div>
+                            </div>
+                            <div class="armor-bar rounded h-2 mt-1">
+                                <div class="armor-fill rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 垂直血量条 -->
+                <div class="space-y-2">
+                    <div class="text-sm text-tactical-300">垂直血量条</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar-component health-vertical" data-health="45" data-max-health="100">
+                            <div class="health-bar rounded w-8 h-24">
+                                <div class="health-fill rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 圆形血量条 -->
+                <div class="space-y-2">
+                    <div class="text-sm text-tactical-300">圆形血量条</div>
+                    <div class="health-bar-container">
+                        <div class="health-circular w-16 h-16 relative">
+                            <div class="absolute inset-2 bg-tactical-800 rounded-full flex items-center justify-center">
+                                <span class="text-cyber-400 text-xs font-bold">80%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分段护甲演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">分段护甲系统</h3>
+            <div class="space-y-4">
+                <div class="health-bar-container">
+                    <div class="health-bar-component segmented-armor" data-health="100" data-max-health="100" data-armor-segments="5">
+                        <div class="health-bar rounded h-8">
+                            <div class="health-fill rounded"></div>
+                            <div class="health-text text-sm">100 / 100</div>
+                        </div>
+                        <div class="armor-segments flex mt-2 space-x-1 h-3">
+                            <!-- 护甲片段将通过JavaScript生成 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="bg-alert-600 text-white px-3 py-1 rounded text-sm" onclick="breakArmor()">破坏护甲</button>
+                    <button class="bg-cyber-600 text-white px-3 py-1 rounded text-sm" onclick="restoreArmor()">修复护甲</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建血量条实例
+const healthBar = new HealthBar('container-id', {
+    maxHealth: 100,        // 最大生命值
+    maxArmor: 100,         // 最大护甲值
+    showArmor: true,       // 显示护甲条
+    showText: true,        // 显示数值文字
+    showPercentage: false, // 显示百分比
+    armorSegments: 5,      // 护甲分段数
+    animationSpeed: 500,   // 动画速度(ms)
+    criticalThreshold: 25, // 危险阈值
+    dangerousThreshold: 50 // 警告阈值
+});
+
+// 设置血量和护甲
+healthBar.setHealth(75);
+healthBar.setArmor(50);
+
+// 造成伤害
+healthBar.takeDamage(25, {
+    showFloatingText: true,
+    armorFirst: true  // 护甲优先承受伤害
+});
+
+// 治疗
+healthBar.heal(30, {
+    showFloatingText: true,
+    healArmor: false  // 不治疗护甲
+});
+
+// 修复护甲
+healthBar.repairArmor(20);
+
+// 监听事件
+healthBar.on('critical', () => {
+    console.log('生命值危险！');
+});
+
+healthBar.on('death', () => {
+    console.log('角色死亡');
+});
+
+healthBar.on('armorBreak', (segment) => {
+    console.log('护甲片段破坏:', segment);
+});</code></pre>
+        </div>
+
+        <!-- 配置选项 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">配置选项</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">基础配置</h4>
+                    <ul class="space-y-2 text-tactical-300 text-sm">
+                        <li><code class="text-cyber-400">maxHealth</code>: 最大生命值</li>
+                        <li><code class="text-cyber-400">maxArmor</code>: 最大护甲值</li>
+                        <li><code class="text-cyber-400">armorSegments</code>: 护甲分段数</li>
+                        <li><code class="text-cyber-400">animationSpeed</code>: 动画速度</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-cyber-300 mb-2">显示选项</h4>
+                    <ul class="space-y-2 text-tactical-300 text-sm">
+                        <li><code class="text-cyber-400">showArmor</code>: 显示护甲条</li>
+                        <li><code class="text-cyber-400">showText</code>: 显示数值文字</li>
+                        <li><code class="text-cyber-400">showFloatingNumbers</code>: 显示浮动数字</li>
+                        <li><code class="text-cyber-400">showStatusIcon</code>: 显示状态图标</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * HealthBar - 血量条组件
+         */
+        class HealthBar {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    maxHealth: 100,
+                    maxArmor: 100,
+                    showArmor: true,
+                    showText: true,
+                    showPercentage: false,
+                    showFloatingNumbers: true,
+                    showStatusIcon: true,
+                    armorSegments: 1,
+                    animationSpeed: 500,
+                    criticalThreshold: 25,
+                    dangerousThreshold: 50,
+                    orientation: 'horizontal', // horizontal, vertical
+                    style: 'standard', // standard, circular
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    health: this.config.maxHealth,
+                    armor: this.config.showArmor ? this.config.maxArmor : 0,
+                    armorSegments: [],
+                    isDead: false
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.initArmorSegments();
+                this.updateDisplay();
+            }
+
+            createElements() {
+                const orientation = this.config.orientation === 'vertical' ? 'health-vertical' : '';
+
+                this.container.innerHTML = `
+                    <div class="health-bar-container ${orientation}">
+                        <div class="health-bar rounded ${this.config.orientation === 'vertical' ? 'w-8 h-24' : 'h-8'} relative">
+                            <div class="health-fill rounded"></div>
+                            ${this.config.showText ? '<div class="health-text text-sm"></div>' : ''}
+                            ${this.config.showStatusIcon ? '<div class="status-icon"></div>' : ''}
+                        </div>
+                        ${this.config.showArmor ? `
+                            <div class="armor-bar rounded ${this.config.orientation === 'vertical' ? 'w-8 h-6 mt-1' : 'h-2 mt-2'}">
+                                <div class="armor-fill rounded"></div>
+                            </div>
+                        ` : ''}
+                        ${this.config.armorSegments > 1 ? '<div class="armor-segments flex mt-2 space-x-1 h-3"></div>' : ''}
+                    </div>
+                `;
+
+                this.elements = {
+                    healthBar: this.container.querySelector('.health-bar'),
+                    healthFill: this.container.querySelector('.health-fill'),
+                    healthText: this.container.querySelector('.health-text'),
+                    statusIcon: this.container.querySelector('.status-icon'),
+                    armorBar: this.container.querySelector('.armor-bar'),
+                    armorFill: this.container.querySelector('.armor-fill'),
+                    armorSegments: this.container.querySelector('.armor-segments')
+                };
+            }
+
+            initArmorSegments() {
+                if (this.config.armorSegments > 1 && this.elements.armorSegments) {
+                    this.state.armorSegments = [];
+                    this.elements.armorSegments.innerHTML = '';
+
+                    for (let i = 0; i < this.config.armorSegments; i++) {
+                        const segment = document.createElement('div');
+                        segment.className = 'armor-segment flex-1 rounded bg-cyber-600';
+                        this.elements.armorSegments.appendChild(segment);
+                        this.state.armorSegments.push({ active: true, element: segment });
+                    }
+                }
+            }
+
+            updateDisplay() {
+                this.updateHealthBar();
+                this.updateArmorBar();
+                this.updateText();
+                this.updateStatus();
+            }
+
+            updateHealthBar() {
+                const healthPercentage = Math.max(0, (this.state.health / this.config.maxHealth) * 100);
+
+                if (this.elements.healthFill) {
+                    if (this.config.orientation === 'vertical') {
+                        this.elements.healthFill.style.height = healthPercentage + '%';
+                    } else {
+                        this.elements.healthFill.style.width = healthPercentage + '%';
+                    }
+
+                    // 根据生命值设置颜色
+                    this.elements.healthFill.className = 'health-fill rounded ' + this.getHealthColorClass(healthPercentage);
+
+                    // 危险状态闪烁
+                    if (healthPercentage <= this.config.criticalThreshold && healthPercentage > 0) {
+                        this.elements.healthBar.classList.add('health-critical');
+                    } else {
+                        this.elements.healthBar.classList.remove('health-critical');
+                    }
+                }
+            }
+
+            updateArmorBar() {
+                if (!this.config.showArmor || !this.elements.armorFill) return;
+
+                const armorPercentage = Math.max(0, (this.state.armor / this.config.maxArmor) * 100);
+
+                if (this.config.orientation === 'vertical') {
+                    this.elements.armorFill.style.height = armorPercentage + '%';
+                } else {
+                    this.elements.armorFill.style.width = armorPercentage + '%';
+                }
+            }
+
+            updateText() {
+                if (!this.elements.healthText) return;
+
+                if (this.config.showPercentage) {
+                    const percentage = Math.round((this.state.health / this.config.maxHealth) * 100);
+                    this.elements.healthText.textContent = percentage + '%';
+                } else {
+                    this.elements.healthText.textContent = `${Math.round(this.state.health)} / ${this.config.maxHealth}`;
+                }
+            }
+
+            updateStatus() {
+                if (!this.elements.statusIcon) return;
+
+                this.elements.statusIcon.innerHTML = '';
+
+                const healthPercentage = (this.state.health / this.config.maxHealth) * 100;
+
+                if (healthPercentage <= this.config.criticalThreshold) {
+                    this.elements.statusIcon.innerHTML = `
+                        <div class="w-full h-full bg-alert-500 rounded-full flex items-center justify-center pulse-glow">
+                            <span class="text-white text-xs">!</span>
+                        </div>
+                    `;
+                } else if (healthPercentage <= this.config.dangerousThreshold) {
+                    this.elements.statusIcon.innerHTML = `
+                        <div class="w-full h-full bg-yellow-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">⚠</span>
+                        </div>
+                    `;
+                }
+            }
+
+            getHealthColorClass(percentage) {
+                if (percentage > 75) return 'health-high';
+                if (percentage > 50) return 'health-medium';
+                if (percentage > 25) return 'health-low';
+                return 'health-critical';
+            }
+
+            // 公共API
+            setHealth(value, options = {}) {
+                const oldHealth = this.state.health;
+                this.state.health = Math.max(0, Math.min(value, this.config.maxHealth));
+
+                if (options.animate !== false) {
+                    setTimeout(() => this.updateDisplay(), 0);
+                } else {
+                    this.updateDisplay();
+                }
+
+                // 触发事件
+                if (this.state.health <= 0 && !this.state.isDead) {
+                    this.state.isDead = true;
+                    this.emit('death');
+                } else if (this.state.health <= this.config.criticalThreshold) {
+                    this.emit('critical', this.state.health);
+                } else if (this.state.health <= this.config.dangerousThreshold) {
+                    this.emit('danger', this.state.health);
+                }
+
+                this.emit('healthChange', { health: this.state.health, oldHealth });
+            }
+
+            setArmor(value, options = {}) {
+                const oldArmor = this.state.armor;
+                this.state.armor = Math.max(0, Math.min(value, this.config.maxArmor));
+
+                if (options.animate !== false) {
+                    setTimeout(() => this.updateDisplay(), 0);
+                } else {
+                    this.updateDisplay();
+                }
+
+                this.emit('armorChange', { armor: this.state.armor, oldArmor });
+            }
+
+            takeDamage(damage, options = {}) {
+                let remainingDamage = damage;
+
+                // 护甲优先承受伤害
+                if (options.armorFirst !== false && this.state.armor > 0) {
+                    const armorDamage = Math.min(remainingDamage, this.state.armor);
+                    this.setArmor(this.state.armor - armorDamage, options);
+                    remainingDamage -= armorDamage;
+
+                    // 显示护甲伤害数字
+                    if (options.showFloatingText !== false && this.config.showFloatingNumbers) {
+                        this.showFloatingNumber(-armorDamage, 'armor-damage');
+                    }
+                }
+
+                // 剩余伤害作用于生命值
+                if (remainingDamage > 0) {
+                    this.setHealth(this.state.health - remainingDamage, options);
+
+                    // 显示生命值伤害数字
+                    if (options.showFloatingText !== false && this.config.showFloatingNumbers) {
+                        this.showFloatingNumber(-remainingDamage, 'health-damage');
+                    }
+                }
+
+                this.emit('damage', { damage, remainingDamage });
+            }
+
+            heal(amount, options = {}) {
+                const oldHealth = this.state.health;
+                this.setHealth(this.state.health + amount, options);
+
+                // 显示治疗数字
+                if (options.showFloatingText !== false && this.config.showFloatingNumbers) {
+                    this.showFloatingNumber(amount, 'heal');
+                }
+
+                this.emit('heal', { amount, actualHeal: this.state.health - oldHealth });
+            }
+
+            repairArmor(amount, options = {}) {
+                const oldArmor = this.state.armor;
+                this.setArmor(this.state.armor + amount, options);
+
+                // 显示修复数字
+                if (options.showFloatingText !== false && this.config.showFloatingNumbers) {
+                    this.showFloatingNumber(amount, 'armor-repair');
+                }
+
+                this.emit('armorRepair', { amount, actualRepair: this.state.armor - oldArmor });
+            }
+
+            showFloatingNumber(value, type) {
+                const number = document.createElement('div');
+                number.className = `damage-number ${type === 'heal' || type === 'armor-repair' ? 'heal-number' : 'text-alert-400'}`;
+                number.textContent = (value > 0 ? '+' : '') + value;
+                number.style.left = '50%';
+                number.style.top = '50%';
+                number.style.transform = 'translate(-50%, -50%)';
+
+                this.elements.healthBar.appendChild(number);
+
+                setTimeout(() => {
+                    number.remove();
+                }, 1000);
+            }
+
+            // 护甲分段相关
+            breakArmorSegment(index) {
+                if (this.state.armorSegments[index]) {
+                    this.state.armorSegments[index].active = false;
+                    this.state.armorSegments[index].element.classList.add('broken');
+                    this.emit('armorBreak', index);
+                }
+            }
+
+            restoreArmorSegment(index) {
+                if (this.state.armorSegments[index]) {
+                    this.state.armorSegments[index].active = true;
+                    this.state.armorSegments[index].element.classList.remove('broken');
+                    this.emit('armorRestore', index);
+                }
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+
+            // 获取当前状态
+            getState() {
+                return {
+                    health: this.state.health,
+                    armor: this.state.armor,
+                    healthPercentage: (this.state.health / this.config.maxHealth) * 100,
+                    armorPercentage: (this.state.armor / this.config.maxArmor) * 100,
+                    isDead: this.state.isDead
+                };
+            }
+
+            reset() {
+                this.state.health = this.config.maxHealth;
+                this.state.armor = this.config.showArmor ? this.config.maxArmor : 0;
+                this.state.isDead = false;
+                this.updateDisplay();
+                this.emit('reset');
+            }
+        }
+
+        // 演示函数
+        let healthBars = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化所有血量条组件
+            document.querySelectorAll('.health-bar-component').forEach((container, index) => {
+                const health = parseInt(container.dataset.health) || 100;
+                const maxHealth = parseInt(container.dataset.maxHealth) || 100;
+                const armor = parseInt(container.dataset.armor) || 0;
+                const maxArmor = parseInt(container.dataset.maxArmor) || 100;
+                const armorSegments = parseInt(container.dataset.armorSegments) || 1;
+
+                const healthBar = new HealthBar(container, {
+                    maxHealth: maxHealth,
+                    maxArmor: maxArmor,
+                    showArmor: armor > 0,
+                    armorSegments: armorSegments,
+                    showStatusIcon: index === 1 // 只有第二个显示状态图标
+                });
+
+                healthBar.setHealth(health);
+                if (armor > 0) {
+                    healthBar.setArmor(armor);
+                }
+
+                healthBars.push(healthBar);
+
+                // 为分段护甲初始化
+                if (container.classList.contains('segmented-armor')) {
+                    healthBar.armorBreakIndex = 0;
+                }
+            });
+        });
+
+        // 演示用的控制函数
+        function takeDamage(index, damage) {
+            if (healthBars[index]) {
+                healthBars[index].takeDamage(damage);
+            }
+        }
+
+        function heal(index, amount) {
+            if (healthBars[index]) {
+                healthBars[index].heal(amount);
+            }
+        }
+
+        function repairArmor(index, amount) {
+            if (healthBars[index]) {
+                healthBars[index].repairArmor(amount);
+            }
+        }
+
+        function breakArmor() {
+            const segmentedHealthBar = healthBars.find(hb => hb.container.classList.contains('segmented-armor'));
+            if (segmentedHealthBar && segmentedHealthBar.armorBreakIndex < segmentedHealthBar.config.armorSegments) {
+                segmentedHealthBar.breakArmorSegment(segmentedHealthBar.armorBreakIndex);
+                segmentedHealthBar.armorBreakIndex++;
+            }
+        }
+
+        function restoreArmor() {
+            const segmentedHealthBar = healthBars.find(hb => hb.container.classList.contains('segmented-armor'));
+            if (segmentedHealthBar) {
+                for (let i = 0; i < segmentedHealthBar.config.armorSegments; i++) {
+                    segmentedHealthBar.restoreArmorSegment(i);
+                }
+                segmentedHealthBar.armorBreakIndex = 0;
+            }
+        }
+    </script>
+</body>
+</html>

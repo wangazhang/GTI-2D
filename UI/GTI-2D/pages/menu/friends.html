@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好友系统 - GTI-2D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4', 100: '#e9ebe4', 200: '#d4d7ca', 300: '#b6bca7',
+                            400: '#95a082', 500: '#7a8564', 600: '#616b4f', 700: '#556B2F',
+                            800: '#485a28', 900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff', 100: '#ccf7fe', 200: '#9aeffd', 300: '#58e1fa',
+                            400: '#00CED1', 500: '#00b4b8', 600: '#039094', 700: '#0a7377',
+                            800: '#115e61', 900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2', 100: '#fdeee4', 200: '#fadac4', 300: '#f6bf99',
+                            400: '#f1976c', 500: '#FF6347', 600: '#dd4e2f', 700: '#b63e25',
+                            800: '#943525', 900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#228B22', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#2F4F4F',
+                            800: '#1e293b', 900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(0, 206, 209, 0.8)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .status-online {
+            background: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+        }
+        .status-away {
+            background: #eab308;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+        }
+        .status-offline {
+            background: #6b7280;
+        }
+
+        .friend-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.2);
+        }
+
+        .chat-bubble {
+            position: relative;
+            padding: 8px 12px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .chat-bubble.sent {
+            background: linear-gradient(135deg, #556B2F, #7a8564);
+            margin-left: auto;
+            color: #f0fdff;
+        }
+
+        .chat-bubble.received {
+            background: #374151;
+            color: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button onclick="history.back()" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">好友系统</h1>
+                        <p class="text-xs text-tactical-400">Social System</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="addFriendBtn" class="px-4 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                        + 添加好友
+                    </button>
+                    <button id="refreshBtn" class="w-10 h-10 bg-military-700 hover:bg-military-600 rounded-lg flex items-center justify-center transition-colors" title="刷新">
+                        <span class="text-cyber-400">↻</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Friends List -->
+            <div class="lg:col-span-2">
+                <!-- Tab Navigation -->
+                <div class="bg-tactical-800/50 rounded-lg p-1 mb-6">
+                    <div class="flex space-x-1">
+                        <button class="friend-tab active flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="online">
+                            在线好友 <span class="online-count bg-success-500 text-white text-xs px-2 py-1 rounded-full ml-2">3</span>
+                        </button>
+                        <button class="friend-tab flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="all">
+                            全部好友 <span class="total-count bg-tactical-600 text-tactical-300 text-xs px-2 py-1 rounded-full ml-2">12</span>
+                        </button>
+                        <button class="friend-tab flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="recent">
+                            最近游戏 <span class="recent-count bg-cyber-600 text-white text-xs px-2 py-1 rounded-full ml-2">5</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Friends Content -->
+                <div class="friends-content animate-fade-in">
+                    <!-- Online Friends -->
+                    <div id="online-friends" class="friend-section">
+                        <div class="space-y-3">
+                            <!-- Friend Card 1 -->
+                            <div class="friend-card bg-tactical-800 rounded-lg p-4 border border-success-400/30 transition-all duration-300 cursor-pointer" data-friend="user1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold">战</span>
+                                            </div>
+                                            <div class="absolute -bottom-1 -right-1 w-4 h-4 status-online rounded-full border-2 border-tactical-800"></div>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">战术大师</div>
+                                            <div class="text-sm text-success-400">在线 • 游戏中</div>
+                                            <div class="text-xs text-tactical-400">等级 28 • 击杀 1,356</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-sm transition-colors">
+                                            邀请
+                                        </button>
+                                        <button class="px-3 py-1 bg-cyber-600 hover:bg-cyber-700 text-white rounded text-sm transition-colors" onclick="openChat('战术大师')">
+                                            聊天
+                                        </button>
+                                        <button class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors" onclick="viewProfile('战术大师')">
+                                            <span class="text-tactical-300 text-sm">👤</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Friend Card 2 -->
+                            <div class="friend-card bg-tactical-800 rounded-lg p-4 border border-success-400/30 transition-all duration-300 cursor-pointer" data-friend="user2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-military-400 to-military-600 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold">狙</span>
+                                            </div>
+                                            <div class="absolute -bottom-1 -right-1 w-4 h-4 status-online rounded-full border-2 border-tactical-800"></div>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">狙击精英</div>
+                                            <div class="text-sm text-success-400">在线 • 大厅</div>
+                                            <div class="text-xs text-tactical-400">等级 32 • 击杀 2,041</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-sm transition-colors">
+                                            邀请
+                                        </button>
+                                        <button class="px-3 py-1 bg-cyber-600 hover:bg-cyber-700 text-white rounded text-sm transition-colors" onclick="openChat('狙击精英')">
+                                            聊天
+                                        </button>
+                                        <button class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors" onclick="viewProfile('狙击精英')">
+                                            <span class="text-tactical-300 text-sm">👤</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Friend Card 3 -->
+                            <div class="friend-card bg-tactical-800 rounded-lg p-4 border border-success-400/30 transition-all duration-300 cursor-pointer" data-friend="user3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-alert-400 to-alert-600 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold">火</span>
+                                            </div>
+                                            <div class="absolute -bottom-1 -right-1 w-4 h-4 status-away rounded-full border-2 border-tactical-800"></div>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">火力支援</div>
+                                            <div class="text-sm text-yellow-400">暂离 • 5分钟前</div>
+                                            <div class="text-xs text-tactical-400">等级 25 • 击杀 987</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="px-3 py-1 bg-tactical-700 text-tactical-400 rounded text-sm cursor-not-allowed" disabled>
+                                            邀请
+                                        </button>
+                                        <button class="px-3 py-1 bg-cyber-600 hover:bg-cyber-700 text-white rounded text-sm transition-colors" onclick="openChat('火力支援')">
+                                            聊天
+                                        </button>
+                                        <button class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors" onclick="viewProfile('火力支援')">
+                                            <span class="text-tactical-300 text-sm">👤</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Friends (Hidden by default) -->
+                    <div id="all-friends" class="friend-section hidden">
+                        <div class="space-y-3">
+                            <!-- Include online friends plus offline ones -->
+                            <div class="text-sm text-tactical-400 mb-3 px-2">在线好友 (3)</div>
+
+                            <!-- Repeat online friends here -->
+                            <div class="friend-card bg-tactical-800 rounded-lg p-4 border border-tactical-600 transition-all duration-300">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-tactical-400 to-tactical-600 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold">钢</span>
+                                            </div>
+                                            <div class="absolute -bottom-1 -right-1 w-4 h-4 status-offline rounded-full border-2 border-tactical-800"></div>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-200">钢铁意志</div>
+                                            <div class="text-sm text-tactical-400">离线 • 2小时前</div>
+                                            <div class="text-xs text-tactical-400">等级 29 • 击杀 1,567</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="px-3 py-1 bg-tactical-700 text-tactical-400 rounded text-sm cursor-not-allowed" disabled>
+                                            邀请
+                                        </button>
+                                        <button class="px-3 py-1 bg-cyber-600 hover:bg-cyber-700 text-white rounded text-sm transition-colors" onclick="openChat('钢铁意志')">
+                                            聊天
+                                        </button>
+                                        <button class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors" onclick="viewProfile('钢铁意志')">
+                                            <span class="text-tactical-300 text-sm">👤</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Players -->
+                    <div id="recent-friends" class="friend-section hidden">
+                        <div class="space-y-3">
+                            <div class="text-sm text-tactical-400 mb-3 px-2">最近一起游戏的玩家</div>
+
+                            <div class="friend-card bg-tactical-800 rounded-lg p-4 border border-cyber-400/30 transition-all duration-300">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-success-400 to-success-600 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold">医</span>
+                                            </div>
+                                            <div class="absolute -bottom-1 -right-1 w-4 h-4 status-online rounded-full border-2 border-tactical-800"></div>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">医疗兵</div>
+                                            <div class="text-sm text-cyber-400">刚才一起游戏</div>
+                                            <div class="text-xs text-tactical-400">等级 22 • 救援 456次</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <button class="px-3 py-1 bg-success-600 hover:bg-success-700 text-white rounded text-sm transition-colors">
+                                            添加好友
+                                        </button>
+                                        <button class="px-3 py-1 bg-cyber-600 hover:bg-cyber-700 text-white rounded text-sm transition-colors" onclick="openChat('医疗兵')">
+                                            聊天
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Chat & Info -->
+            <div class="lg:col-span-1">
+                <div class="bg-tactical-800 rounded-lg border border-cyber-400/20 h-full min-h-[500px] flex flex-col">
+                    <!-- Chat Header -->
+                    <div id="chatHeader" class="p-4 border-b border-tactical-700 hidden">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold" id="chatAvatar">战</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-tactical-100" id="chatName">战术大师</div>
+                                    <div class="text-xs text-success-400" id="chatStatus">在线</div>
+                                </div>
+                            </div>
+                            <button onclick="closeChat()" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                                <span class="text-tactical-400">✕</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 hidden">
+                        <!-- Sample messages will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div id="chatInput" class="p-4 border-t border-tactical-700 hidden">
+                        <div class="flex space-x-2">
+                            <input type="text" id="messageInput" placeholder="输入消息..."
+                                   class="flex-1 px-3 py-2 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors text-sm">
+                            <button onclick="sendMessage()" class="px-4 py-2 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold text-sm">
+                                发送
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Default Welcome -->
+                    <div id="chatWelcome" class="flex-1 flex items-center justify-center p-8 text-center">
+                        <div>
+                            <div class="w-16 h-16 bg-cyber-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-cyber-400 text-2xl">💬</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-tactical-200 mb-2">选择好友开始聊天</h3>
+                            <p class="text-sm text-tactical-400">点击左侧好友列表中的聊天按钮</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Friend Modal -->
+    <div id="addFriendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tactical-900/80 backdrop-blur-sm hidden">
+        <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-cyber-400">添加好友</h3>
+                    <button onclick="closeAddFriendModal()" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                        <span class="text-tactical-400">✕</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-2">好友ID或微信号</label>
+                        <input type="text" id="friendIdInput" placeholder="输入好友ID..."
+                               class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-tactical-200 mb-2">验证消息</label>
+                        <textarea placeholder="我是..." rows="3"
+                                  class="w-full px-4 py-3 bg-tactical-700 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeAddFriendModal()" class="px-4 py-2 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button onclick="sendFriendRequest()" class="px-6 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold">
+                        发送请求
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.friend-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tab states
+                document.querySelectorAll('.friend-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-military-700', 'text-cyber-400');
+                    t.classList.add('text-tactical-400');
+                });
+
+                tab.classList.add('active', 'bg-military-700', 'text-cyber-400');
+                tab.classList.remove('text-tactical-400');
+
+                // Show corresponding content
+                const targetTab = tab.dataset.tab;
+                document.querySelectorAll('.friend-section').forEach(section => {
+                    section.classList.add('hidden');
+                });
+
+                document.getElementById(`${targetTab}-friends`).classList.remove('hidden');
+            });
+        });
+
+        // Chat functionality
+        let currentChat = null;
+
+        function openChat(friendName) {
+            currentChat = friendName;
+
+            // Show chat interface
+            document.getElementById('chatWelcome').classList.add('hidden');
+            document.getElementById('chatHeader').classList.remove('hidden');
+            document.getElementById('chatMessages').classList.remove('hidden');
+            document.getElementById('chatInput').classList.remove('hidden');
+
+            // Update chat header
+            document.getElementById('chatName').textContent = friendName;
+            document.getElementById('chatAvatar').textContent = friendName.charAt(0);
+
+            // Load sample messages
+            loadChatMessages(friendName);
+        }
+
+        function closeChat() {
+            currentChat = null;
+
+            // Hide chat interface
+            document.getElementById('chatHeader').classList.add('hidden');
+            document.getElementById('chatMessages').classList.add('hidden');
+            document.getElementById('chatInput').classList.add('hidden');
+            document.getElementById('chatWelcome').classList.remove('hidden');
+        }
+
+        function loadChatMessages(friendName) {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = `
+                <div class="chat-bubble received">
+                    <div class="text-sm">刚才那局游戏玩得不错！</div>
+                    <div class="text-xs text-tactical-400 mt-1">5分钟前</div>
+                </div>
+                <div class="chat-bubble sent">
+                    <div class="text-sm">是的，团队配合很棒</div>
+                    <div class="text-xs text-tactical-400 mt-1">3分钟前</div>
+                </div>
+                <div class="chat-bubble received">
+                    <div class="text-sm">下次一起组队吧</div>
+                    <div class="text-xs text-tactical-400 mt-1">1分钟前</div>
+                </div>
+            `;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (message && currentChat) {
+                const messagesContainer = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-bubble sent';
+                messageDiv.innerHTML = `
+                    <div class="text-sm">${message}</div>
+                    <div class="text-xs text-tactical-400 mt-1">刚刚</div>
+                `;
+
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                input.value = '';
+
+                // Simulate response after a short delay
+                setTimeout(() => {
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'chat-bubble received';
+                    responseDiv.innerHTML = `
+                        <div class="text-sm">收到！</div>
+                        <div class="text-xs text-tactical-400 mt-1">刚刚</div>
+                    `;
+                    messagesContainer.appendChild(responseDiv);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        // Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Add friend modal
+        function openAddFriendModal() {
+            document.getElementById('addFriendModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddFriendModal() {
+            document.getElementById('addFriendModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            document.getElementById('friendIdInput').value = '';
+        }
+
+        function sendFriendRequest() {
+            const friendId = document.getElementById('friendIdInput').value.trim();
+            if (friendId) {
+                // Simulate friend request
+                alert(`已向 ${friendId} 发送好友请求`);
+                closeAddFriendModal();
+            }
+        }
+
+        // View profile function
+        function viewProfile(friendName) {
+            alert(`查看 ${friendName} 的详细资料`);
+        }
+
+        // Event listeners
+        document.getElementById('addFriendBtn').addEventListener('click', openAddFriendModal);
+
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            // Simulate refresh
+            document.getElementById('refreshBtn').style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                document.getElementById('refreshBtn').style.transform = 'rotate(0deg)';
+            }, 500);
+        });
+
+        // Close modal on background click
+        document.getElementById('addFriendModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeAddFriendModal();
+            }
+        });
+
+        // Initialize page
+        console.log('Friends System Loaded');
+    </script>
+</body>
+</html>

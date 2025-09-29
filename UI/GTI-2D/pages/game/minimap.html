@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GTI-2D 小地图系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'radar-sweep': 'radarSweep 3s linear infinite',
+                        'ping-slow': 'pingSlow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        'blink': 'blink 1s ease-in-out infinite alternate',
+                        'zoom-in': 'zoomIn 0.3s ease-out',
+                        'zoom-out': 'zoomOut 0.3s ease-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'slide-out': 'slideOut 0.3s ease-in',
+                        'marker-bounce': 'markerBounce 1s ease-in-out infinite',
+                        'enemy-pulse': 'enemyPulse 1.5s ease-in-out infinite',
+                        'safe-zone': 'safeZone 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        radarSweep: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' }
+                        },
+                        pingSlow: {
+                            '0%, 100%': {
+                                transform: 'scale(1)',
+                                opacity: '1'
+                            },
+                            '50%': {
+                                transform: 'scale(1.5)',
+                                opacity: '0.3'
+                            }
+                        },
+                        blink: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0.3' }
+                        },
+                        zoomIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        zoomOut: {
+                            '0%': { transform: 'scale(1)', opacity: '1' },
+                            '100%': { transform: 'scale(0.8)', opacity: '0' }
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateX(-100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        slideOut: {
+                            '0%': { transform: 'translateX(0)', opacity: '1' },
+                            '100%': { transform: 'translateX(-100%)', opacity: '0' }
+                        },
+                        markerBounce: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-4px)' }
+                        },
+                        enemyPulse: {
+                            '0%, 100%': {
+                                transform: 'scale(1)',
+                                'box-shadow': '0 0 0 rgba(255, 99, 71, 0.7)'
+                            },
+                            '50%': {
+                                transform: 'scale(1.2)',
+                                'box-shadow': '0 0 10px rgba(255, 99, 71, 0.4)'
+                            }
+                        },
+                        safeZone: {
+                            '0%, 100%': {
+                                'box-shadow': '0 0 0 0 rgba(34, 139, 34, 0.4)',
+                                border: '2px solid rgba(34, 139, 34, 0.6)'
+                            },
+                            '50%': {
+                                'box-shadow': '0 0 0 10px rgba(34, 139, 34, 0)',
+                                border: '2px solid rgba(34, 139, 34, 0.9)'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        /* 地图容器样式 */
+        .map-container {
+            position: relative;
+            background: linear-gradient(45deg,
+                rgba(30, 41, 59, 0.8) 0%,
+                rgba(15, 23, 42, 0.9) 50%,
+                rgba(30, 41, 59, 0.8) 100%);
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+
+        /* 地图网格背景 */
+        .map-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* 地图区域样式 */
+        .map-area {
+            position: absolute;
+            border-radius: 8px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .map-area:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        /* 建筑物样式 */
+        .building {
+            background: rgba(107, 114, 128, 0.8);
+            border: 1px solid rgba(156, 163, 175, 0.5);
+        }
+
+        .building.important {
+            background: rgba(85, 107, 47, 0.6);
+            border: 2px solid rgba(85, 107, 47, 0.8);
+        }
+
+        /* 水体样式 */
+        .water {
+            background: rgba(59, 130, 246, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.6);
+        }
+
+        /* 森林样式 */
+        .forest {
+            background: rgba(34, 139, 34, 0.4);
+            border: 1px solid rgba(34, 139, 34, 0.6);
+        }
+
+        /* 道路样式 */
+        .road {
+            background: rgba(156, 163, 175, 0.6);
+            border: 1px solid rgba(156, 163, 175, 0.8);
+        }
+
+        /* 标记点样式 */
+        .map-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .map-marker:hover {
+            transform: scale(1.3);
+        }
+
+        /* 玩家标记 */
+        .player-marker {
+            background: #00CED1;
+            border-color: #ffffff;
+            animation: pulse-slow 2s infinite;
+        }
+
+        /* 队友标记 */
+        .teammate-marker {
+            background: #228B22;
+            border-color: #ffffff;
+        }
+
+        /* 敌人标记 */
+        .enemy-marker {
+            background: #FF6347;
+            border-color: #ffffff;
+            animation: enemy-pulse 1.5s infinite;
+        }
+
+        /* 装备掉落标记 */
+        .loot-marker {
+            background: #F59E0B;
+            border-color: #ffffff;
+            animation: marker-bounce 1s infinite;
+        }
+
+        /* 撤离点标记 */
+        .evacuation-marker {
+            background: #8B5CF6;
+            border-color: #ffffff;
+            animation: glow 2s infinite;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 雷达扫描线 */
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 40%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 206, 209, 0.8), transparent);
+            transform-origin: bottom center;
+            animation: radar-sweep 3s linear infinite;
+            z-index: 5;
+        }
+
+        /* 安全区域 */
+        .safe-zone {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(34, 139, 34, 0.1);
+            animation: safe-zone 4s infinite;
+            z-index: 1;
+        }
+
+        /* 视野范围 */
+        .vision-range {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 206, 209, 0.1) 0%, rgba(0, 206, 209, 0.05) 70%, transparent 100%);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            z-index: 2;
+            animation: pulse-slow 3s infinite;
+        }
+
+        /* 路径线条 */
+        .path-line {
+            position: absolute;
+            background: rgba(0, 206, 209, 0.6);
+            z-index: 3;
+            animation: blink 2s infinite;
+        }
+
+        /* 距离指示器 */
+        .distance-indicator {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00CED1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid rgba(0, 206, 209, 0.5);
+            z-index: 15;
+        }
+
+        /* 控制面板样式 */
+        .control-panel {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+        }
+
+        /* 图层控制按钮 */
+        .layer-toggle {
+            padding: 8px 12px;
+            background: rgba(47, 79, 79, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            color: #CBD5E1;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            items: center;
+            space: 8px;
+        }
+
+        .layer-toggle:hover {
+            background: rgba(47, 79, 79, 0.8);
+            border-color: rgba(0, 206, 209, 0.6);
+            color: #00CED1;
+        }
+
+        .layer-toggle.active {
+            background: rgba(85, 107, 47, 0.6);
+            border-color: rgba(85, 107, 47, 0.8);
+            color: #00CED1;
+        }
+
+        /* 缩放控制 */
+        .zoom-control {
+            width: 40px;
+            height: 40px;
+            background: rgba(47, 79, 79, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            color: #00CED1;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-control:hover {
+            background: rgba(0, 206, 209, 0.2);
+            border-color: rgba(0, 206, 209, 0.6);
+            transform: scale(1.05);
+        }
+
+        .zoom-control:active {
+            transform: scale(0.95);
+        }
+
+        /* 坐标显示 */
+        .coordinate-display {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00CED1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 206, 209, 0.5);
+        }
+
+        /* 标记信息弹出 */
+        .marker-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid rgba(0, 206, 209, 0.5);
+            z-index: 20;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .marker-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid rgba(0, 0, 0, 0.9);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 640px) {
+            .map-container {
+                border-radius: 8px;
+            }
+
+            .control-panel {
+                border-radius: 6px;
+            }
+
+            .layer-toggle {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            .zoom-control {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .map-marker {
+                width: 10px;
+                height: 10px;
+            }
+
+            .evacuation-marker {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        @media (orientation: landscape) {
+            .minimap-overlay {
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-white font-military">
+    <!-- 背景层 -->
+    <div class="absolute inset-0 bg-gradient-to-br from-tactical-900 via-tactical-800 to-tactical-900">
+        <div class="absolute inset-0" style="background-image: linear-gradient(rgba(0, 206, 209, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 206, 209, 0.03) 1px, transparent 1px); background-size: 30px 30px;"></div>
+    </div>
+
+    <!-- 主界面容器 -->
+    <div class="absolute inset-0 flex flex-col">
+        <!-- 顶部控制栏 -->
+        <div class="flex-none bg-tactical-800/90 border-b border-cyber-400/20 backdrop-filter backdrop-blur-md">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button id="backBtn" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">战术地图</h1>
+                        <p class="text-xs text-tactical-400">Tactical Map System</p>
+                    </div>
+                </div>
+
+                <!-- 坐标和缩放显示 -->
+                <div class="flex items-center space-x-4">
+                    <div class="coordinate-display">
+                        <span id="playerCoords">X: 1250, Y: 800</span>
+                    </div>
+                    <div class="coordinate-display">
+                        <span id="zoomLevel">缩放: 100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- 地图主体 -->
+            <div class="flex-1 p-4 relative">
+                <!-- 地图容器 -->
+                <div class="map-container map-grid w-full h-full relative" id="mapContainer">
+                    <!-- 雷达扫描线 -->
+                    <div class="radar-sweep" id="radarSweep"></div>
+
+                    <!-- 安全区域 -->
+                    <div class="safe-zone" id="safeZone" style="width: 200px; height: 200px; top: 30%; left: 30%;"></div>
+
+                    <!-- 视野范围 -->
+                    <div class="vision-range" id="visionRange" style="width: 120px; height: 120px;"></div>
+
+                    <!-- 地图区域 - 建筑物 -->
+                    <div class="map-area building important" style="width: 80px; height: 60px; top: 20%; left: 15%;" data-name="指挥中心"></div>
+                    <div class="map-area building" style="width: 40px; height: 30px; top: 35%; left: 25%;" data-name="仓库A"></div>
+                    <div class="map-area building" style="width: 50px; height: 40px; top: 15%; right: 20%;" data-name="通信塔"></div>
+                    <div class="map-area building" style="width: 60px; height: 45px; bottom: 25%; right: 15%;" data-name="车库"></div>
+                    <div class="map-area building" style="width: 35px; height: 25px; bottom: 20%; left: 30%;" data-name="哨站"></div>
+
+                    <!-- 地图区域 - 水体 -->
+                    <div class="map-area water" style="width: 120px; height: 80px; top: 60%; left: 10%;" data-name="湖泊"></div>
+
+                    <!-- 地图区域 - 森林 -->
+                    <div class="map-area forest" style="width: 100px; height: 70px; top: 10%; left: 60%;" data-name="密林"></div>
+                    <div class="map-area forest" style="width: 80px; height: 90px; bottom: 10%; right: 40%;" data-name="树林"></div>
+
+                    <!-- 地图区域 - 道路 -->
+                    <div class="map-area road" style="width: 8px; height: 200px; top: 25%; left: 45%;" data-name="主干道"></div>
+                    <div class="map-area road" style="width: 150px; height: 6px; top: 50%; left: 30%;" data-name="横向道路"></div>
+
+                    <!-- 玩家标记 -->
+                    <div class="map-marker player-marker" id="playerMarker" style="top: 50%; left: 50%;" data-info="你 - TacticalGamer"></div>
+
+                    <!-- 队友标记 -->
+                    <div class="map-marker teammate-marker" style="top: 40%; left: 45%;" data-info="Alpha_Sniper - 距离: 85m"></div>
+                    <div class="map-marker teammate-marker" style="top: 60%; left: 55%;" data-info="BravoSupport - 距离: 120m"></div>
+
+                    <!-- 敌人标记 -->
+                    <div class="map-marker enemy-marker" style="top: 30%; left: 70%;" data-info="敌人 - 最后发现: 15秒前"></div>
+                    <div class="map-marker enemy-marker" style="top: 75%; left: 25%;" data-info="敌人 - 最后发现: 32秒前"></div>
+
+                    <!-- 装备掉落标记 -->
+                    <div class="map-marker loot-marker" style="top: 25%; left: 35%;" data-info="装备掉落 - AK-47 突击步枪"></div>
+                    <div class="map-marker loot-marker" style="top: 65%; left: 40%;" data-info="装备掉落 - 医疗包 x3"></div>
+                    <div class="map-marker loot-marker" style="top: 45%; left: 75%;" data-info="装备掉落 - 钛合金护甲"></div>
+
+                    <!-- 撤离点标记 -->
+                    <div class="map-marker evacuation-marker" style="top: 15%; left: 80%;" data-info="撤离点Alpha - 距离: 450m"></div>
+                    <div class="map-marker evacuation-marker" style="bottom: 15%; right: 20%;" data-info="撤离点Bravo - 距离: 680m"></div>
+
+                    <!-- 路径线条 (示例路径) -->
+                    <div class="path-line" style="width: 2px; height: 60px; top: 50%; left: 50%; transform-origin: top; transform: rotate(25deg);"></div>
+                    <div class="path-line" style="width: 80px; height: 2px; top: 48%; left: 52%;"></div>
+
+                    <!-- 距离指示器 -->
+                    <div class="distance-indicator" style="top: 35%; left: 40%;">85m</div>
+                    <div class="distance-indicator" style="top: 65%; left: 60%;">120m</div>
+                    <div class="distance-indicator" style="top: 25%; left: 75%;">245m</div>
+
+                    <!-- 标记工具提示 -->
+                    <div class="marker-tooltip hidden" id="markerTooltip">
+                        <div id="tooltipContent">标记信息</div>
+                    </div>
+                </div>
+
+                <!-- 缩放控制 -->
+                <div class="absolute bottom-6 right-6 flex flex-col space-y-2">
+                    <button class="zoom-control" id="zoomInBtn">+</button>
+                    <button class="zoom-control" id="zoomOutBtn">−</button>
+                    <button class="zoom-control text-sm" id="resetZoomBtn">⌂</button>
+                </div>
+            </div>
+
+            <!-- 右侧控制面板 -->
+            <div class="flex-none w-64 p-4 bg-tactical-800/30 border-l border-cyber-400/20">
+                <!-- 图层控制 -->
+                <div class="control-panel p-4 mb-4">
+                    <h3 class="text-sm font-semibold text-military-300 mb-3">图层控制</h3>
+                    <div class="space-y-2">
+                        <label class="layer-toggle active">
+                            <input type="checkbox" checked class="hidden" data-layer="players">
+                            <span class="text-xs">👤</span>
+                            <span>玩家位置</span>
+                        </label>
+                        <label class="layer-toggle active">
+                            <input type="checkbox" checked class="hidden" data-layer="enemies">
+                            <span class="text-xs">⚠️</span>
+                            <span>敌人标记</span>
+                        </label>
+                        <label class="layer-toggle active">
+                            <input type="checkbox" checked class="hidden" data-layer="loot">
+                            <span class="text-xs">📦</span>
+                            <span>装备掉落</span>
+                        </label>
+                        <label class="layer-toggle active">
+                            <input type="checkbox" checked class="hidden" data-layer="evacuation">
+                            <span class="text-xs">🚁</span>
+                            <span>撤离点</span>
+                        </label>
+                        <label class="layer-toggle">
+                            <input type="checkbox" class="hidden" data-layer="vision">
+                            <span class="text-xs">👁️</span>
+                            <span>视野范围</span>
+                        </label>
+                        <label class="layer-toggle active">
+                            <input type="checkbox" checked class="hidden" data-layer="safezone">
+                            <span class="text-xs">🛡️</span>
+                            <span>安全区域</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 标记列表 -->
+                <div class="control-panel p-4 mb-4">
+                    <h3 class="text-sm font-semibold text-military-300 mb-3">标记点</h3>
+                    <div class="space-y-2 max-h-48 overflow-y-auto" id="markerList">
+                        <!-- 标记列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 队伍状态 -->
+                <div class="control-panel p-4 mb-4">
+                    <h3 class="text-sm font-semibold text-military-300 mb-3">队伍状态</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-cyber-400 rounded-full animate-pulse-slow"></div>
+                                <span class="text-tactical-200">你</span>
+                            </div>
+                            <span class="text-cyber-400 font-mono">100%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-success-400 rounded-full"></div>
+                                <span class="text-tactical-200">Alpha_Sniper</span>
+                            </div>
+                            <span class="text-success-400 font-mono">85%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-success-400 rounded-full"></div>
+                                <span class="text-tactical-200">BravoSupport</span>
+                            </div>
+                            <span class="text-success-400 font-mono">72%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 地图信息 -->
+                <div class="control-panel p-4">
+                    <h3 class="text-sm font-semibold text-military-300 mb-3">地图信息</h3>
+                    <div class="space-y-2 text-xs text-tactical-400">
+                        <div class="flex justify-between">
+                            <span>地图:</span>
+                            <span class="text-tactical-200">Industrial Complex</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>大小:</span>
+                            <span class="text-tactical-200">2000 x 2000m</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>撤离点:</span>
+                            <span class="text-tactical-200">2 个活跃</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>敌人:</span>
+                            <span class="text-alert-400">2 个发现</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>装备:</span>
+                            <span class="text-amber-400">3 个掉落</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小地图悬浮窗模式切换 -->
+    <div class="fixed top-4 left-4 z-30">
+        <button id="minimizeBtn" class="w-12 h-12 bg-tactical-800/90 hover:bg-tactical-700 border border-cyber-400/30 rounded-lg flex items-center justify-center transition-all duration-200 backdrop-filter backdrop-blur-md">
+            <span class="text-cyber-400">📍</span>
+        </button>
+    </div>
+
+    <!-- 小地图悬浮模式 -->
+    <div class="fixed top-4 right-4 w-48 h-48 minimap-overlay hidden animate-slide-in" id="minimapOverlay">
+        <div class="map-container map-grid w-full h-full relative scale-75">
+            <!-- 简化版地图内容 -->
+            <div class="radar-sweep"></div>
+            <div class="map-marker player-marker" style="top: 50%; left: 50%;"></div>
+            <div class="map-marker teammate-marker" style="top: 40%; left: 45%;"></div>
+            <div class="map-marker teammate-marker" style="top: 60%; left: 55%;"></div>
+            <div class="map-marker enemy-marker" style="top: 30%; left: 70%;"></div>
+            <div class="map-marker evacuation-marker" style="top: 15%; left: 80%;"></div>
+        </div>
+
+        <!-- 悬浮窗控制 -->
+        <div class="absolute -top-2 -right-2 flex space-x-1">
+            <button id="expandBtn" class="w-6 h-6 bg-tactical-800/90 hover:bg-tactical-700 border border-cyber-400/30 rounded flex items-center justify-center text-xs text-cyber-400 transition-colors">
+                ⛶
+            </button>
+            <button id="closeOverlayBtn" class="w-6 h-6 bg-tactical-800/90 hover:bg-alert-700 border border-alert-400/30 rounded flex items-center justify-center text-xs text-alert-400 transition-colors">
+                ✕
+            </button>
+        </div>
+    </div>
+
+    <!-- 通知消息 -->
+    <div id="notifications" class="fixed bottom-4 right-4 space-y-2 z-40">
+        <!-- 通知将通过JavaScript动态添加 -->
+    </div>
+
+    <script>
+        // 地图状态管理
+        let mapState = {
+            zoom: 1.0,
+            centerX: 0,
+            centerY: 0,
+            isDragging: false,
+            lastX: 0,
+            lastY: 0,
+            isMinimized: false,
+            layers: {
+                players: true,
+                enemies: true,
+                loot: true,
+                evacuation: true,
+                vision: false,
+                safezone: true
+            }
+        };
+
+        // 玩家位置和数据
+        let playerData = {
+            x: 1250,
+            y: 800,
+            direction: 45, // 朝向角度
+            teammates: [
+                { name: 'Alpha_Sniper', x: 1200, y: 750, health: 85, distance: 85 },
+                { name: 'BravoSupport', x: 1300, y: 850, health: 72, distance: 120 }
+            ],
+            enemies: [
+                { x: 1400, y: 600, lastSeen: 15, distance: 245 },
+                { x: 1000, y: 900, lastSeen: 32, distance: 320 }
+            ]
+        };
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupMapInteraction();
+            updateMarkerList();
+            startSimulation();
+            updatePlayerPosition();
+        });
+
+        function setupEventListeners() {
+            // 返回按钮
+            document.getElementById('backBtn').addEventListener('click', () => {
+                showNotification('返回游戏', 'info');
+                // 这里可以添加返回游戏的逻辑
+            });
+
+            // 缩放控制
+            document.getElementById('zoomInBtn').addEventListener('click', () => zoomMap(1.2));
+            document.getElementById('zoomOutBtn').addEventListener('click', () => zoomMap(0.8));
+            document.getElementById('resetZoomBtn').addEventListener('click', resetView);
+
+            // 最小化控制
+            document.getElementById('minimizeBtn').addEventListener('click', toggleMinimize);
+            document.getElementById('expandBtn').addEventListener('click', toggleMinimize);
+            document.getElementById('closeOverlayBtn').addEventListener('click', closeOverlay);
+
+            // 图层控制
+            document.querySelectorAll('.layer-toggle input').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const layer = e.target.dataset.layer;
+                    const isChecked = e.target.checked;
+                    toggleLayer(layer, isChecked);
+
+                    // 更新按钮状态
+                    const label = e.target.closest('.layer-toggle');
+                    if (isChecked) {
+                        label.classList.add('active');
+                    } else {
+                        label.classList.remove('active');
+                    }
+                });
+            });
+
+            // 标记点击事件
+            document.querySelectorAll('.map-marker').forEach(marker => {
+                marker.addEventListener('mouseenter', showMarkerTooltip);
+                marker.addEventListener('mouseleave', hideMarkerTooltip);
+                marker.addEventListener('click', (e) => {
+                    const info = e.target.dataset.info;
+                    showNotification(info, 'info');
+                });
+            });
+
+            // 地图区域悬停事件
+            document.querySelectorAll('.map-area').forEach(area => {
+                area.addEventListener('mouseenter', (e) => {
+                    const name = e.target.dataset.name;
+                    if (name) {
+                        showNotification(name, 'info');
+                    }
+                });
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function setupMapInteraction() {
+            const mapContainer = document.getElementById('mapContainer');
+
+            // 鼠标拖拽
+            mapContainer.addEventListener('mousedown', (e) => {
+                mapState.isDragging = true;
+                mapState.lastX = e.clientX;
+                mapState.lastY = e.clientY;
+                mapContainer.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!mapState.isDragging) return;
+
+                const deltaX = e.clientX - mapState.lastX;
+                const deltaY = e.clientY - mapState.lastY;
+
+                mapState.centerX -= deltaX / mapState.zoom;
+                mapState.centerY -= deltaY / mapState.zoom;
+
+                mapState.lastX = e.clientX;
+                mapState.lastY = e.clientY;
+
+                updateMapTransform();
+            });
+
+            document.addEventListener('mouseup', () => {
+                mapState.isDragging = false;
+                mapContainer.style.cursor = 'grab';
+            });
+
+            // 鼠标滚轮缩放
+            mapContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                zoomMap(zoomFactor);
+            });
+
+            // 触摸支持
+            let touchStartX, touchStartY, initialDistance;
+
+            mapContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+
+                if (e.touches.length === 1) {
+                    // 单点触摸 - 拖拽
+                    mapState.isDragging = true;
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    // 双点触摸 - 缩放
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    initialDistance = Math.sqrt(
+                        Math.pow(touch2.clientX - touch1.clientX, 2) +
+                        Math.pow(touch2.clientY - touch1.clientY, 2)
+                    );
+                }
+            });
+
+            mapContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+
+                if (e.touches.length === 1 && mapState.isDragging) {
+                    // 拖拽
+                    const deltaX = e.touches[0].clientX - touchStartX;
+                    const deltaY = e.touches[0].clientY - touchStartY;
+
+                    mapState.centerX -= deltaX / mapState.zoom;
+                    mapState.centerY -= deltaY / mapState.zoom;
+
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+
+                    updateMapTransform();
+                } else if (e.touches.length === 2) {
+                    // 缩放
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const currentDistance = Math.sqrt(
+                        Math.pow(touch2.clientX - touch1.clientX, 2) +
+                        Math.pow(touch2.clientY - touch1.clientY, 2)
+                    );
+
+                    const zoomFactor = currentDistance / initialDistance;
+                    zoomMap(zoomFactor);
+                    initialDistance = currentDistance;
+                }
+            });
+
+            mapContainer.addEventListener('touchend', () => {
+                mapState.isDragging = false;
+            });
+        }
+
+        function zoomMap(factor) {
+            mapState.zoom = Math.max(0.5, Math.min(3.0, mapState.zoom * factor));
+            updateMapTransform();
+            updateZoomLevel();
+
+            // 触觉反馈
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        function resetView() {
+            mapState.zoom = 1.0;
+            mapState.centerX = 0;
+            mapState.centerY = 0;
+            updateMapTransform();
+            updateZoomLevel();
+            showNotification('视角已重置', 'info');
+        }
+
+        function updateMapTransform() {
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.style.transform = `translate(${mapState.centerX}px, ${mapState.centerY}px) scale(${mapState.zoom})`;
+        }
+
+        function updateZoomLevel() {
+            const zoomLevel = document.getElementById('zoomLevel');
+            zoomLevel.textContent = `缩放: ${Math.round(mapState.zoom * 100)}%`;
+        }
+
+        function toggleLayer(layer, show) {
+            mapState.layers[layer] = show;
+
+            // 根据图层类型显示/隐藏元素
+            let selector = '';
+            switch (layer) {
+                case 'players':
+                    selector = '.player-marker, .teammate-marker';
+                    break;
+                case 'enemies':
+                    selector = '.enemy-marker';
+                    break;
+                case 'loot':
+                    selector = '.loot-marker';
+                    break;
+                case 'evacuation':
+                    selector = '.evacuation-marker';
+                    break;
+                case 'vision':
+                    selector = '.vision-range';
+                    break;
+                case 'safezone':
+                    selector = '.safe-zone';
+                    break;
+            }
+
+            if (selector) {
+                document.querySelectorAll(selector).forEach(element => {
+                    element.style.display = show ? 'block' : 'none';
+                });
+            }
+
+            const actionText = show ? '显示' : '隐藏';
+            const layerNames = {
+                players: '玩家位置',
+                enemies: '敌人标记',
+                loot: '装备掉落',
+                evacuation: '撤离点',
+                vision: '视野范围',
+                safezone: '安全区域'
+            };
+
+            showNotification(`${actionText}${layerNames[layer]}`, 'info');
+        }
+
+        function toggleMinimize() {
+            const minimapOverlay = document.getElementById('minimapOverlay');
+            const minimizeBtn = document.getElementById('minimizeBtn');
+
+            mapState.isMinimized = !mapState.isMinimized;
+
+            if (mapState.isMinimized) {
+                // 切换到悬浮模式
+                minimapOverlay.classList.remove('hidden');
+                minimapOverlay.classList.add('animate-slide-in');
+                minimizeBtn.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                showNotification('已切换到悬浮地图模式', 'info');
+            } else {
+                // 切换回全屏模式
+                minimapOverlay.classList.add('hidden');
+                minimapOverlay.classList.remove('animate-slide-in');
+                minimizeBtn.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                showNotification('已切换到全屏地图模式', 'info');
+            }
+        }
+
+        function closeOverlay() {
+            const minimapOverlay = document.getElementById('minimapOverlay');
+            const minimizeBtn = document.getElementById('minimizeBtn');
+
+            minimapOverlay.classList.add('animate-slide-out');
+            setTimeout(() => {
+                minimapOverlay.classList.add('hidden');
+                minimapOverlay.classList.remove('animate-slide-out');
+                minimizeBtn.style.display = 'flex';
+            }, 300);
+
+            mapState.isMinimized = false;
+            document.body.style.overflow = 'hidden';
+            showNotification('地图已关闭', 'info');
+        }
+
+        function showMarkerTooltip(e) {
+            const tooltip = document.getElementById('markerTooltip');
+            const content = document.getElementById('tooltipContent');
+            const info = e.target.dataset.info;
+
+            if (info) {
+                content.textContent = info;
+                tooltip.classList.remove('hidden');
+
+                // 计算位置
+                const rect = e.target.getBoundingClientRect();
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+            }
+        }
+
+        function hideMarkerTooltip() {
+            const tooltip = document.getElementById('markerTooltip');
+            tooltip.classList.add('hidden');
+        }
+
+        function updateMarkerList() {
+            const markerList = document.getElementById('markerList');
+            markerList.innerHTML = '';
+
+            // 添加各种标记到列表
+            const markers = [
+                { type: '队友', name: 'Alpha_Sniper', distance: '85m', status: 'online' },
+                { type: '队友', name: 'BravoSupport', distance: '120m', status: 'online' },
+                { type: '敌人', name: '未知敌人', distance: '245m', status: 'hostile' },
+                { type: '装备', name: 'AK-47 突击步枪', distance: '180m', status: 'loot' },
+                { type: '撤离点', name: 'Alpha 撤离点', distance: '450m', status: 'evacuation' }
+            ];
+
+            markers.forEach(marker => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 bg-tactical-700/30 rounded border border-tactical-600/30 text-xs';
+
+                const statusColors = {
+                    online: 'text-success-400',
+                    hostile: 'text-alert-400',
+                    loot: 'text-amber-400',
+                    evacuation: 'text-purple-400'
+                };
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full ${marker.status === 'online' ? 'bg-success-400' : marker.status === 'hostile' ? 'bg-alert-400' : marker.status === 'loot' ? 'bg-amber-400' : 'bg-purple-400'}"></div>
+                        <div>
+                            <div class="${statusColors[marker.status]}">${marker.name}</div>
+                            <div class="text-tactical-500">${marker.type}</div>
+                        </div>
+                    </div>
+                    <div class="text-tactical-400 font-mono">${marker.distance}</div>
+                `;
+
+                item.addEventListener('click', () => {
+                    showNotification(`导航到 ${marker.name}`, 'info');
+                });
+
+                markerList.appendChild(item);
+            });
+        }
+
+        function updatePlayerPosition() {
+            const coords = document.getElementById('playerCoords');
+            const playerMarker = document.getElementById('playerMarker');
+            const visionRange = document.getElementById('visionRange');
+
+            // 更新坐标显示
+            coords.textContent = `X: ${playerData.x}, Y: ${playerData.y}`;
+
+            // 更新视野范围位置
+            if (visionRange) {
+                const rect = playerMarker.getBoundingClientRect();
+                const containerRect = document.getElementById('mapContainer').getBoundingClientRect();
+
+                visionRange.style.left = (rect.left - containerRect.left - 60) + 'px';
+                visionRange.style.top = (rect.top - containerRect.top - 60) + 'px';
+            }
+        }
+
+        function startSimulation() {
+            // 模拟玩家移动和敌人更新
+            setInterval(() => {
+                // 轻微移动玩家位置
+                playerData.x += (Math.random() - 0.5) * 10;
+                playerData.y += (Math.random() - 0.5) * 10;
+
+                updatePlayerPosition();
+
+                // 随机更新敌人最后发现时间
+                playerData.enemies.forEach(enemy => {
+                    enemy.lastSeen += 1;
+                });
+
+                // 偶尔添加新的敌人标记
+                if (Math.random() < 0.05) {
+                    addNewEnemyMarker();
+                }
+            }, 5000);
+
+            // 更新队友状态
+            setInterval(() => {
+                playerData.teammates.forEach(teammate => {
+                    // 轻微健康值变化
+                    teammate.health += (Math.random() - 0.5) * 5;
+                    teammate.health = Math.max(0, Math.min(100, teammate.health));
+                });
+            }, 10000);
+        }
+
+        function addNewEnemyMarker() {
+            const mapContainer = document.getElementById('mapContainer');
+            const newEnemy = document.createElement('div');
+
+            newEnemy.className = 'map-marker enemy-marker';
+            newEnemy.style.top = Math.random() * 80 + 10 + '%';
+            newEnemy.style.left = Math.random() * 80 + 10 + '%';
+            newEnemy.dataset.info = '敌人 - 刚刚发现';
+
+            newEnemy.addEventListener('mouseenter', showMarkerTooltip);
+            newEnemy.addEventListener('mouseleave', hideMarkerTooltip);
+            newEnemy.addEventListener('click', (e) => {
+                showNotification('新敌人已标记', 'alert');
+            });
+
+            mapContainer.appendChild(newEnemy);
+
+            // 3秒后移除标记（模拟敌人移动）
+            setTimeout(() => {
+                if (newEnemy.parentNode) {
+                    newEnemy.parentNode.removeChild(newEnemy);
+                }
+            }, 30000);
+
+            showNotification('发现新敌人！', 'alert');
+
+            // 触觉反馈
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        function handleKeyPress(e) {
+            switch (e.key) {
+                case 'Escape':
+                    if (mapState.isMinimized) {
+                        closeOverlay();
+                    } else {
+                        document.getElementById('backBtn').click();
+                    }
+                    break;
+                case 'm':
+                case 'M':
+                    toggleMinimize();
+                    break;
+                case '+':
+                case '=':
+                    zoomMap(1.2);
+                    break;
+                case '-':
+                case '_':
+                    zoomMap(0.8);
+                    break;
+                case '0':
+                    resetView();
+                    break;
+                case '1':
+                    document.querySelector('[data-layer="players"]').click();
+                    break;
+                case '2':
+                    document.querySelector('[data-layer="enemies"]').click();
+                    break;
+                case '3':
+                    document.querySelector('[data-layer="loot"]').click();
+                    break;
+                case '4':
+                    document.querySelector('[data-layer="evacuation"]').click();
+                    break;
+                case '5':
+                    document.querySelector('[data-layer="vision"]').click();
+                    break;
+                case '6':
+                    document.querySelector('[data-layer="safezone"]').click();
+                    break;
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `bg-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-500/90 rounded-lg px-4 py-2 border border-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-400 backdrop-filter backdrop-blur-md animate-zoom-in`;
+            notification.innerHTML = `
+                <div class="text-sm text-white font-semibold">${message}</div>
+            `;
+
+            document.getElementById('notifications').appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove('animate-zoom-in');
+                notification.classList.add('animate-zoom-out');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 防止页面滚动和缩放
+        document.addEventListener('touchmove', (e) => {
+            if (!e.target.closest('#mapContainer')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('gesturechange', (e) => e.preventDefault());
+
+        console.log('GTI-2D Map System initialized');
+    </script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 色彩系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F', // 主色
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1', // 科技蓝
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347', // 警戒色
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22', // 成功色
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F', // 中性色
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --military-primary: #556B2F;
+            --cyber-primary: #00CED1;
+            --alert-primary: #FF6347;
+            --success-primary: #228B22;
+            --tactical-primary: #2F4F4F;
+        }
+
+        .theme-light {
+            --military-primary: #556B2F;
+            --cyber-primary: #0a7377;
+            --alert-primary: #dd4e2f;
+            --success-primary: #15803d;
+            --tactical-primary: #475569;
+        }
+
+        .color-swatch {
+            transition: all 0.3s ease;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .contrast-demo {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contrast-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .accessibility-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .aa-badge {
+            background-color: #15803d;
+            color: white;
+        }
+
+        .aaa-badge {
+            background-color: #166534;
+            color: white;
+        }
+
+        .fail-badge {
+            background-color: #dc2626;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-military-700 rounded border-2 border-cyber-400 flex items-center justify-center">
+                        <span class="text-cyber-400 font-bold text-sm">C</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">GTI-2D 色彩系统</h1>
+                        <p class="text-xs text-tactical-400">Color System & Accessibility</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded border border-cyber-400/30 transition-all duration-200 text-sm">
+                        浅色主题
+                    </button>
+                    <a href="design-guide.html" class="text-tactical-400 hover:text-cyber-400 transition-colors text-sm">← 设计指南</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Color Palette Overview -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">主色调系统</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+                <!-- Military Green -->
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600">
+                    <div class="w-full h-32 bg-military-700 rounded-lg mb-4 color-swatch border-2 border-military-600"></div>
+                    <h3 class="text-lg font-semibold text-military-300 mb-2">军绿色</h3>
+                    <p class="text-sm text-tactical-400 mb-2">Military Green</p>
+                    <p class="font-mono text-xs text-tactical-300">#556B2F</p>
+                    <p class="text-xs text-tactical-500 mt-2">主要品牌色彩，用于重要元素和强调</p>
+                </div>
+
+                <!-- Cyber Blue -->
+                <div class="bg-tactical-800 rounded-lg p-6 border border-cyber-600">
+                    <div class="w-full h-32 bg-cyber-400 rounded-lg mb-4 color-swatch border-2 border-cyber-600"></div>
+                    <h3 class="text-lg font-semibold text-cyber-300 mb-2">科技蓝</h3>
+                    <p class="text-sm text-tactical-400 mb-2">Cyber Blue</p>
+                    <p class="font-mono text-xs text-tactical-300">#00CED1</p>
+                    <p class="text-xs text-tactical-500 mt-2">信息提示、链接和科技元素</p>
+                </div>
+
+                <!-- Alert Red -->
+                <div class="bg-tactical-800 rounded-lg p-6 border border-alert-600">
+                    <div class="w-full h-32 bg-alert-500 rounded-lg mb-4 color-swatch border-2 border-alert-600"></div>
+                    <h3 class="text-lg font-semibold text-alert-300 mb-2">警戒色</h3>
+                    <p class="text-sm text-tactical-400 mb-2">Alert Red</p>
+                    <p class="font-mono text-xs text-tactical-300">#FF6347</p>
+                    <p class="text-xs text-tactical-500 mt-2">危险状态、错误信息和警告</p>
+                </div>
+
+                <!-- Success Green -->
+                <div class="bg-tactical-800 rounded-lg p-6 border border-success-600">
+                    <div class="w-full h-32 bg-success-500 rounded-lg mb-4 color-swatch border-2 border-success-600"></div>
+                    <h3 class="text-lg font-semibold text-success-300 mb-2">成功色</h3>
+                    <p class="text-sm text-tactical-400 mb-2">Success Green</p>
+                    <p class="font-mono text-xs text-tactical-300">#228B22</p>
+                    <p class="text-xs text-tactical-500 mt-2">成功状态、完成提示和正面反馈</p>
+                </div>
+
+                <!-- Tactical Gray -->
+                <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+                    <div class="w-full h-32 bg-tactical-700 rounded-lg mb-4 color-swatch border-2 border-tactical-600"></div>
+                    <h3 class="text-lg font-semibold text-tactical-300 mb-2">中性色</h3>
+                    <p class="text-sm text-tactical-400 mb-2">Tactical Gray</p>
+                    <p class="font-mono text-xs text-tactical-300">#2F4F4F</p>
+                    <p class="text-xs text-tactical-500 mt-2">背景、边框和次要元素</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Scales -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">色彩层级系统</h2>
+
+            <!-- Military Scale -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">军绿色层级</h3>
+                <div class="bg-tactical-800/50 rounded-lg p-6 border border-military-600/30">
+                    <div class="grid grid-cols-5 md:grid-cols-10 gap-2 mb-4">
+                        <div class="aspect-square bg-military-50 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">50</span>
+                        </div>
+                        <div class="aspect-square bg-military-100 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">100</span>
+                        </div>
+                        <div class="aspect-square bg-military-200 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">200</span>
+                        </div>
+                        <div class="aspect-square bg-military-300 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">300</span>
+                        </div>
+                        <div class="aspect-square bg-military-400 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">400</span>
+                        </div>
+                        <div class="aspect-square bg-military-500 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">500</span>
+                        </div>
+                        <div class="aspect-square bg-military-600 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">600</span>
+                        </div>
+                        <div class="aspect-square bg-military-700 rounded border border-cyber-400 border-2 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white font-bold">700</span>
+                        </div>
+                        <div class="aspect-square bg-military-800 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">800</span>
+                        </div>
+                        <div class="aspect-square bg-military-900 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">900</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-tactical-400">
+                        <p class="mb-2"><strong>使用场景：</strong></p>
+                        <ul class="space-y-1 text-xs">
+                            <li>• <span class="text-military-300">300-400:</span> 边框和分割线</li>
+                            <li>• <span class="text-military-500">500-600:</span> 禁用状态和次要元素</li>
+                            <li>• <span class="text-military-700">700:</span> 主要按钮和品牌元素（主色）</li>
+                            <li>• <span class="text-military-800">800-900:</span> 深色背景和容器</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cyber Scale -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-cyber-300">科技蓝层级</h3>
+                <div class="bg-tactical-800/50 rounded-lg p-6 border border-cyber-600/30">
+                    <div class="grid grid-cols-5 md:grid-cols-10 gap-2 mb-4">
+                        <div class="aspect-square bg-cyber-50 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">50</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-100 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">100</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-200 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">200</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-300 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">300</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-400 rounded border border-military-400 border-2 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-900 font-bold">400</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-500 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">500</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-600 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">600</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-700 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">700</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-800 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">800</span>
+                        </div>
+                        <div class="aspect-square bg-cyber-900 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">900</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-tactical-400">
+                        <p class="mb-2"><strong>使用场景：</strong></p>
+                        <ul class="space-y-1 text-xs">
+                            <li>• <span class="text-cyber-100">100-200:</span> 浅色背景和高亮</li>
+                            <li>• <span class="text-cyber-300">300:</span> 悬停状态</li>
+                            <li>• <span class="text-cyber-400">400:</span> 链接和交互元素（主色）</li>
+                            <li>• <span class="text-cyber-600">600-700:</span> 深色主题下的主色</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Scale -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-alert-300">警戒色层级</h3>
+                <div class="bg-tactical-800/50 rounded-lg p-6 border border-alert-600/30">
+                    <div class="grid grid-cols-5 md:grid-cols-10 gap-2 mb-4">
+                        <div class="aspect-square bg-alert-50 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">50</span>
+                        </div>
+                        <div class="aspect-square bg-alert-100 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">100</span>
+                        </div>
+                        <div class="aspect-square bg-alert-200 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">200</span>
+                        </div>
+                        <div class="aspect-square bg-alert-300 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-tactical-800">300</span>
+                        </div>
+                        <div class="aspect-square bg-alert-400 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">400</span>
+                        </div>
+                        <div class="aspect-square bg-alert-500 rounded border border-military-400 border-2 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white font-bold">500</span>
+                        </div>
+                        <div class="aspect-square bg-alert-600 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">600</span>
+                        </div>
+                        <div class="aspect-square bg-alert-700 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">700</span>
+                        </div>
+                        <div class="aspect-square bg-alert-800 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">800</span>
+                        </div>
+                        <div class="aspect-square bg-alert-900 rounded border border-tactical-600 flex items-center justify-center">
+                            <span class="text-xs font-mono text-white">900</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-tactical-400">
+                        <p class="mb-2"><strong>使用场景：</strong></p>
+                        <ul class="space-y-1 text-xs">
+                            <li>• <span class="text-alert-100">100-200:</span> 错误提示背景</li>
+                            <li>• <span class="text-alert-400">400:</span> 图标和边框</li>
+                            <li>• <span class="text-alert-500">500:</span> 危险按钮和警告（主色）</li>
+                            <li>• <span class="text-alert-700">700-800:</span> 深色警告背景</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game-specific Color Usage -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">游戏状态色彩映射</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Health & Status -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-xl font-semibold mb-4 text-military-300">生命值与状态</h3>
+                    <div class="space-y-4">
+                        <!-- Health States -->
+                        <div class="flex items-center justify-between p-3 rounded bg-success-900/30 border border-success-600/30">
+                            <span class="text-success-300">生命值 (80-100%)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-success-500 rounded"></div>
+                                <span class="text-xs font-mono">#228B22</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-yellow-900/30 border border-yellow-600/30">
+                            <span class="text-yellow-300">生命值 (40-79%)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                                <span class="text-xs font-mono">#EAB308</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-alert-900/30 border border-alert-600/30">
+                            <span class="text-alert-300">生命值 (0-39%)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-alert-500 rounded"></div>
+                                <span class="text-xs font-mono">#FF6347</span>
+                            </div>
+                        </div>
+
+                        <!-- Shield States -->
+                        <div class="flex items-center justify-between p-3 rounded bg-cyber-900/30 border border-cyber-600/30">
+                            <span class="text-cyber-300">护甲值</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-cyber-400 rounded"></div>
+                                <span class="text-xs font-mono">#00CED1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Rarity -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-xl font-semibold mb-4 text-military-300">装备稀有度</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 rounded bg-gray-800/50 border border-gray-600/30">
+                            <span class="text-gray-300">普通 (Common)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-gray-500 rounded"></div>
+                                <span class="text-xs font-mono">#6B7280</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-green-900/30 border border-green-600/30">
+                            <span class="text-green-300">精良 (Uncommon)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-green-500 rounded"></div>
+                                <span class="text-xs font-mono">#10B981</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-blue-900/30 border border-blue-600/30">
+                            <span class="text-blue-300">稀有 (Rare)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-blue-500 rounded"></div>
+                                <span class="text-xs font-mono">#3B82F6</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-purple-900/30 border border-purple-600/30">
+                            <span class="text-purple-300">史诗 (Epic)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-purple-500 rounded"></div>
+                                <span class="text-xs font-mono">#8B5CF6</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3 rounded bg-orange-900/30 border border-orange-600/30">
+                            <span class="text-orange-300">传奇 (Legendary)</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-orange-500 rounded"></div>
+                                <span class="text-xs font-mono">#F97316</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contrast & Accessibility -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">对比度与无障碍性</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Contrast Tests -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">对比度测试</h3>
+
+                    <!-- Light on Dark -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold mb-3 text-tactical-400">深色背景文本对比度</h4>
+                        <div class="space-y-3">
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-tactical-900 rounded border border-tactical-700">
+                                <span class="text-white">白色文本 (#FFFFFF)</span>
+                                <span class="aaa-badge accessibility-badge">AAA</span>
+                            </div>
+
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-tactical-800 rounded border border-tactical-600">
+                                <span class="text-cyber-400">科技蓝文本 (#00CED1)</span>
+                                <span class="aa-badge accessibility-badge">AA</span>
+                            </div>
+
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-military-700 rounded border border-military-600">
+                                <span class="text-tactical-100">浅灰文本 (#F1F5F9)</span>
+                                <span class="aa-badge accessibility-badge">AA</span>
+                            </div>
+
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-tactical-700 rounded border border-tactical-600">
+                                <span class="text-tactical-400">中灰文本 (#94A3B8)</span>
+                                <span class="fail-badge accessibility-badge">FAIL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dark on Light -->
+                    <div>
+                        <h4 class="text-sm font-semibold mb-3 text-tactical-400">浅色背景文本对比度</h4>
+                        <div class="space-y-3">
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-white rounded border border-tactical-300">
+                                <span class="text-tactical-900">深色文本 (#0F172A)</span>
+                                <span class="aaa-badge accessibility-badge">AAA</span>
+                            </div>
+
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-cyber-50 rounded border border-cyber-200">
+                                <span class="text-cyber-800">深蓝文本 (#115E61)</span>
+                                <span class="aa-badge accessibility-badge">AA</span>
+                            </div>
+
+                            <div class="contrast-demo flex items-center justify-between p-4 bg-military-100 rounded border border-military-200">
+                                <span class="text-military-800">深绿文本 (#485A28)</span>
+                                <span class="aa-badge accessibility-badge">AA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Guidelines -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">无障碍指南</h3>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-sm font-semibold mb-2 text-success-400">✓ 推荐使用</h4>
+                            <ul class="space-y-2 text-sm text-tactical-300">
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    主要文本使用高对比度颜色（4.5:1 以上）
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    重要信息不仅依赖颜色传达
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    使用图标和文字双重标识
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    状态变化有明显视觉反馈
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold mb-2 text-alert-400">✗ 避免使用</h4>
+                            <ul class="space-y-2 text-sm text-tactical-300">
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-alert-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    低对比度的颜色组合
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-alert-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    纯颜色区分重要信息
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-alert-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    过于鲜艳的背景色
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="w-2 h-2 bg-alert-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                    快速闪烁的颜色变化
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Theme Variations -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">主题变化</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Dark Theme -->
+                <div class="bg-tactical-900 rounded-lg p-6 border border-cyber-400/30">
+                    <h3 class="text-xl font-semibold mb-4 text-cyber-400">深色主题 (默认)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-tactical-800 p-4 rounded border border-tactical-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-tactical-100">主要内容</span>
+                                <button class="px-3 py-1 bg-military-700 text-cyber-400 rounded text-sm">操作</button>
+                            </div>
+                            <p class="text-tactical-400 text-sm">这是深色主题下的界面示例，使用深色背景和浅色文本。</p>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <div class="w-8 h-8 bg-military-700 rounded border border-cyber-400/50"></div>
+                            <div class="w-8 h-8 bg-cyber-400 rounded"></div>
+                            <div class="w-8 h-8 bg-alert-500 rounded"></div>
+                            <div class="w-8 h-8 bg-success-500 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Light Theme -->
+                <div id="lightThemeDemo" class="bg-white rounded-lg p-6 border border-gray-300">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">浅色主题</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-900">主要内容</span>
+                                <button class="px-3 py-1 bg-military-700 text-white rounded text-sm hover:bg-military-600">操作</button>
+                            </div>
+                            <p class="text-gray-600 text-sm">这是浅色主题下的界面示例，使用浅色背景和深色文本。</p>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <div class="w-8 h-8 bg-military-700 rounded border border-gray-300"></div>
+                            <div class="w-8 h-8 bg-cyan-600 rounded"></div>
+                            <div class="w-8 h-8 bg-orange-500 rounded"></div>
+                            <div class="w-8 h-8 bg-green-600 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSS Variables for Theming -->
+            <div class="mt-8 bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                <h3 class="text-lg font-semibold mb-4 text-military-300">CSS 变量配置</h3>
+                <div class="bg-tactical-900 rounded-lg p-4 overflow-x-auto">
+                    <pre class="text-sm text-tactical-300"><code>:root {
+  --military-primary: #556B2F;
+  --cyber-primary: #00CED1;
+  --alert-primary: #FF6347;
+  --success-primary: #228B22;
+  --tactical-primary: #2F4F4F;
+}
+
+.theme-light {
+  --military-primary: #556B2F;
+  --cyber-primary: #0a7377;
+  --alert-primary: #dd4e2f;
+  --success-primary: #15803d;
+  --tactical-primary: #475569;
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color Blindness Consideration -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">色盲友好设计</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Normal Vision -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">正常色觉</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-success-500 rounded"></div>
+                            <span class="text-sm">成功状态</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-alert-500 rounded"></div>
+                            <span class="text-sm">危险状态</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-cyber-400 rounded"></div>
+                            <span class="text-sm">信息提示</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deuteranopia Simulation -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">红绿色盲视角</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-yellow-500 rounded"></div>
+                            <span class="text-sm">成功状态 + ✓</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-yellow-600 rounded"></div>
+                            <span class="text-sm">危险状态 + ⚠</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-cyan-400 rounded"></div>
+                            <span class="text-sm">信息提示 + ℹ</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-tactical-500 mt-4">通过图标辅助，确保信息传达不依赖颜色</p>
+                </div>
+
+                <!-- Solutions -->
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">解决方案</h3>
+                    <ul class="space-y-2 text-sm text-tactical-300">
+                        <li class="flex items-start">
+                            <span class="text-success-400 mr-2">✓</span>
+                            使用图标和文字标识
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-success-400 mr-2">✓</span>
+                            不同的形状和图案
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-success-400 mr-2">✓</span>
+                            高对比度设计
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-success-400 mr-2">✓</span>
+                            位置和布局变化
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-success-400 mr-2">✓</span>
+                            动画和声音反馈
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-tactical-800 border-t border-cyber-400/20 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-tactical-400 text-sm">GTI-2D 色彩系统 - 符合 WCAG 2.1 AA 标准</p>
+                <p class="text-tactical-500 text-xs mt-2">Color System • Accessibility • Game Design</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        let isLight = false;
+
+        themeToggle.addEventListener('click', () => {
+            isLight = !isLight;
+
+            if (isLight) {
+                body.classList.remove('bg-tactical-900', 'text-tactical-100');
+                body.classList.add('bg-gray-50', 'text-gray-900');
+                themeToggle.textContent = '深色主题';
+                body.classList.add('theme-light');
+            } else {
+                body.classList.remove('bg-gray-50', 'text-gray-900');
+                body.classList.add('bg-tactical-900', 'text-tactical-100');
+                themeToggle.textContent = '浅色主题';
+                body.classList.remove('theme-light');
+            }
+        });
+
+        // Color swatch interactions
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', function() {
+                const color = window.getComputedStyle(this).backgroundColor;
+                const rgbMatch = color.match(/rgb\((\d+), (\d+), (\d+)\)/);
+                if (rgbMatch) {
+                    const hex = '#' + [rgbMatch[1], rgbMatch[2], rgbMatch[3]]
+                        .map(x => parseInt(x).toString(16).padStart(2, '0'))
+                        .join('');
+
+                    navigator.clipboard.writeText(hex).then(() => {
+                        // Show copied feedback
+                        const original = this.style.transform;
+                        this.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            this.style.transform = original;
+                        }, 150);
+                    });
+                }
+            });
+        });
+
+        // Contrast ratio calculator (simplified)
+        function getContrastRatio(color1, color2) {
+            // This is a simplified version - in production, you'd use a proper contrast calculation
+            const luminance1 = getLuminance(color1);
+            const luminance2 = getLuminance(color2);
+            const lighter = Math.max(luminance1, luminance2);
+            const darker = Math.min(luminance1, luminance2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        function getLuminance(color) {
+            // Simplified luminance calculation
+            const rgb = color.match(/\d+/g);
+            if (!rgb) return 0;
+
+            const [r, g, b] = rgb.map(x => {
+                x = parseInt(x) / 255;
+                return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            });
+
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+
+        // Add shimmer effect to contrast demos
+        setInterval(() => {
+            document.querySelectorAll('.contrast-demo').forEach(demo => {
+                demo.style.animation = 'none';
+                setTimeout(() => {
+                    demo.style.animation = '';
+                }, 10);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

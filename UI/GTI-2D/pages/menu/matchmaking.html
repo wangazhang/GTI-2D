@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 匹配系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                        'radar-scan': 'radar-scan 2s linear infinite',
+                        'connect-pulse': 'connect-pulse 1.5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        'radar-scan': {
+                            '0%': { transform: 'rotate(0deg) scale(1)', opacity: '1' },
+                            '50%': { transform: 'rotate(180deg) scale(1.1)', opacity: '0.5' },
+                            '100%': { transform: 'rotate(360deg) scale(1)', opacity: '1' }
+                        },
+                        'connect-pulse': {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.5', transform: 'scale(1.05)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-tactical-900 via-military-900 to-tactical-800 font-military text-white overflow-x-hidden">
+    <!-- 动态背景效果 -->
+    <div class="fixed inset-0 opacity-15">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920')] bg-cover bg-center bg-fixed opacity-30"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-military-900/90 via-transparent to-cyber-900/40"></div>
+        <!-- 雷达扫描动画背景 -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 opacity-20">
+            <div class="w-full h-full border border-cyber-400/30 rounded-full animate-radar-scan"></div>
+        </div>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <nav class="relative z-50 border-b border-military-600/30 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="main-menu.html" class="flex items-center space-x-2 text-tactical-300 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span class="text-sm">返回主菜单</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 text-sm">
+                        <span class="text-cyber-400 animate-pulse">●</span>
+                        <span class="text-tactical-300">匹配中...</span>
+                    </div>
+                    <div class="text-sm text-tactical-400 font-mono" id="match-timer">00:00</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="relative z-10 min-h-screen flex flex-col">
+        <!-- 匹配状态标题 -->
+        <div class="text-center py-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyber-400 to-military-300 bg-clip-text text-transparent">
+                战术匹配
+            </h1>
+            <p class="text-xl text-tactical-200 mb-2">正在为您寻找势均力敌的对手</p>
+            <div class="w-32 h-0.5 bg-gradient-to-r from-transparent via-cyber-400 to-transparent mx-auto"></div>
+        </div>
+
+        <!-- 匹配进度区域 -->
+        <div class="container mx-auto px-4 flex-1">
+            <div class="max-w-4xl mx-auto">
+                <!-- 匹配进度圆环 -->
+                <div class="text-center mb-12">
+                    <div class="relative inline-block">
+                        <div class="w-48 h-48 mx-auto relative">
+                            <!-- 外圆环 -->
+                            <div class="absolute inset-0 border-4 border-tactical-700 rounded-full"></div>
+                            <!-- 进度圆环 -->
+                            <div class="absolute inset-0">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4" fill="transparent" class="text-tactical-700"/>
+                                    <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4" fill="transparent"
+                                            class="text-cyber-400 animate-pulse"
+                                            style="stroke-dasharray: 289; stroke-dashoffset: 0;"
+                                            id="progress-circle"/>
+                                </svg>
+                            </div>
+                            <!-- 中心图标 -->
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="relative">
+                                    <svg class="w-16 h-16 text-cyber-400 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    </svg>
+                                    <div class="absolute inset-0 border-2 border-cyber-400/30 rounded-full animate-ping"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 匹配状态文字 -->
+                        <div class="mt-6">
+                            <div class="text-2xl font-bold text-white mb-2" id="match-status">搜索对手中</div>
+                            <div class="text-tactical-400 text-lg" id="match-progress">
+                                正在扫描全球服务器...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 当前队伍状态 -->
+                <div class="mb-12">
+                    <h2 class="text-xl font-bold text-center mb-6 text-cyber-300">当前队伍</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- 玩家1 - 自己 -->
+                        <div class="bg-gradient-to-br from-military-800/60 to-tactical-800/60 rounded-xl border-2 border-success-500/50 p-6 backdrop-blur-sm">
+                            <div class="text-center">
+                                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-cyber-500 to-military-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="font-bold text-white mb-1">指挥官_Alpha</h3>
+                                <div class="text-sm text-tactical-400 mb-2">等级 23 • 队长</div>
+                                <div class="text-xs text-success-400 bg-success-900/30 rounded-full px-2 py-1">准备就绪</div>
+                            </div>
+                        </div>
+
+                        <!-- 玩家2 - 匹配中 -->
+                        <div class="bg-gradient-to-br from-military-800/40 to-tactical-800/40 rounded-xl border border-cyber-400/30 p-6 backdrop-blur-sm animate-connect-pulse">
+                            <div class="text-center">
+                                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-tactical-600 to-tactical-700 rounded-full flex items-center justify-center relative">
+                                    <svg class="w-10 h-10 text-tactical-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    <div class="absolute inset-0 border-2 border-cyber-400/50 rounded-full animate-ping"></div>
+                                </div>
+                                <h3 class="font-bold text-tactical-300 mb-1">匹配中...</h3>
+                                <div class="text-sm text-tactical-500 mb-2">寻找队友</div>
+                                <div class="text-xs text-cyber-400 bg-cyber-900/30 rounded-full px-2 py-1">连接中</div>
+                            </div>
+                        </div>
+
+                        <!-- 玩家3 - 匹配中 -->
+                        <div class="bg-gradient-to-br from-military-800/40 to-tactical-800/40 rounded-xl border border-cyber-400/30 p-6 backdrop-blur-sm animate-connect-pulse" style="animation-delay: 0.5s;">
+                            <div class="text-center">
+                                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-tactical-600 to-tactical-700 rounded-full flex items-center justify-center relative">
+                                    <svg class="w-10 h-10 text-tactical-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    <div class="absolute inset-0 border-2 border-cyber-400/50 rounded-full animate-ping" style="animation-delay: 0.3s;"></div>
+                                </div>
+                                <h3 class="font-bold text-tactical-300 mb-1">匹配中...</h3>
+                                <div class="text-sm text-tactical-500 mb-2">寻找队友</div>
+                                <div class="text-xs text-cyber-400 bg-cyber-900/30 rounded-full px-2 py-1">连接中</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 匹配信息面板 -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <!-- 匹配统计 -->
+                    <div class="bg-gradient-to-r from-military-800/40 to-tactical-800/40 rounded-xl border border-military-600/30 backdrop-blur-sm p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-cyber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            匹配统计
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-tactical-300">当前在线</span>
+                                <span class="text-white font-mono" id="online-count">2,847</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-tactical-300">匹配队列</span>
+                                <span class="text-cyber-400 font-mono" id="queue-count">156</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-tactical-300">预计等待</span>
+                                <span class="text-military-400 font-mono" id="estimated-wait">45秒</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-tactical-300">服务器</span>
+                                <span class="text-success-400 font-mono">亚洲-1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 地图预览 -->
+                    <div class="bg-gradient-to-r from-tactical-800/40 to-military-800/40 rounded-xl border border-tactical-600/30 backdrop-blur-sm p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-military-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/>
+                            </svg>
+                            待选地图
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="bg-military-900/30 rounded-lg p-3 border-l-4 border-cyber-400">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-semibold text-white">工业区</h4>
+                                        <p class="text-sm text-tactical-400">城市战术地图</p>
+                                    </div>
+                                    <div class="text-xs text-cyber-400 bg-cyber-900/30 rounded-full px-2 py-1">
+                                        候选
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-tactical-900/30 rounded-lg p-3 border-l-4 border-military-400">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-semibold text-white">沙漠前哨</h4>
+                                        <p class="text-sm text-tactical-400">开阔地形地图</p>
+                                    </div>
+                                    <div class="text-xs text-military-400 bg-military-900/30 rounded-full px-2 py-1">
+                                        候选
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="text-center">
+                    <button onclick="cancelMatch()" class="bg-gradient-to-r from-alert-600 to-alert-500 hover:from-alert-500 hover:to-alert-400 text-white font-bold py-4 px-8 rounded-xl transform transition-all duration-300 hover:scale-105 shadow-lg">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>取消匹配</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部提示信息 -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="max-w-2xl mx-auto bg-gradient-to-r from-tactical-800/30 to-military-800/30 rounded-xl border border-tactical-600/20 p-4">
+                <div class="text-center">
+                    <p class="text-sm text-tactical-300 mb-2">匹配提示</p>
+                    <p class="text-xs text-tactical-400">
+                        系统会根据您的等级和战斗力匹配合适的队友和对手。首次匹配可能需要较长时间，请耐心等待。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 匹配成功弹窗模板 -->
+    <div id="match-found-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gradient-to-br from-military-800 to-tactical-800 rounded-2xl border-2 border-success-500/50 shadow-2xl max-w-lg w-full p-8 animate-pulse">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-success-500 to-success-600 rounded-full flex items-center justify-center">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-4">匹配成功！</h2>
+                    <p class="text-tactical-200 mb-6">已找到合适的队友和对手</p>
+                    <div class="text-center mb-6">
+                        <div class="text-3xl font-bold text-success-400 font-mono" id="countdown">5</div>
+                        <div class="text-sm text-tactical-400">秒后自动进入大厅</div>
+                    </div>
+                    <button onclick="enterLobby()" class="w-full bg-gradient-to-r from-success-600 to-success-500 hover:from-success-500 hover:to-success-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300">
+                        立即进入大厅
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let matchStartTime = Date.now();
+        let matchTimer;
+        let progressAnimation;
+        let matchProgress = 0;
+
+        // 匹配状态阶段
+        const matchStages = [
+            { progress: 20, status: "搜索对手中", message: "正在扫描全球服务器..." },
+            { progress: 40, status: "分析战力", message: "匹配势均力敌的对手..." },
+            { progress: 60, status: "组建队伍", message: "为您寻找最佳队友..." },
+            { progress: 80, status: "连接服务器", message: "建立游戏连接..." },
+            { progress: 100, status: "匹配完成", message: "准备进入战场！" }
+        ];
+
+        let currentStage = 0;
+
+        // 更新匹配计时器
+        function updateMatchTimer() {
+            const elapsed = Math.floor((Date.now() - matchStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('match-timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 更新匹配进度
+        function updateMatchProgress() {
+            matchProgress += Math.random() * 3 + 1;
+
+            // 更新进度圆环
+            const circle = document.getElementById('progress-circle');
+            const circumference = 289;
+            const offset = circumference - (matchProgress / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+
+            // 检查是否进入下一阶段
+            while (currentStage < matchStages.length && matchProgress >= matchStages[currentStage].progress) {
+                const stage = matchStages[currentStage];
+                document.getElementById('match-status').textContent = stage.status;
+                document.getElementById('match-progress').textContent = stage.message;
+                currentStage++;
+            }
+
+            // 模拟匹配完成
+            if (matchProgress >= 100) {
+                setTimeout(showMatchFound, 1000);
+                clearInterval(progressAnimation);
+                return;
+            }
+        }
+
+        // 显示匹配成功弹窗
+        function showMatchFound() {
+            document.getElementById('match-found-modal').classList.remove('hidden');
+
+            let countdown = 5;
+            const countdownElement = document.getElementById('countdown');
+
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = countdown;
+
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    enterLobby();
+                }
+            }, 1000);
+        }
+
+        // 进入大厅
+        function enterLobby() {
+            window.location.href = 'lobby.html';
+        }
+
+        // 取消匹配
+        function cancelMatch() {
+            if (confirm('确定要取消匹配吗？')) {
+                window.location.href = 'main-menu.html';
+            }
+        }
+
+        // 更新在线人数等统计信息
+        function updateStats() {
+            const onlineCount = document.getElementById('online-count');
+            const queueCount = document.getElementById('queue-count');
+            const estimatedWait = document.getElementById('estimated-wait');
+
+            // 模拟动态数据
+            const baseOnline = 2847;
+            const baseQueue = 156;
+
+            onlineCount.textContent = (baseOnline + Math.floor(Math.random() * 100 - 50)).toLocaleString();
+            queueCount.textContent = Math.max(1, baseQueue + Math.floor(Math.random() * 20 - 10));
+
+            const waitTime = Math.max(15, 45 - Math.floor(matchProgress / 100 * 30));
+            estimatedWait.textContent = `${waitTime}秒`;
+        }
+
+        // 初始化
+        function initializeMatching() {
+            // 启动计时器
+            matchTimer = setInterval(updateMatchTimer, 1000);
+
+            // 启动进度动画
+            progressAnimation = setInterval(updateMatchProgress, 800);
+
+            // 启动统计更新
+            setInterval(updateStats, 2000);
+
+            // 初始更新
+            updateMatchTimer();
+            updateStats();
+        }
+
+        // 页面加载完成后启动匹配
+        window.addEventListener('load', initializeMatching);
+
+        // 触摸优化
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 页面离开时清理定时器
+        window.addEventListener('beforeunload', () => {
+            if (matchTimer) clearInterval(matchTimer);
+            if (progressAnimation) clearInterval(progressAnimation);
+        });
+    </script>
+</body>
+</html>

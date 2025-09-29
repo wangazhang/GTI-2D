@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GTI-2D 背包装备界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        'rarity': {
+                            'common': '#6B7280',    // 灰色
+                            'uncommon': '#10B981',  // 绿色
+                            'rare': '#3B82F6',      // 蓝色
+                            'epic': '#8B5CF6',      // 紫色
+                            'legendary': '#F59E0B'  // 橙色
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'slide-down': 'slideDown 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'shake': 'shake 0.5s ease-in-out',
+                        'legendary-glow': 'legendaryGlow 3s ease-in-out infinite',
+                        'epic-glow': 'epicGlow 2.5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-5px)' },
+                            '75%': { transform: 'translateX(5px)' }
+                        },
+                        legendaryGlow: {
+                            '0%, 100%': {
+                                'box-shadow': '0 0 10px rgba(245, 158, 11, 0.6), 0 0 20px rgba(245, 158, 11, 0.3)',
+                                'border-color': 'rgba(245, 158, 11, 0.8)'
+                            },
+                            '50%': {
+                                'box-shadow': '0 0 20px rgba(245, 158, 11, 0.9), 0 0 40px rgba(245, 158, 11, 0.5)',
+                                'border-color': 'rgba(245, 158, 11, 1)'
+                            }
+                        },
+                        epicGlow: {
+                            '0%, 100%': {
+                                'box-shadow': '0 0 8px rgba(139, 92, 246, 0.6), 0 0 16px rgba(139, 92, 246, 0.3)',
+                                'border-color': 'rgba(139, 92, 246, 0.8)'
+                            },
+                            '50%': {
+                                'box-shadow': '0 0 16px rgba(139, 92, 246, 0.9), 0 0 32px rgba(139, 92, 246, 0.5)',
+                                'border-color': 'rgba(139, 92, 246, 1)'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        /* 物品槽样式 */
+        .item-slot {
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .item-slot:hover {
+            border-color: rgba(0, 206, 209, 0.8);
+            background: rgba(30, 41, 59, 0.5);
+            transform: scale(1.05);
+        }
+
+        .item-slot.occupied {
+            border-color: rgba(0, 206, 209, 0.6);
+            background: rgba(0, 206, 209, 0.1);
+        }
+
+        .item-slot.selected {
+            border-color: rgba(0, 206, 209, 1);
+            background: rgba(0, 206, 209, 0.2);
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
+        }
+
+        .item-slot.drag-over {
+            border-color: rgba(34, 139, 34, 0.8);
+            background: rgba(34, 139, 34, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* 稀有度样式 */
+        .rarity-common {
+            border-color: #6B7280;
+            background: linear-gradient(135deg, rgba(107, 114, 128, 0.1), rgba(107, 114, 128, 0.05));
+        }
+
+        .rarity-uncommon {
+            border-color: #10B981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        }
+
+        .rarity-rare {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+        }
+
+        .rarity-epic {
+            border-color: #8B5CF6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+            animation: epic-glow 2.5s ease-in-out infinite;
+        }
+
+        .rarity-legendary {
+            border-color: #F59E0B;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+            animation: legendary-glow 3s ease-in-out infinite;
+        }
+
+        /* 装备槽样式 */
+        .equipment-slot {
+            width: 80px;
+            height: 80px;
+            border: 3px solid rgba(71, 85, 105, 0.5);
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .equipment-slot:hover {
+            border-color: rgba(0, 206, 209, 0.8);
+            transform: scale(1.05);
+        }
+
+        .equipment-slot.equipped {
+            border-color: rgba(85, 107, 47, 0.8);
+            background: linear-gradient(135deg, rgba(85, 107, 47, 0.2), rgba(85, 107, 47, 0.1));
+            box-shadow: 0 0 15px rgba(85, 107, 47, 0.4);
+        }
+
+        /* 物品拖拽样式 */
+        .item-dragging {
+            opacity: 0.5;
+            transform: scale(0.8);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .drag-ghost {
+            position: absolute;
+            z-index: 1001;
+            pointer-events: none;
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        /* 物品详情面板 */
+        .item-details {
+            backdrop-filter: blur(8px);
+            background: rgba(30, 41, 59, 0.95);
+            border: 2px solid rgba(0, 206, 209, 0.5);
+        }
+
+        /* 属性对比 */
+        .stat-improvement {
+            color: #22C55E;
+        }
+
+        .stat-decrease {
+            color: #EF4444;
+        }
+
+        /* 快捷栏样式 */
+        .quick-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            background: rgba(30, 41, 59, 0.3);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-slot:hover {
+            border-color: rgba(0, 206, 209, 0.8);
+            transform: scale(1.05);
+        }
+
+        .quick-slot.active {
+            border-color: rgba(85, 107, 47, 0.8);
+            background: rgba(85, 107, 47, 0.2);
+        }
+
+        .quick-slot .key-indicator {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: rgba(0, 206, 209, 0.8);
+            border-radius: 4px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 排序和筛选按钮 */
+        .filter-button {
+            padding: 8px 16px;
+            background: rgba(47, 79, 79, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            color: #CBD5E1;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .filter-button:hover {
+            background: rgba(47, 79, 79, 0.8);
+            border-color: rgba(0, 206, 209, 0.6);
+            color: #00CED1;
+        }
+
+        .filter-button.active {
+            background: rgba(85, 107, 47, 0.6);
+            border-color: rgba(85, 107, 47, 0.8);
+            color: #00CED1;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 640px) {
+            .item-slot {
+                width: 50px;
+                height: 50px;
+            }
+
+            .equipment-slot {
+                width: 70px;
+                height: 70px;
+            }
+
+            .quick-slot {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 640px) {
+            .inventory-container {
+                padding: 16px 8px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-white font-military">
+    <!-- 背景层 -->
+    <div class="absolute inset-0 bg-gradient-to-br from-tactical-900 via-tactical-800 to-tactical-900">
+        <div class="absolute inset-0" style="background-image: linear-gradient(rgba(0, 206, 209, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 206, 209, 0.02) 1px, transparent 1px); background-size: 30px 30px;"></div>
+    </div>
+
+    <!-- 主界面容器 -->
+    <div class="absolute inset-0 flex flex-col">
+        <!-- 顶部标题栏 -->
+        <div class="flex-none bg-tactical-800/90 border-b border-cyber-400/20 backdrop-filter backdrop-blur-md">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <button id="backBtn" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">背包装备</h1>
+                        <p class="text-xs text-tactical-400">Inventory & Equipment</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <div class="text-sm text-tactical-300">
+                        负重: <span class="font-mono text-cyber-400" id="weightText">85/120</span> kg
+                    </div>
+                    <div class="w-24 bg-tactical-700 rounded-full h-2">
+                        <div class="bg-cyber-400 h-full rounded-full transition-all duration-300" id="weightBar" style="width: 70%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="flex-1 overflow-hidden">
+            <!-- 标签页导航 -->
+            <div class="bg-tactical-800/50 border-b border-cyber-400/10">
+                <div class="flex space-x-1 p-2 overflow-x-auto">
+                    <button class="tab-button active px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="inventory">
+                        背包
+                    </button>
+                    <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="equipment">
+                        装备
+                    </button>
+                    <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="weapons">
+                        武器
+                    </button>
+                    <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="consumables">
+                        消耗品
+                    </button>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="flex-1 overflow-y-auto inventory-container">
+                <!-- 背包标签页 -->
+                <div class="tab-content active p-4 space-y-4" id="inventory">
+                    <!-- 筛选和排序工具栏 -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-tactical-800/50 rounded-lg p-3 border border-tactical-600/30">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="filter-button active" data-filter="all">全部</button>
+                            <button class="filter-button" data-filter="weapons">武器</button>
+                            <button class="filter-button" data-filter="armor">护甲</button>
+                            <button class="filter-button" data-filter="consumables">消耗品</button>
+                            <button class="filter-button" data-filter="materials">材料</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="sortBtn" class="filter-button">
+                                <span class="text-xs">⇅</span> 排序
+                            </button>
+                            <button id="autoSortBtn" class="filter-button">
+                                <span class="text-xs">✨</span> 整理
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 背包网格 -->
+                    <div class="bg-tactical-800/30 rounded-lg p-4 border border-tactical-600/30">
+                        <div class="grid grid-cols-6 gap-2 mb-4" id="inventoryGrid">
+                            <!-- 背包格子将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 快捷栏 -->
+                    <div class="bg-tactical-800/50 rounded-lg p-4 border border-military-600/30">
+                        <h3 class="text-sm font-semibold text-military-300 mb-3">快捷栏</h3>
+                        <div class="flex justify-center space-x-2" id="quickSlots">
+                            <!-- 快捷栏格子将通过JavaScript生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 装备标签页 -->
+                <div class="tab-content p-4 space-y-4 hidden" id="equipment">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 装备槽区域 -->
+                        <div class="bg-tactical-800/30 rounded-lg p-6 border border-tactical-600/30">
+                            <h3 class="text-lg font-semibold text-military-300 mb-4">当前装备</h3>
+                            <div class="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+                                <!-- 头盔 -->
+                                <div class="col-span-3 flex justify-center">
+                                    <div class="equipment-slot" data-slot="helmet">
+                                        <span class="text-2xl">⛑️</span>
+                                        <span class="text-xs text-tactical-400 mt-1">头盔</span>
+                                    </div>
+                                </div>
+
+                                <!-- 护甲、武器、护甲 -->
+                                <div class="equipment-slot" data-slot="armor">
+                                    <span class="text-2xl">🛡️</span>
+                                    <span class="text-xs text-tactical-400 mt-1">护甲</span>
+                                </div>
+                                <div class="equipment-slot equipped" data-slot="weapon">
+                                    <span class="text-2xl">🔫</span>
+                                    <span class="text-xs text-tactical-400 mt-1">武器</span>
+                                </div>
+                                <div class="equipment-slot" data-slot="gloves">
+                                    <span class="text-2xl">🧤</span>
+                                    <span class="text-xs text-tactical-400 mt-1">手套</span>
+                                </div>
+
+                                <!-- 靴子 -->
+                                <div class="col-span-3 flex justify-center">
+                                    <div class="equipment-slot" data-slot="boots">
+                                        <span class="text-2xl">👢</span>
+                                        <span class="text-xs text-tactical-400 mt-1">靴子</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 装备属性 -->
+                        <div class="bg-tactical-800/30 rounded-lg p-6 border border-tactical-600/30">
+                            <h3 class="text-lg font-semibold text-military-300 mb-4">装备属性</h3>
+                            <div class="space-y-3" id="equipmentStats">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-tactical-400">总防护值</span>
+                                    <span class="text-cyber-400 font-mono">145</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-tactical-400">移动速度</span>
+                                    <span class="text-military-400 font-mono">+5%</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-tactical-400">暴击率</span>
+                                    <span class="text-alert-400 font-mono">12%</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-tactical-400">装填速度</span>
+                                    <span class="text-success-400 font-mono">+15%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 武器标签页 -->
+                <div class="tab-content p-4 space-y-4 hidden" id="weapons">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="weaponsList">
+                        <!-- 武器列表将通过JavaScript生成 -->
+                    </div>
+                </div>
+
+                <!-- 消耗品标签页 -->
+                <div class="tab-content p-4 space-y-4 hidden" id="consumables">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="consumablesList">
+                        <!-- 消耗品列表将通过JavaScript生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 物品详情模态框 -->
+    <div id="itemDetailsModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-filter backdrop-blur-sm" id="modalOverlay"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="item-details rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto animate-slide-up">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-16 h-16 rounded-lg flex items-center justify-center text-2xl" id="itemIcon">
+                            🔫
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-cyber-400" id="itemName">AK-47 突击步枪</h3>
+                            <p class="text-sm text-tactical-400" id="itemType">突击步枪</p>
+                        </div>
+                    </div>
+                    <button id="closeModal" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                        <span class="text-tactical-400">✕</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4" id="itemDetailsContent">
+                    <!-- 物品详情内容将通过JavaScript生成 -->
+                </div>
+
+                <!-- 对比区域 -->
+                <div id="comparisonArea" class="mt-4 p-4 bg-tactical-900/50 rounded-lg border border-tactical-700 hidden">
+                    <h4 class="text-sm font-semibold text-military-300 mb-2">与当前装备对比</h4>
+                    <div id="comparisonContent">
+                        <!-- 对比内容将通过JavaScript生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="flex space-x-3 mt-6">
+                    <button id="useItemBtn" class="flex-1 py-3 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg transition-all duration-200 font-semibold">
+                        使用/装备
+                    </button>
+                    <button id="dropItemBtn" class="px-4 py-3 bg-alert-700 hover:bg-alert-600 text-white rounded-lg transition-all duration-200 font-semibold">
+                        丢弃
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知消息 -->
+    <div id="notifications" class="fixed top-4 right-4 space-y-2 z-40">
+        <!-- 通知将通过JavaScript动态添加 -->
+    </div>
+
+    <script>
+        // 游戏物品数据
+        const itemDatabase = {
+            weapons: {
+                'ak47': {
+                    id: 'ak47',
+                    name: 'AK-47',
+                    type: '突击步枪',
+                    icon: '🔫',
+                    rarity: 'rare',
+                    weight: 4.3,
+                    stats: {
+                        damage: 35,
+                        range: 150,
+                        fireRate: 600,
+                        accuracy: 72
+                    },
+                    description: '经典的突击步枪，威力强大，后坐力较大。'
+                },
+                'm4a1': {
+                    id: 'm4a1',
+                    name: 'M4A1',
+                    type: '突击步枪',
+                    icon: '🔫',
+                    rarity: 'epic',
+                    weight: 3.4,
+                    stats: {
+                        damage: 30,
+                        range: 180,
+                        fireRate: 750,
+                        accuracy: 85
+                    },
+                    description: '精确度极高的突击步枪，适合中远距离作战。'
+                },
+                'sniper_rifle': {
+                    id: 'sniper_rifle',
+                    name: '巴雷特狙击枪',
+                    type: '狙击步枪',
+                    icon: '🎯',
+                    rarity: 'legendary',
+                    weight: 8.9,
+                    stats: {
+                        damage: 120,
+                        range: 800,
+                        fireRate: 60,
+                        accuracy: 98
+                    },
+                    description: '传奇级狙击步枪，一枪致命的恐怖武器。'
+                }
+            },
+            armor: {
+                'tactical_vest': {
+                    id: 'tactical_vest',
+                    name: '战术背心',
+                    type: '护甲',
+                    icon: '🦺',
+                    rarity: 'uncommon',
+                    weight: 2.5,
+                    stats: {
+                        protection: 45,
+                        durability: 100
+                    },
+                    description: '基础的防护装备，提供中等程度的保护。'
+                }
+            },
+            consumables: {
+                'medkit': {
+                    id: 'medkit',
+                    name: '医疗包',
+                    type: '消耗品',
+                    icon: '💊',
+                    rarity: 'common',
+                    weight: 0.5,
+                    effect: 'heal',
+                    value: 50,
+                    stackable: true,
+                    description: '恢复50点生命值。'
+                },
+                'energy_drink': {
+                    id: 'energy_drink',
+                    name: '能量饮料',
+                    type: '消耗品',
+                    icon: '🥤',
+                    rarity: 'common',
+                    weight: 0.3,
+                    effect: 'stamina',
+                    value: 30,
+                    stackable: true,
+                    description: '恢复30点体力值。'
+                },
+                'grenade': {
+                    id: 'grenade',
+                    name: '手榴弹',
+                    type: '消耗品',
+                    icon: '💣',
+                    rarity: 'uncommon',
+                    weight: 0.8,
+                    effect: 'explosive',
+                    value: 100,
+                    stackable: true,
+                    description: '造成范围爆炸伤害。'
+                }
+            }
+        };
+
+        // 玩家背包状态
+        let playerInventory = {
+            items: new Array(24).fill(null), // 4x6 背包格子
+            equipment: {
+                helmet: null,
+                armor: 'tactical_vest',
+                weapon: 'ak47',
+                gloves: null,
+                boots: null
+            },
+            quickSlots: new Array(8).fill(null),
+            weight: 85,
+            maxWeight: 120
+        };
+
+        // 当前选中的物品
+        let selectedItem = null;
+        let draggedItem = null;
+        let currentFilter = 'all';
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeInterface();
+            generateSampleItems();
+            setupEventListeners();
+            updateInterface();
+        });
+
+        function initializeInterface() {
+            // 生成背包格子
+            const inventoryGrid = document.getElementById('inventoryGrid');
+            for (let i = 0; i < 24; i++) {
+                const slot = createItemSlot(i, 'inventory');
+                inventoryGrid.appendChild(slot);
+            }
+
+            // 生成快捷栏格子
+            const quickSlots = document.getElementById('quickSlots');
+            for (let i = 0; i < 8; i++) {
+                const slot = createQuickSlot(i);
+                quickSlots.appendChild(slot);
+            }
+        }
+
+        function createItemSlot(index, type) {
+            const slot = document.createElement('div');
+            slot.className = 'item-slot';
+            slot.dataset.index = index;
+            slot.dataset.type = type;
+
+            // 添加拖拽事件
+            slot.addEventListener('dragover', handleDragOver);
+            slot.addEventListener('drop', handleDrop);
+            slot.addEventListener('click', () => selectItem(index, type));
+
+            return slot;
+        }
+
+        function createQuickSlot(index) {
+            const slot = document.createElement('div');
+            slot.className = 'quick-slot';
+            slot.dataset.index = index;
+            slot.dataset.type = 'quick';
+
+            const keyIndicator = document.createElement('div');
+            keyIndicator.className = 'key-indicator';
+            keyIndicator.textContent = (index + 1).toString();
+            slot.appendChild(keyIndicator);
+
+            slot.addEventListener('dragover', handleDragOver);
+            slot.addEventListener('drop', handleDrop);
+            slot.addEventListener('click', () => selectItem(index, 'quick'));
+
+            return slot;
+        }
+
+        function generateSampleItems() {
+            // 在背包中添加一些示例物品
+            playerInventory.items[0] = { ...itemDatabase.weapons.m4a1, quantity: 1 };
+            playerInventory.items[2] = { ...itemDatabase.consumables.medkit, quantity: 3 };
+            playerInventory.items[3] = { ...itemDatabase.consumables.energy_drink, quantity: 2 };
+            playerInventory.items[5] = { ...itemDatabase.consumables.grenade, quantity: 1 };
+            playerInventory.items[7] = { ...itemDatabase.weapons.sniper_rifle, quantity: 1 };
+            playerInventory.items[10] = { ...itemDatabase.armor.tactical_vest, quantity: 1 };
+
+            // 快捷栏物品
+            playerInventory.quickSlots[0] = { ...itemDatabase.consumables.medkit, quantity: 1 };
+            playerInventory.quickSlots[1] = { ...itemDatabase.consumables.grenade, quantity: 1 };
+        }
+
+        function updateInterface() {
+            updateInventoryGrid();
+            updateQuickSlots();
+            updateEquipmentSlots();
+            updateWeightDisplay();
+        }
+
+        function updateInventoryGrid() {
+            const slots = document.querySelectorAll('.item-slot[data-type="inventory"]');
+
+            slots.forEach((slot, index) => {
+                const item = playerInventory.items[index];
+                slot.innerHTML = '';
+                slot.className = 'item-slot';
+
+                if (item) {
+                    slot.classList.add('occupied', `rarity-${item.rarity}`);
+
+                    const icon = document.createElement('div');
+                    icon.className = 'text-2xl';
+                    icon.textContent = item.icon;
+                    slot.appendChild(icon);
+
+                    if (item.stackable && item.quantity > 1) {
+                        const quantity = document.createElement('div');
+                        quantity.className = 'absolute bottom-0 right-0 bg-tactical-800 text-xs rounded px-1 text-cyber-400 font-mono';
+                        quantity.textContent = item.quantity;
+                        slot.appendChild(quantity);
+                    }
+
+                    // 添加拖拽功能
+                    slot.draggable = true;
+                    slot.addEventListener('dragstart', (e) => handleDragStart(e, index, 'inventory'));
+                }
+            });
+        }
+
+        function updateQuickSlots() {
+            const slots = document.querySelectorAll('.quick-slot');
+
+            slots.forEach((slot, index) => {
+                const item = playerInventory.quickSlots[index];
+                const existingIcon = slot.querySelector('.item-icon');
+                const existingQuantity = slot.querySelector('.quantity-indicator');
+
+                if (existingIcon) existingIcon.remove();
+                if (existingQuantity) existingQuantity.remove();
+
+                if (item) {
+                    slot.classList.add('occupied');
+
+                    const icon = document.createElement('div');
+                    icon.className = 'item-icon text-lg';
+                    icon.textContent = item.icon;
+                    slot.appendChild(icon);
+
+                    if (item.stackable && item.quantity > 1) {
+                        const quantity = document.createElement('div');
+                        quantity.className = 'quantity-indicator absolute top-0 left-0 bg-tactical-800 text-xs rounded px-1 text-cyber-400 font-mono';
+                        quantity.textContent = item.quantity;
+                        slot.appendChild(quantity);
+                    }
+                } else {
+                    slot.classList.remove('occupied');
+                }
+            });
+        }
+
+        function updateEquipmentSlots() {
+            const slots = document.querySelectorAll('.equipment-slot');
+
+            Object.entries(playerInventory.equipment).forEach(([slotType, itemId]) => {
+                const slot = document.querySelector(`[data-slot="${slotType}"]`);
+                if (slot && itemId) {
+                    const item = findItemById(itemId);
+                    if (item) {
+                        slot.classList.add('equipped');
+                        const icon = slot.querySelector('span');
+                        if (icon && icon.textContent !== item.icon) {
+                            icon.textContent = item.icon;
+                        }
+                    }
+                } else if (slot) {
+                    slot.classList.remove('equipped');
+                }
+            });
+        }
+
+        function updateWeightDisplay() {
+            const weightText = document.getElementById('weightText');
+            const weightBar = document.getElementById('weightBar');
+
+            weightText.textContent = `${playerInventory.weight}/${playerInventory.maxWeight}`;
+            const percentage = (playerInventory.weight / playerInventory.maxWeight) * 100;
+            weightBar.style.width = `${percentage}%`;
+
+            if (percentage > 80) {
+                weightBar.classList.add('bg-alert-500');
+                weightBar.classList.remove('bg-cyber-400');
+            } else {
+                weightBar.classList.add('bg-cyber-400');
+                weightBar.classList.remove('bg-alert-500');
+            }
+        }
+
+        function findItemById(id) {
+            for (const category of Object.values(itemDatabase)) {
+                if (category[id]) {
+                    return category[id];
+                }
+            }
+            return null;
+        }
+
+        function selectItem(index, type) {
+            // 清除之前的选中状态
+            document.querySelectorAll('.item-slot, .quick-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+
+            // 设置当前选中
+            const slot = document.querySelector(`[data-index="${index}"][data-type="${type}"]`);
+            if (slot) {
+                slot.classList.add('selected');
+
+                let item = null;
+                if (type === 'inventory') {
+                    item = playerInventory.items[index];
+                } else if (type === 'quick') {
+                    item = playerInventory.quickSlots[index];
+                }
+
+                if (item) {
+                    selectedItem = { item, index, type };
+                    showItemDetails(item);
+                }
+            }
+        }
+
+        function showItemDetails(item) {
+            const modal = document.getElementById('itemDetailsModal');
+            const itemIcon = document.getElementById('itemIcon');
+            const itemName = document.getElementById('itemName');
+            const itemType = document.getElementById('itemType');
+            const detailsContent = document.getElementById('itemDetailsContent');
+
+            itemIcon.textContent = item.icon;
+            itemIcon.className = `w-16 h-16 rounded-lg flex items-center justify-center text-2xl rarity-${item.rarity}`;
+            itemName.textContent = item.name;
+            itemType.textContent = item.type;
+
+            // 生成详细信息
+            detailsContent.innerHTML = '';
+
+            // 基本信息
+            const basicInfo = document.createElement('div');
+            basicInfo.className = 'space-y-2';
+            basicInfo.innerHTML = `
+                <div class="flex justify-between text-sm">
+                    <span class="text-tactical-400">稀有度</span>
+                    <span class="text-rarity-${item.rarity} font-semibold">${getRarityName(item.rarity)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-tactical-400">重量</span>
+                    <span class="text-tactical-200 font-mono">${item.weight} kg</span>
+                </div>
+                ${item.quantity ? `<div class="flex justify-between text-sm">
+                    <span class="text-tactical-400">数量</span>
+                    <span class="text-cyber-400 font-mono">${item.quantity}</span>
+                </div>` : ''}
+            `;
+            detailsContent.appendChild(basicInfo);
+
+            // 属性信息
+            if (item.stats) {
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'mt-4';
+                statsDiv.innerHTML = '<h4 class="text-sm font-semibold text-military-300 mb-2">属性</h4>';
+
+                const statsList = document.createElement('div');
+                statsList.className = 'space-y-2';
+
+                Object.entries(item.stats).forEach(([key, value]) => {
+                    const statItem = document.createElement('div');
+                    statItem.className = 'flex justify-between text-sm';
+                    statItem.innerHTML = `
+                        <span class="text-tactical-400">${getStatName(key)}</span>
+                        <span class="text-cyber-400 font-mono">${value}${getStatUnit(key)}</span>
+                    `;
+                    statsList.appendChild(statItem);
+                });
+
+                statsDiv.appendChild(statsList);
+                detailsContent.appendChild(statsDiv);
+            }
+
+            // 描述
+            if (item.description) {
+                const description = document.createElement('div');
+                description.className = 'mt-4 p-3 bg-tactical-900/50 rounded border border-tactical-700';
+                description.innerHTML = `<p class="text-sm text-tactical-300">${item.description}</p>`;
+                detailsContent.appendChild(description);
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function getRarityName(rarity) {
+            const names = {
+                common: '普通',
+                uncommon: '精良',
+                rare: '稀有',
+                epic: '史诗',
+                legendary: '传奇'
+            };
+            return names[rarity] || '未知';
+        }
+
+        function getStatName(key) {
+            const names = {
+                damage: '伤害',
+                range: '射程',
+                fireRate: '射速',
+                accuracy: '精确度',
+                protection: '防护',
+                durability: '耐久'
+            };
+            return names[key] || key;
+        }
+
+        function getStatUnit(key) {
+            const units = {
+                damage: '',
+                range: 'm',
+                fireRate: '/分',
+                accuracy: '%',
+                protection: '',
+                durability: '%'
+            };
+            return units[key] || '';
+        }
+
+        // 拖拽功能
+        function handleDragStart(e, index, type) {
+            draggedItem = { index, type };
+            e.target.classList.add('item-dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            if (!draggedItem) return;
+
+            const targetIndex = parseInt(e.currentTarget.dataset.index);
+            const targetType = e.currentTarget.dataset.type;
+
+            // 执行物品移动
+            moveItem(draggedItem.index, draggedItem.type, targetIndex, targetType);
+
+            // 清理拖拽状态
+            document.querySelectorAll('.item-dragging').forEach(el => {
+                el.classList.remove('item-dragging');
+            });
+            draggedItem = null;
+        }
+
+        function moveItem(fromIndex, fromType, toIndex, toType) {
+            let fromContainer, toContainer;
+
+            // 获取源容器
+            if (fromType === 'inventory') {
+                fromContainer = playerInventory.items;
+            } else if (fromType === 'quick') {
+                fromContainer = playerInventory.quickSlots;
+            }
+
+            // 获取目标容器
+            if (toType === 'inventory') {
+                toContainer = playerInventory.items;
+            } else if (toType === 'quick') {
+                toContainer = playerInventory.quickSlots;
+            }
+
+            if (fromContainer && toContainer) {
+                const item = fromContainer[fromIndex];
+                if (item) {
+                    // 交换物品
+                    const targetItem = toContainer[toIndex];
+                    toContainer[toIndex] = item;
+                    fromContainer[fromIndex] = targetItem;
+
+                    updateInterface();
+                    showNotification(`${item.name} 已移动`, 'success');
+                }
+            }
+        }
+
+        // 标签页切换
+        function setupEventListeners() {
+            // 标签页切换
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    switchTab(targetTab);
+                });
+            });
+
+            // 筛选按钮
+            document.querySelectorAll('.filter-button[data-filter]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const filter = button.dataset.filter;
+                    setFilter(filter);
+                });
+            });
+
+            // 排序按钮
+            document.getElementById('sortBtn').addEventListener('click', sortItems);
+            document.getElementById('autoSortBtn').addEventListener('click', autoSortItems);
+
+            // 模态框控制
+            document.getElementById('closeModal').addEventListener('click', closeItemDetails);
+            document.getElementById('modalOverlay').addEventListener('click', closeItemDetails);
+
+            // 物品操作按钮
+            document.getElementById('useItemBtn').addEventListener('click', useSelectedItem);
+            document.getElementById('dropItemBtn').addEventListener('click', dropSelectedItem);
+
+            // 返回按钮
+            document.getElementById('backBtn').addEventListener('click', () => {
+                showNotification('返回游戏', 'info');
+                // 这里可以添加返回游戏的逻辑
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function switchTab(targetTab) {
+            // 更新标签按钮状态
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active', 'bg-military-700', 'text-cyber-400');
+                btn.classList.add('text-tactical-400', 'hover:text-tactical-200');
+            });
+
+            const activeButton = document.querySelector(`[data-tab="${targetTab}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active', 'bg-military-700', 'text-cyber-400');
+                activeButton.classList.remove('text-tactical-400', 'hover:text-tactical-200');
+            }
+
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+
+                // 根据不同标签页更新内容
+                if (targetTab === 'weapons') {
+                    updateWeaponsTab();
+                } else if (targetTab === 'consumables') {
+                    updateConsumablesTab();
+                }
+            }
+        }
+
+        function updateWeaponsTab() {
+            const weaponsList = document.getElementById('weaponsList');
+            weaponsList.innerHTML = '';
+
+            // 显示背包中的武器
+            playerInventory.items.forEach((item, index) => {
+                if (item && item.type.includes('步枪')) {
+                    const weaponCard = createWeaponCard(item, index);
+                    weaponsList.appendChild(weaponCard);
+                }
+            });
+        }
+
+        function updateConsumablesTab() {
+            const consumablesList = document.getElementById('consumablesList');
+            consumablesList.innerHTML = '';
+
+            // 显示背包中的消耗品
+            playerInventory.items.forEach((item, index) => {
+                if (item && item.type === '消耗品') {
+                    const consumableCard = createConsumableCard(item, index);
+                    consumablesList.appendChild(consumableCard);
+                }
+            });
+        }
+
+        function createWeaponCard(item, index) {
+            const card = document.createElement('div');
+            card.className = `bg-tactical-800/50 rounded-lg p-4 border border-${item.rarity === 'legendary' ? 'rarity-legendary' : item.rarity === 'epic' ? 'rarity-epic' : 'tactical-600'}/30 transition-all duration-200 hover:scale-105 cursor-pointer`;
+
+            if (item.rarity === 'legendary') {
+                card.classList.add('animate-legendary-glow');
+            } else if (item.rarity === 'epic') {
+                card.classList.add('animate-epic-glow');
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center space-x-4 mb-3">
+                    <div class="text-3xl">${item.icon}</div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-${item.rarity === 'legendary' ? 'rarity-legendary' : item.rarity === 'epic' ? 'rarity-epic' : 'tactical-200'}">${item.name}</h3>
+                        <p class="text-xs text-tactical-400">${item.type}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                    <div class="flex justify-between">
+                        <span class="text-tactical-400">伤害</span>
+                        <span class="text-alert-400 font-mono">${item.stats.damage}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-tactical-400">射程</span>
+                        <span class="text-cyber-400 font-mono">${item.stats.range}m</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-tactical-400">射速</span>
+                        <span class="text-success-400 font-mono">${item.stats.fireRate}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-tactical-400">精度</span>
+                        <span class="text-military-400 font-mono">${item.stats.accuracy}%</span>
+                    </div>
+                </div>
+
+                <button class="w-full py-2 bg-military-700 hover:bg-military-600 text-cyber-400 rounded transition-colors text-sm">
+                    ${playerInventory.equipment.weapon === item.id ? '已装备' : '装备武器'}
+                </button>
+            `;
+
+            card.addEventListener('click', () => selectItem(index, 'inventory'));
+
+            return card;
+        }
+
+        function createConsumableCard(item, index) {
+            const card = document.createElement('div');
+            card.className = 'bg-tactical-800/50 rounded-lg p-4 border border-tactical-600/30 transition-all duration-200 hover:scale-105 cursor-pointer';
+
+            card.innerHTML = `
+                <div class="text-center">
+                    <div class="text-3xl mb-2">${item.icon}</div>
+                    <h3 class="font-semibold text-tactical-200 mb-1">${item.name}</h3>
+                    <p class="text-xs text-tactical-400 mb-2">${item.description}</p>
+                    ${item.quantity > 1 ? `<div class="text-xs text-cyber-400 font-mono">数量: ${item.quantity}</div>` : ''}
+
+                    <button class="w-full mt-3 py-2 bg-success-700 hover:bg-success-600 text-white rounded transition-colors text-sm">
+                        使用
+                    </button>
+                </div>
+            `;
+
+            card.addEventListener('click', () => selectItem(index, 'inventory'));
+
+            return card;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            // 更新筛选按钮状态
+            document.querySelectorAll('.filter-button[data-filter]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+            // 这里可以添加筛选逻辑
+            showNotification(`筛选: ${getFilterName(filter)}`, 'info');
+        }
+
+        function getFilterName(filter) {
+            const names = {
+                all: '全部',
+                weapons: '武器',
+                armor: '护甲',
+                consumables: '消耗品',
+                materials: '材料'
+            };
+            return names[filter] || filter;
+        }
+
+        function sortItems() {
+            // 按稀有度排序
+            const sortedItems = [...playerInventory.items].sort((a, b) => {
+                if (!a) return 1;
+                if (!b) return -1;
+
+                const rarityOrder = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+                return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+            });
+
+            playerInventory.items = sortedItems;
+            updateInterface();
+            showNotification('物品已按稀有度排序', 'success');
+        }
+
+        function autoSortItems() {
+            // 自动整理：移除空格，按类型分组
+            const nonNullItems = playerInventory.items.filter(item => item !== null);
+            const sortedItems = [...nonNullItems].sort((a, b) => {
+                // 先按类型排序，再按稀有度
+                if (a.type !== b.type) {
+                    return a.type.localeCompare(b.type);
+                }
+                const rarityOrder = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+                return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+            });
+
+            // 重新填充背包
+            playerInventory.items = new Array(24).fill(null);
+            sortedItems.forEach((item, index) => {
+                if (index < 24) {
+                    playerInventory.items[index] = item;
+                }
+            });
+
+            updateInterface();
+            showNotification('背包已自动整理', 'success');
+        }
+
+        function useSelectedItem() {
+            if (!selectedItem) return;
+
+            const { item, index, type } = selectedItem;
+
+            if (item.type === '消耗品') {
+                // 使用消耗品
+                if (item.effect === 'heal') {
+                    showNotification(`使用 ${item.name}，恢复 ${item.value} 生命值`, 'success');
+                } else if (item.effect === 'stamina') {
+                    showNotification(`使用 ${item.name}，恢复 ${item.value} 体力值`, 'success');
+                }
+
+                // 减少数量
+                if (item.quantity > 1) {
+                    item.quantity--;
+                } else {
+                    // 移除物品
+                    if (type === 'inventory') {
+                        playerInventory.items[index] = null;
+                    } else if (type === 'quick') {
+                        playerInventory.quickSlots[index] = null;
+                    }
+                }
+            } else if (item.type.includes('步枪') || item.type === '护甲') {
+                // 装备物品
+                if (item.type.includes('步枪')) {
+                    playerInventory.equipment.weapon = item.id;
+                } else if (item.type === '护甲') {
+                    playerInventory.equipment.armor = item.id;
+                }
+                showNotification(`装备 ${item.name}`, 'success');
+            }
+
+            updateInterface();
+            closeItemDetails();
+        }
+
+        function dropSelectedItem() {
+            if (!selectedItem) return;
+
+            const { item, index, type } = selectedItem;
+
+            // 移除物品
+            if (type === 'inventory') {
+                playerInventory.items[index] = null;
+            } else if (type === 'quick') {
+                playerInventory.quickSlots[index] = null;
+            }
+
+            showNotification(`丢弃 ${item.name}`, 'alert');
+            updateInterface();
+            closeItemDetails();
+        }
+
+        function closeItemDetails() {
+            document.getElementById('itemDetailsModal').classList.add('hidden');
+            selectedItem = null;
+
+            // 清除选中状态
+            document.querySelectorAll('.item-slot, .quick-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+        }
+
+        function handleKeyPress(e) {
+            // ESC 键关闭模态框
+            if (e.key === 'Escape') {
+                closeItemDetails();
+            }
+
+            // 数字键使用快捷栏物品
+            if (e.key >= '1' && e.key <= '8') {
+                const slotIndex = parseInt(e.key) - 1;
+                const item = playerInventory.quickSlots[slotIndex];
+                if (item && item.type === '消耗品') {
+                    selectedItem = { item, index: slotIndex, type: 'quick' };
+                    useSelectedItem();
+                }
+            }
+
+            // Tab 键切换标签页
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const tabs = ['inventory', 'equipment', 'weapons', 'consumables'];
+                const currentTab = document.querySelector('.tab-button.active')?.dataset.tab;
+                const currentIndex = tabs.indexOf(currentTab);
+                const nextIndex = (currentIndex + 1) % tabs.length;
+                switchTab(tabs[nextIndex]);
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `bg-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-500/90 rounded-lg px-4 py-2 border border-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-400 backdrop-filter backdrop-blur-md animate-slide-down`;
+            notification.innerHTML = `
+                <div class="text-sm text-white font-semibold">${message}</div>
+            `;
+
+            document.getElementById('notifications').appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 触觉反馈
+        function vibrate(duration = 50) {
+            if (navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
+        }
+
+        console.log('GTI-2D Inventory System initialized');
+    </script>
+</body>
+</html>

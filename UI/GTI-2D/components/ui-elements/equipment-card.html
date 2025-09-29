@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 装备卡片组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        'legendary': '#FFD700',
+                        'epic': '#A020F0',
+                        'rare': '#0080FF',
+                        'uncommon': '#008000',
+                        'common': '#808080'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .equipment-card {
+            position: relative;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.9), rgba(47, 79, 79, 0.7));
+            border: 2px solid transparent;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .equipment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, var(--rarity-color), transparent, var(--rarity-color));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+        }
+
+        .equipment-card.selected {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.4);
+            border-color: #00CED1;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 稀有度配色 */
+        .rarity-legendary { --rarity-color: #FFD700; }
+        .rarity-epic { --rarity-color: #A020F0; }
+        .rarity-rare { --rarity-color: #0080FF; }
+        .rarity-uncommon { --rarity-color: #008000; }
+        .rarity-common { --rarity-color: #808080; }
+
+        .equipment-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.2), rgba(0, 206, 209, 0.4));
+            border: 2px solid var(--rarity-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .equipment-icon::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, var(--rarity-color), transparent);
+            animation: icon-shimmer 3s infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes icon-shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .equipment-name {
+            color: var(--rarity-color);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--rarity-color);
+        }
+
+        .equipment-type {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+        }
+
+        .equipment-stats {
+            font-size: 0.75rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-name {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-value {
+            color: #00CED1;
+            font-weight: bold;
+        }
+
+        .stat-change {
+            font-size: 0.7rem;
+            margin-left: 4px;
+        }
+
+        .stat-increase {
+            color: #228B22;
+        }
+
+        .stat-decrease {
+            color: #FF6347;
+        }
+
+        .equipment-level {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--rarity-color);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border: 1px solid var(--rarity-color);
+        }
+
+        .equipment-durability {
+            margin-top: 8px;
+        }
+
+        .durability-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .durability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6347, #FFD700, #228B22);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .durability-text {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        .equipment-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 6px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 1px solid rgba(0, 206, 209, 0.4);
+            border-radius: 4px;
+            color: #00CED1;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 206, 209, 0.3);
+            border-color: #00CED1;
+        }
+
+        .equipment-comparison {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .comparison-arrow {
+            width: 0;
+            height: 0;
+            opacity: 0.8;
+        }
+
+        .comparison-arrow.up {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid #228B22;
+        }
+
+        .comparison-arrow.down {
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid #FF6347;
+        }
+
+        .equipment-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(47, 79, 79, 0.95);
+            border: 1px solid rgba(0, 206, 209, 0.4);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .equipment-card:hover .equipment-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .rarity-glow {
+            animation: rarity-pulse 2s infinite;
+        }
+
+        @keyframes rarity-pulse {
+            0%, 100% { box-shadow: 0 0 10px var(--rarity-color); }
+            50% { box-shadow: 0 0 20px var(--rarity-color); }
+        }
+
+        .equipment-new {
+            position: relative;
+            overflow: visible;
+        }
+
+        .equipment-new::after {
+            content: 'NEW';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FF6347;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.6rem;
+            font-weight: bold;
+            animation: new-badge-pulse 1s infinite;
+        }
+
+        @keyframes new-badge-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 装备槽样式 */
+        .equipment-slot {
+            min-height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(47, 79, 79, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .equipment-slot.can-drop {
+            border-color: #00CED1;
+            background: rgba(0, 206, 209, 0.1);
+        }
+
+        .equipment-slot.drag-over {
+            border-color: #228B22;
+            background: rgba(34, 139, 34, 0.2);
+            transform: scale(1.02);
+        }
+
+        .slot-placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        /* 拖拽效果 */
+        .equipment-card.dragging {
+            transform: rotate(5deg) scale(0.95);
+            opacity: 0.8;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">装备卡片组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用装备卡片，支持稀有度显示、属性对比和拖拽操作</p>
+        </div>
+
+        <!-- 装备背包演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">装备背包</h3>
+            <div id="equipment-inventory" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+        </div>
+
+        <!-- 装备栏演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">装备栏</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">主武器</div>
+                    <div class="equipment-slot" data-slot-type="primary-weapon">
+                        <div class="slot-placeholder">拖拽武器到此处</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">副武器</div>
+                    <div class="equipment-slot" data-slot-type="secondary-weapon">
+                        <div class="slot-placeholder">拖拽武器到此处</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">护甲</div>
+                    <div class="equipment-slot" data-slot-type="armor">
+                        <div class="slot-placeholder">拖拽护甲到此处</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">配件</div>
+                    <div class="equipment-slot" data-slot-type="accessory">
+                        <div class="slot-placeholder">拖拽配件到此处</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 稀有度演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">稀有度系统</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div id="rarity-demo-common"></div>
+                <div id="rarity-demo-uncommon"></div>
+                <div id="rarity-demo-rare"></div>
+                <div id="rarity-demo-epic"></div>
+                <div id="rarity-demo-legendary"></div>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建装备卡片实例
+const equipmentCard = new EquipmentCard('container-id', {
+    id: 'ak47_001',
+    name: 'AK-47 突击步枪',
+    type: 'primary-weapon',
+    rarity: 'rare',
+    level: 15,
+    durability: 85,
+    maxDurability: 100,
+    icon: '🔫',
+    stats: {
+        damage: { value: 42, base: 35 },
+        accuracy: { value: 78, base: 75 },
+        range: { value: 85, base: 80 },
+        fireRate: { value: 650, base: 600 }
+    },
+    description: '经典的全自动突击步枪，火力强劲。',
+    isNew: true,
+    selectable: true,
+    draggable: true
+});
+
+// 监听事件
+equipmentCard.on('click', (data) => {
+    console.log('装备被点击:', data);
+});
+
+equipmentCard.on('select', (data) => {
+    console.log('装备被选中:', data);
+});
+
+equipmentCard.on('dragStart', (data) => {
+    console.log('开始拖拽装备:', data);
+});
+
+equipmentCard.on('dragEnd', (data) => {
+    console.log('拖拽结束:', data);
+});
+
+// 更新装备属性
+equipmentCard.updateStats({
+    damage: 45,
+    accuracy: 80
+});
+
+// 设置耐久度
+equipmentCard.setDurability(60);
+
+// 比较装备
+equipmentCard.showComparison({
+    damage: 5,      // +5
+    accuracy: -2,   // -2
+    range: 0        // 无变化
+});
+
+// 选中/取消选中
+equipmentCard.select();
+equipmentCard.deselect();</code></pre>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">控制面板</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="addRandomEquipment()">添加随机装备</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="selectRandomEquipment()">随机选择</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="showComparison()">显示对比</button>
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="clearInventory()">清空背包</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * EquipmentCard - 装备卡片组件
+         */
+        class EquipmentCard {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    id: '',
+                    name: '未知装备',
+                    type: 'weapon',
+                    rarity: 'common',
+                    level: 1,
+                    durability: 100,
+                    maxDurability: 100,
+                    icon: '📦',
+                    stats: {},
+                    description: '',
+                    isNew: false,
+                    selectable: true,
+                    draggable: true,
+                    showActions: true,
+                    showTooltip: true,
+                    showComparison: false,
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    selected: false,
+                    dragging: false,
+                    comparing: false,
+                    comparisonData: {}
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            createElements() {
+                this.container.innerHTML = `
+                    <div class="equipment-card rarity-${this.config.rarity} rounded-lg p-3 cursor-pointer ${this.config.isNew ? 'equipment-new' : ''}"
+                         draggable="${this.config.draggable}"
+                         data-equipment-id="${this.config.id}">
+
+                        <!-- 等级标识 -->
+                        <div class="equipment-level">Lv.${this.config.level}</div>
+
+                        <!-- 装备图标和基本信息 -->
+                        <div class="flex items-start gap-3 mb-2">
+                            <div class="equipment-icon rarity-${this.config.rarity}">
+                                ${this.config.icon}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="equipment-name text-sm truncate">${this.config.name}</div>
+                                <div class="equipment-type">${this.getTypeDisplay()}</div>
+                            </div>
+                        </div>
+
+                        <!-- 装备属性 -->
+                        <div class="equipment-stats"></div>
+
+                        <!-- 耐久度 -->
+                        ${this.config.maxDurability > 0 ? `
+                            <div class="equipment-durability">
+                                <div class="durability-bar">
+                                    <div class="durability-fill"></div>
+                                </div>
+                                <div class="durability-text"></div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 操作按钮 -->
+                        ${this.config.showActions ? `
+                            <div class="equipment-actions">
+                                <div class="action-btn" data-action="use">使用</div>
+                                <div class="action-btn" data-action="info">详情</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 对比箭头 -->
+                        <div class="equipment-comparison" style="display: none;"></div>
+
+                        <!-- 工具提示 -->
+                        ${this.config.showTooltip ? `
+                            <div class="equipment-tooltip">
+                                <div class="font-bold text-cyber-400">${this.config.name}</div>
+                                ${this.config.description ? `<div class="mt-1">${this.config.description}</div>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                this.elements = {
+                    card: this.container.querySelector('.equipment-card'),
+                    icon: this.container.querySelector('.equipment-icon'),
+                    name: this.container.querySelector('.equipment-name'),
+                    type: this.container.querySelector('.equipment-type'),
+                    level: this.container.querySelector('.equipment-level'),
+                    stats: this.container.querySelector('.equipment-stats'),
+                    durabilityBar: this.container.querySelector('.durability-bar'),
+                    durabilityFill: this.container.querySelector('.durability-fill'),
+                    durabilityText: this.container.querySelector('.durability-text'),
+                    actions: this.container.querySelector('.equipment-actions'),
+                    comparison: this.container.querySelector('.equipment-comparison')
+                };
+            }
+
+            bindEvents() {
+                if (this.config.selectable) {
+                    this.elements.card.addEventListener('click', this.handleClick.bind(this));
+                }
+
+                if (this.config.draggable) {
+                    this.elements.card.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    this.elements.card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                }
+
+                if (this.elements.actions) {
+                    this.elements.actions.addEventListener('click', this.handleActionClick.bind(this));
+                }
+            }
+
+            handleClick(e) {
+                e.stopPropagation();
+                this.toggle();
+                this.emit('click', this.getEquipmentData());
+            }
+
+            handleDragStart(e) {
+                this.state.dragging = true;
+                this.elements.card.classList.add('dragging');
+
+                e.dataTransfer.setData('application/json', JSON.stringify(this.getEquipmentData()));
+                e.dataTransfer.effectAllowed = 'move';
+
+                this.emit('dragStart', this.getEquipmentData());
+            }
+
+            handleDragEnd(e) {
+                this.state.dragging = false;
+                this.elements.card.classList.remove('dragging');
+
+                this.emit('dragEnd', this.getEquipmentData());
+            }
+
+            handleActionClick(e) {
+                e.stopPropagation();
+                const action = e.target.dataset.action;
+                if (action) {
+                    this.emit('action', { action, equipment: this.getEquipmentData() });
+                }
+            }
+
+            updateDisplay() {
+                this.updateStats();
+                this.updateDurability();
+                this.updateComparison();
+            }
+
+            updateStats() {
+                if (!this.elements.stats) return;
+
+                let statsHtml = '';
+                for (const [key, stat] of Object.entries(this.config.stats)) {
+                    const isImproved = stat.value > stat.base;
+                    const isReduced = stat.value < stat.base;
+
+                    statsHtml += `
+                        <div class="stat-item">
+                            <span class="stat-name">${this.getStatDisplay(key)}</span>
+                            <span class="stat-value">
+                                ${stat.value}
+                                ${this.state.comparing && (isImproved || isReduced) ?
+                                    `<span class="stat-change ${isImproved ? 'stat-increase' : 'stat-decrease'}">
+                                        ${isImproved ? '+' : ''}${stat.value - stat.base}
+                                    </span>` : ''
+                                }
+                            </span>
+                        </div>
+                    `;
+                }
+                this.elements.stats.innerHTML = statsHtml;
+            }
+
+            updateDurability() {
+                if (!this.elements.durabilityFill) return;
+
+                const percentage = (this.config.durability / this.config.maxDurability) * 100;
+                this.elements.durabilityFill.style.width = percentage + '%';
+
+                if (this.elements.durabilityText) {
+                    this.elements.durabilityText.textContent = `${this.config.durability}/${this.config.maxDurability}`;
+                }
+            }
+
+            updateComparison() {
+                if (!this.elements.comparison || !this.config.showComparison) return;
+
+                this.elements.comparison.style.display = this.state.comparing ? 'flex' : 'none';
+
+                if (this.state.comparing) {
+                    let comparisonHtml = '';
+                    for (const [stat, change] of Object.entries(this.state.comparisonData)) {
+                        if (change > 0) {
+                            comparisonHtml += '<div class="comparison-arrow up"></div>';
+                        } else if (change < 0) {
+                            comparisonHtml += '<div class="comparison-arrow down"></div>';
+                        }
+                    }
+                    this.elements.comparison.innerHTML = comparisonHtml;
+                }
+            }
+
+            getTypeDisplay() {
+                const types = {
+                    'primary-weapon': '主武器',
+                    'secondary-weapon': '副武器',
+                    'armor': '护甲',
+                    'accessory': '配件',
+                    'consumable': '消耗品'
+                };
+                return types[this.config.type] || this.config.type;
+            }
+
+            getStatDisplay(stat) {
+                const stats = {
+                    'damage': '伤害',
+                    'accuracy': '精度',
+                    'range': '射程',
+                    'fireRate': '射速',
+                    'armor': '护甲值',
+                    'speed': '移动速度',
+                    'health': '生命值'
+                };
+                return stats[stat] || stat;
+            }
+
+            getRarityColor(rarity) {
+                const colors = {
+                    'legendary': '#FFD700',
+                    'epic': '#A020F0',
+                    'rare': '#0080FF',
+                    'uncommon': '#008000',
+                    'common': '#808080'
+                };
+                return colors[rarity] || colors.common;
+            }
+
+            // 公共API
+            select() {
+                this.state.selected = true;
+                this.elements.card.classList.add('selected');
+                this.emit('select', this.getEquipmentData());
+            }
+
+            deselect() {
+                this.state.selected = false;
+                this.elements.card.classList.remove('selected');
+                this.emit('deselect', this.getEquipmentData());
+            }
+
+            toggle() {
+                if (this.state.selected) {
+                    this.deselect();
+                } else {
+                    this.select();
+                }
+            }
+
+            updateStats(newStats) {
+                for (const [key, value] of Object.entries(newStats)) {
+                    if (this.config.stats[key]) {
+                        this.config.stats[key].value = value;
+                    }
+                }
+                this.updateStats();
+            }
+
+            setDurability(durability) {
+                this.config.durability = Math.max(0, Math.min(durability, this.config.maxDurability));
+                this.updateDurability();
+                this.emit('durabilityChange', this.config.durability);
+            }
+
+            showComparison(comparisonData) {
+                this.state.comparing = true;
+                this.state.comparisonData = comparisonData;
+                this.config.showComparison = true;
+                this.updateDisplay();
+            }
+
+            hideComparison() {
+                this.state.comparing = false;
+                this.config.showComparison = false;
+                this.updateComparison();
+            }
+
+            setRarity(rarity) {
+                this.elements.card.classList.remove(`rarity-${this.config.rarity}`);
+                this.elements.icon.classList.remove(`rarity-${this.config.rarity}`);
+
+                this.config.rarity = rarity;
+
+                this.elements.card.classList.add(`rarity-${rarity}`);
+                this.elements.icon.classList.add(`rarity-${rarity}`);
+            }
+
+            getEquipmentData() {
+                return {
+                    ...this.config,
+                    selected: this.state.selected
+                };
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        /**
+         * EquipmentSlot - 装备槽组件
+         */
+        class EquipmentSlot {
+            constructor(element, type) {
+                this.element = element;
+                this.type = type;
+                this.equipment = null;
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                this.element.addEventListener('dragover', this.handleDragOver.bind(this));
+                this.element.addEventListener('drop', this.handleDrop.bind(this));
+                this.element.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                this.element.classList.add('drag-over');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                this.element.classList.remove('drag-over');
+
+                try {
+                    const equipmentData = JSON.parse(e.dataTransfer.getData('application/json'));
+
+                    if (this.canAcceptEquipment(equipmentData)) {
+                        this.setEquipment(equipmentData);
+                    }
+                } catch (error) {
+                    console.error('Invalid equipment data:', error);
+                }
+            }
+
+            handleDragLeave(e) {
+                this.element.classList.remove('drag-over');
+            }
+
+            canAcceptEquipment(equipment) {
+                // 检查装备类型是否匹配槽位
+                return equipment.type === this.type;
+            }
+
+            setEquipment(equipmentData) {
+                this.equipment = equipmentData;
+
+                // 创建装备卡片在槽位中
+                const cardContainer = document.createElement('div');
+                this.element.innerHTML = '';
+                this.element.appendChild(cardContainer);
+
+                new EquipmentCard(cardContainer, {
+                    ...equipmentData,
+                    showActions: false,
+                    draggable: true
+                });
+
+                this.element.classList.add('occupied');
+            }
+
+            clear() {
+                this.equipment = null;
+                this.element.innerHTML = '<div class="slot-placeholder">拖拽装备到此处</div>';
+                this.element.classList.remove('occupied');
+            }
+        }
+
+        // 全局变量
+        let equipmentCards = [];
+        let equipmentSlots = {};
+
+        // 示例装备数据
+        const sampleEquipment = [
+            {
+                id: 'ak47_001',
+                name: 'AK-47',
+                type: 'primary-weapon',
+                rarity: 'rare',
+                level: 15,
+                durability: 85,
+                maxDurability: 100,
+                icon: '🔫',
+                stats: {
+                    damage: { value: 42, base: 35 },
+                    accuracy: { value: 78, base: 75 },
+                    range: { value: 85, base: 80 }
+                },
+                description: '经典突击步枪'
+            },
+            {
+                id: 'pistol_001',
+                name: '格洛克17',
+                type: 'secondary-weapon',
+                rarity: 'uncommon',
+                level: 8,
+                durability: 95,
+                maxDurability: 100,
+                icon: '🔫',
+                stats: {
+                    damage: { value: 25, base: 22 },
+                    accuracy: { value: 82, base: 80 },
+                    fireRate: { value: 350, base: 300 }
+                },
+                description: '可靠的手枪'
+            },
+            {
+                id: 'armor_001',
+                name: '战术背心',
+                type: 'armor',
+                rarity: 'rare',
+                level: 12,
+                durability: 70,
+                maxDurability: 100,
+                icon: '🛡️',
+                stats: {
+                    armor: { value: 45, base: 40 },
+                    speed: { value: -5, base: 0 }
+                },
+                description: '提供良好防护'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化装备槽
+            document.querySelectorAll('.equipment-slot').forEach(slot => {
+                const type = slot.dataset.slotType;
+                equipmentSlots[type] = new EquipmentSlot(slot, type);
+            });
+
+            // 初始化背包
+            initializeInventory();
+
+            // 初始化稀有度演示
+            initializeRarityDemo();
+        });
+
+        function initializeInventory() {
+            const inventory = document.getElementById('equipment-inventory');
+
+            sampleEquipment.forEach(equipment => {
+                const cardContainer = document.createElement('div');
+                inventory.appendChild(cardContainer);
+
+                const card = new EquipmentCard(cardContainer, equipment);
+                equipmentCards.push(card);
+
+                card.on('select', (data) => {
+                    // 取消其他卡片的选中状态
+                    equipmentCards.forEach(otherCard => {
+                        if (otherCard !== card) {
+                            otherCard.deselect();
+                        }
+                    });
+                });
+            });
+        }
+
+        function initializeRarityDemo() {
+            const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+            const rarityNames = ['普通', '精良', '稀有', '史诗', '传说'];
+
+            rarities.forEach((rarity, index) => {
+                const container = document.getElementById(`rarity-demo-${rarity}`);
+                const card = new EquipmentCard(container, {
+                    id: `demo_${rarity}`,
+                    name: `${rarityNames[index]}装备`,
+                    type: 'weapon',
+                    rarity: rarity,
+                    level: index * 5 + 5,
+                    durability: 100,
+                    maxDurability: 100,
+                    icon: '⚔️',
+                    stats: {
+                        damage: { value: 30 + index * 10, base: 30 + index * 10 }
+                    },
+                    showActions: false,
+                    draggable: false
+                });
+
+                card.elements.card.classList.add('rarity-glow');
+            });
+        }
+
+        // 控制函数
+        function addRandomEquipment() {
+            const inventory = document.getElementById('equipment-inventory');
+            const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+            const types = ['primary-weapon', 'secondary-weapon', 'armor', 'accessory'];
+            const names = ['雷霆', '烈焰', '冰霜', '暗影', '光辉'];
+
+            const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            const randomName = names[Math.floor(Math.random() * names.length)];
+
+            const cardContainer = document.createElement('div');
+            inventory.appendChild(cardContainer);
+
+            const card = new EquipmentCard(cardContainer, {
+                id: `random_${Date.now()}`,
+                name: `${randomName}装备`,
+                type: randomType,
+                rarity: randomRarity,
+                level: Math.floor(Math.random() * 20) + 1,
+                durability: Math.floor(Math.random() * 100) + 1,
+                maxDurability: 100,
+                icon: randomType === 'armor' ? '🛡️' : '⚔️',
+                stats: {
+                    damage: { value: Math.floor(Math.random() * 50) + 20, base: 30 }
+                },
+                isNew: true
+            });
+
+            equipmentCards.push(card);
+
+            card.on('select', (data) => {
+                equipmentCards.forEach(otherCard => {
+                    if (otherCard !== card) {
+                        otherCard.deselect();
+                    }
+                });
+            });
+        }
+
+        function selectRandomEquipment() {
+            if (equipmentCards.length > 0) {
+                const randomCard = equipmentCards[Math.floor(Math.random() * equipmentCards.length)];
+                randomCard.select();
+            }
+        }
+
+        function showComparison() {
+            equipmentCards.forEach(card => {
+                if (card.state.selected) {
+                    card.showComparison({
+                        damage: Math.floor(Math.random() * 20) - 10,
+                        accuracy: Math.floor(Math.random() * 10) - 5
+                    });
+                }
+            });
+        }
+
+        function clearInventory() {
+            const inventory = document.getElementById('equipment-inventory');
+            inventory.innerHTML = '';
+            equipmentCards = [];
+        }
+    </script>
+</body>
+</html>

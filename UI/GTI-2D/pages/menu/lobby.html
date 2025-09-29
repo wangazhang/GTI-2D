@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 战术大厅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                        'team-ready': 'team-ready 1s ease-in-out infinite alternate',
+                        'countdown': 'countdown 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        'team-ready': {
+                            '0%': { transform: 'scale(1)', opacity: '0.8' },
+                            '100%': { transform: 'scale(1.05)', opacity: '1' }
+                        },
+                        countdown: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gradient-to-br from-tactical-900 via-military-900 to-tactical-800 font-military text-white overflow-x-hidden">
+    <!-- 动态背景效果 -->
+    <div class="fixed inset-0 opacity-10">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920')] bg-cover bg-center bg-fixed opacity-40"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-military-900/90 via-transparent to-cyber-900/30"></div>
+    </div>
+
+    <!-- 顶部状态栏 -->
+    <nav class="relative z-50 border-b border-military-600/30 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="main-menu.html" class="flex items-center space-x-2 text-tactical-300 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span class="text-sm">返回主菜单</span>
+                    </a>
+                    <div class="text-sm text-tactical-400">
+                        房间号: <span class="text-cyber-400 font-mono">GTI-001</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 text-sm">
+                        <div id="game-status" class="flex items-center space-x-2">
+                            <span class="text-military-400 animate-pulse">●</span>
+                            <span class="text-tactical-300">准备阶段</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-tactical-400 font-mono" id="lobby-timer">05:00</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="relative z-10 min-h-screen">
+        <!-- 标题区域 -->
+        <div class="container mx-auto px-4 py-6">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-cyber-400 to-military-300 bg-clip-text text-transparent">
+                    战术大厅
+                </h1>
+                <p class="text-tactical-200">工业区 • 3v3v3 团队对抗</p>
+            </div>
+
+            <!-- 主要布局 -->
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- 左侧：队伍阵容 -->
+                <div class="lg:col-span-2">
+                    <div class="grid gap-6">
+                        <!-- 队伍1 - Alpha小队 -->
+                        <div class="bg-gradient-to-r from-cyber-800/40 to-cyber-700/40 rounded-xl border-2 border-cyber-500/50 backdrop-blur-sm p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-4 h-4 bg-cyber-400 rounded-full animate-pulse"></div>
+                                    <h2 class="text-xl font-bold text-white">Alpha小队</h2>
+                                    <span class="text-sm text-cyber-300 bg-cyber-900/50 px-2 py-1 rounded-full">3/3</span>
+                                </div>
+                                <div class="text-sm text-cyber-300 bg-cyber-900/30 px-3 py-1 rounded-full animate-team-ready">
+                                    全员就绪
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <!-- 队员1 - 自己 -->
+                                <div class="bg-cyber-900/30 rounded-lg p-4 border border-cyber-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-cyber-500 to-military-500 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">指挥官_Alpha</h3>
+                                            <p class="text-xs text-cyber-300">队长 • 等级23</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">突击步枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">战术背心</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 队员2 -->
+                                <div class="bg-cyber-900/30 rounded-lg p-4 border border-cyber-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-cyber-500 to-cyber-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">狙击手_Beta</h3>
+                                            <p class="text-xs text-cyber-300">队员 • 等级18</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">狙击步枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">轻型装甲</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 队员3 -->
+                                <div class="bg-cyber-900/30 rounded-lg p-4 border border-cyber-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-cyber-500 to-cyber-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">医疗兵_Gamma</h3>
+                                            <p class="text-xs text-cyber-300">队员 • 等级21</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">冲锋枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">医疗背心</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 队伍2 - Bravo小队 -->
+                        <div class="bg-gradient-to-r from-military-800/40 to-military-700/40 rounded-xl border-2 border-military-500/50 backdrop-blur-sm p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-4 h-4 bg-military-400 rounded-full animate-pulse"></div>
+                                    <h2 class="text-xl font-bold text-white">Bravo小队</h2>
+                                    <span class="text-sm text-military-300 bg-military-900/50 px-2 py-1 rounded-full">2/3</span>
+                                </div>
+                                <div class="text-sm text-alert-400 bg-alert-900/30 px-3 py-1 rounded-full">
+                                    等待队员
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <!-- 队员1 -->
+                                <div class="bg-military-900/30 rounded-lg p-4 border border-military-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-military-500 to-military-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">重装兵_Delta</h3>
+                                            <p class="text-xs text-military-300">队长 • 等级25</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">机枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">重型装甲</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 队员2 -->
+                                <div class="bg-military-900/30 rounded-lg p-4 border border-military-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-military-500 to-military-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">工程兵_Echo</h3>
+                                            <p class="text-xs text-military-300">队员 • 等级16</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">霰弹枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">工程背心</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-alert-900/50 text-alert-300 px-2 py-1 rounded-full">装备中</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 空位 -->
+                                <div class="bg-tactical-900/30 rounded-lg p-4 border border-tactical-500/20 border-dashed">
+                                    <div class="flex items-center justify-center h-full">
+                                        <div class="text-center">
+                                            <div class="w-12 h-12 mx-auto mb-3 bg-tactical-600 rounded-full flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-tactical-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs text-tactical-400">等待队员</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 队伍3 - Charlie小队 -->
+                        <div class="bg-gradient-to-r from-tactical-800/40 to-tactical-700/40 rounded-xl border-2 border-tactical-500/50 backdrop-blur-sm p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-4 h-4 bg-tactical-400 rounded-full animate-pulse"></div>
+                                    <h2 class="text-xl font-bold text-white">Charlie小队</h2>
+                                    <span class="text-sm text-tactical-300 bg-tactical-900/50 px-2 py-1 rounded-full">3/3</span>
+                                </div>
+                                <div class="text-sm text-tactical-300 bg-tactical-900/30 px-3 py-1 rounded-full animate-team-ready">
+                                    全员就绪
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <!-- 三名队员的相似结构 -->
+                                <div class="bg-tactical-900/30 rounded-lg p-4 border border-tactical-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-tactical-500 to-tactical-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">侦察兵_Foxtrot</h3>
+                                            <p class="text-xs text-tactical-300">队长 • 等级20</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">卡宾枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">侦察背心</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-tactical-900/30 rounded-lg p-4 border border-tactical-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-tactical-500 to-tactical-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">爆破手_Golf</h3>
+                                            <p class="text-xs text-tactical-300">队员 • 等级19</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">榴弹发射器</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">爆破背心</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-tactical-900/30 rounded-lg p-4 border border-tactical-500/30">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-tactical-500 to-tactical-600 rounded-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-white">通讯兵_Hotel</h3>
+                                            <p class="text-xs text-tactical-300">队员 • 等级17</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">武器</span>
+                                            <span class="text-white">突击步枪</span>
+                                        </div>
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-tactical-400">装甲</span>
+                                            <span class="text-white">通讯背包</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <span class="text-xs bg-success-900/50 text-success-300 px-2 py-1 rounded-full">准备完毕</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：控制面板 -->
+                <div class="space-y-6">
+                    <!-- 地图信息 -->
+                    <div class="bg-gradient-to-br from-military-800/40 to-tactical-800/40 rounded-xl border border-military-600/30 backdrop-blur-sm p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-military-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/>
+                            </svg>
+                            地图预览
+                        </h3>
+                        <div class="bg-gradient-to-br from-tactical-900/50 to-military-900/50 rounded-lg p-4 mb-4">
+                            <div class="w-full h-32 bg-gradient-to-br from-military-700/30 to-tactical-700/30 rounded border-2 border-military-500/20 relative">
+                                <!-- 地图缩略图模拟 -->
+                                <div class="absolute top-2 left-2 w-2 h-2 bg-cyber-400 rounded-full"></div>
+                                <div class="absolute top-4 right-3 w-2 h-2 bg-military-400 rounded-full"></div>
+                                <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-tactical-400 rounded-full"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-tactical-300 text-sm">工业区</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-tactical-400">地图名称</span>
+                                <span class="text-white">工业区</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-tactical-400">游戏模式</span>
+                                <span class="text-white">团队对抗</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-tactical-400">预计时长</span>
+                                <span class="text-white">15分钟</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 个人装备 -->
+                    <div class="bg-gradient-to-br from-cyber-800/40 to-cyber-700/40 rounded-xl border border-cyber-600/30 backdrop-blur-sm p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-cyber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            装备配置
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="bg-cyber-900/30 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm text-cyber-300">主武器</span>
+                                    <button class="text-xs text-cyber-400 hover:text-white">更换</button>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-cyber-600 rounded border"></div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">M4A1突击步枪</p>
+                                        <p class="text-xs text-cyber-300">伤害: 45 | 射程: 80</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-cyber-900/30 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm text-cyber-300">副武器</span>
+                                    <button class="text-xs text-cyber-400 hover:text-white">更换</button>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-cyber-600 rounded border"></div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">格洛克17手枪</p>
+                                        <p class="text-xs text-cyber-300">伤害: 25 | 射程: 30</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-cyber-900/30 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm text-cyber-300">装甲</span>
+                                    <button class="text-xs text-cyber-400 hover:text-white">更换</button>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-cyber-600 rounded border"></div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">战术背心</p>
+                                        <p class="text-xs text-cyber-300">防护: 65 | 移动: +5%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 聊天面板 -->
+                    <div class="bg-gradient-to-br from-tactical-800/40 to-tactical-700/40 rounded-xl border border-tactical-600/30 backdrop-blur-sm p-6">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-tactical-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            团队聊天
+                        </h3>
+                        <div class="space-y-2 mb-4 h-32 overflow-y-auto" id="chat-messages">
+                            <div class="text-xs">
+                                <span class="text-cyber-300">指挥官_Alpha:</span>
+                                <span class="text-tactical-200"> 大家准备好了吗？</span>
+                            </div>
+                            <div class="text-xs">
+                                <span class="text-military-300">重装兵_Delta:</span>
+                                <span class="text-tactical-200"> 装备检查完毕，随时可以开始</span>
+                            </div>
+                            <div class="text-xs">
+                                <span class="text-tactical-300">侦察兵_Foxtrot:</span>
+                                <span class="text-tactical-200"> Charlie小队准备就绪！</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="text" placeholder="输入消息..." class="flex-1 bg-tactical-900/50 border border-tactical-600/30 rounded-lg px-3 py-2 text-sm text-white placeholder-tactical-400 focus:outline-none focus:border-tactical-400">
+                            <button class="bg-tactical-600 hover:bg-tactical-500 text-white p-2 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 开始游戏按钮 -->
+                    <div class="sticky bottom-6">
+                        <div id="start-button-container">
+                            <button id="start-game-btn" onclick="startGame()" disabled class="w-full bg-gradient-to-r from-tactical-600 to-tactical-700 text-tactical-300 font-bold py-4 px-6 rounded-xl cursor-not-allowed">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>等待所有队员准备</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 游戏开始倒计时弹窗 -->
+    <div id="countdown-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="text-8xl font-bold text-white mb-4 animate-countdown" id="countdown-number">5</div>
+                <div class="text-2xl text-tactical-200 mb-2">游戏即将开始</div>
+                <div class="text-lg text-tactical-400">请准备好战斗！</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lobbyStartTime = Date.now();
+        let lobbyTimer;
+        let allReady = false;
+
+        // 更新大厅计时器
+        function updateLobbyTimer() {
+            const elapsed = Math.floor((Date.now() - lobbyStartTime) / 1000);
+            const remaining = Math.max(0, 300 - elapsed); // 5分钟大厅时间
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            document.getElementById('lobby-timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (remaining === 0) {
+                // 大厅时间结束，强制开始游戏
+                startGame();
+            }
+        }
+
+        // 检查所有队员准备状态
+        function checkAllReady() {
+            // 模拟检查逻辑
+            setTimeout(() => {
+                allReady = true;
+                updateStartButton();
+            }, 3000);
+        }
+
+        // 更新开始游戏按钮状态
+        function updateStartButton() {
+            const button = document.getElementById('start-game-btn');
+            if (allReady) {
+                button.disabled = false;
+                button.className = 'w-full bg-gradient-to-r from-success-600 to-success-500 hover:from-success-500 hover:to-success-400 text-white font-bold py-4 px-6 rounded-xl transform transition-all duration-300 hover:scale-105 animate-glow cursor-pointer';
+                button.innerHTML = `
+                    <div class="flex items-center justify-center space-x-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-9-4V8a3 3 0 016 0v2M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <span>开始游戏</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (!allReady) return;
+
+            // 显示倒计时
+            document.getElementById('countdown-modal').classList.remove('hidden');
+
+            let countdown = 5;
+            const countdownElement = document.getElementById('countdown-number');
+
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                } else {
+                    countdownElement.textContent = 'GO!';
+                    setTimeout(() => {
+                        clearInterval(countdownInterval);
+                        // 这里应该跳转到实际游戏界面
+                        alert('游戏开始！（此处应跳转到游戏界面）');
+                        window.location.href = 'main-menu.html';
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        // 模拟队员准备状态变化
+        function simulateTeamReadiness() {
+            // 模拟Bravo队的队员准备
+            setTimeout(() => {
+                const bravoStatus = document.querySelector('.bg-gradient-to-r.from-military-800\\/40 .text-alert-400');
+                if (bravoStatus) {
+                    bravoStatus.textContent = '全员就绪';
+                    bravoStatus.className = 'text-sm text-military-300 bg-military-900/30 px-3 py-1 rounded-full animate-team-ready';
+                }
+                checkAllReady();
+            }, 5000);
+        }
+
+        // 模拟聊天消息
+        function simulateChat() {
+            const messages = [
+                { user: '狙击手_Beta', team: 'cyber', message: '已选择制高点位置' },
+                { user: '工程兵_Echo', team: 'military', message: '装备调整完成，准备就绪' },
+                { user: '爆破手_Golf', team: 'tactical', message: '爆破装置已检查，一切正常' }
+            ];
+
+            let messageIndex = 0;
+            setInterval(() => {
+                if (messageIndex < messages.length) {
+                    const msg = messages[messageIndex];
+                    const chatContainer = document.getElementById('chat-messages');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'text-xs';
+                    messageDiv.innerHTML = `
+                        <span class="text-${msg.team}-300">${msg.user}:</span>
+                        <span class="text-tactical-200"> ${msg.message}</span>
+                    `;
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    messageIndex++;
+                }
+            }, 4000);
+        }
+
+        // 初始化
+        function initializeLobby() {
+            // 启动计时器
+            lobbyTimer = setInterval(updateLobbyTimer, 1000);
+            updateLobbyTimer();
+
+            // 模拟队伍准备
+            simulateTeamReadiness();
+
+            // 模拟聊天
+            simulateChat();
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', initializeLobby);
+
+        // 触摸优化
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 页面离开时清理定时器
+        window.addEventListener('beforeunload', () => {
+            if (lobbyTimer) clearInterval(lobbyTimer);
+        });
+    </script>
+</body>
+</html>

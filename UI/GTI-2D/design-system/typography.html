@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 字体系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                        'display': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    fontSize: {
+                        'xs': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.05em' }],
+                        'sm': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.025em' }],
+                        'base': ['1rem', { lineHeight: '1.5rem', letterSpacing: '0em' }],
+                        'lg': ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
+                        'xl': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
+                        '2xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.05em' }],
+                        '3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.05em' }],
+                        '4xl': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.075em' }],
+                        '5xl': ['3rem', { lineHeight: '1', letterSpacing: '-0.1em' }],
+                        '6xl': ['3.75rem', { lineHeight: '1', letterSpacing: '-0.1em' }],
+                        // Game-specific sizes
+                        'game-xs': ['0.625rem', { lineHeight: '0.75rem', letterSpacing: '0.1em' }],
+                        'game-sm': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.075em' }],
+                        'game-base': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.025em' }],
+                        'game-lg': ['1rem', { lineHeight: '1.5rem', letterSpacing: '0em' }],
+                        'game-xl': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.025em' }],
+                        'game-2xl': ['1.25rem', { lineHeight: '1.5rem', letterSpacing: '-0.05em' }],
+                        'game-3xl': ['1.5rem', { lineHeight: '1.75rem', letterSpacing: '-0.075em' }],
+                    },
+                    fontWeight: {
+                        'hairline': '100',
+                        'thin': '200',
+                        'light': '300',
+                        'normal': '400',
+                        'medium': '500',
+                        'semibold': '600',
+                        'bold': '700',
+                        'extrabold': '800',
+                        'black': '900',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --font-military: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .text-outline {
+            text-shadow:
+                -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000;
+        }
+
+        .text-military-glow {
+            text-shadow: 0 0 20px rgba(85, 107, 47, 0.6);
+        }
+
+        .text-cyber-glow {
+            text-shadow: 0 0 20px rgba(0, 206, 209, 0.6);
+        }
+
+        .text-tactical-scan {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .text-tactical-scan::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.6), transparent);
+            animation: scan 3s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .font-specimen {
+            border: 1px solid rgba(0, 206, 209, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 0.5rem 0;
+            background: rgba(47, 79, 79, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .font-specimen:hover {
+            border-color: rgba(0, 206, 209, 0.4);
+            background: rgba(47, 79, 79, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .font-stats {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 4px;
+        }
+
+        .mobile-preview {
+            width: 375px;
+            height: 667px;
+            max-width: 100%;
+            border: 8px solid #1e293b;
+            border-radius: 25px;
+            background: #0f172a;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mobile-preview::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: #475569;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-military-700 rounded border-2 border-cyber-400 flex items-center justify-center">
+                        <span class="text-cyber-400 font-bold text-sm">T</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">GTI-2D 字体系统</h1>
+                        <p class="text-xs text-tactical-400">Typography & Mobile Optimization</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="previewToggle" class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded border border-cyber-400/30 transition-all duration-200 text-sm">
+                        移动端预览
+                    </button>
+                    <a href="design-guide.html" class="text-tactical-400 hover:text-cyber-400 transition-colors text-sm">← 设计指南</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Font Family Overview -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">字体家族</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Primary Font -->
+                <div class="font-specimen">
+                    <h3 class="text-2xl font-military font-bold mb-4 text-military-300">Inter - 主要字体</h3>
+                    <div class="space-y-3">
+                        <p class="text-lg font-light">轻量 (300) - 精确射击需要稳定心态</p>
+                        <p class="text-lg font-normal">常规 (400) - 战术决策关键在于时机</p>
+                        <p class="text-lg font-medium">中等 (500) - 团队合作是胜利基础</p>
+                        <p class="text-lg font-semibold">半粗 (600) - 快速反应决定成败</p>
+                        <p class="text-lg font-bold">粗体 (700) - MISSION COMPLETE</p>
+                    </div>
+                    <div class="font-stats">
+                        字体特性：现代几何、易读性强、多语言支持<br>
+                        应用场景：界面文本、按钮、标题、正文内容<br>
+                        字重范围：300-700 | 字符集：Latin, CJK
+                    </div>
+                </div>
+
+                <!-- Monospace Font -->
+                <div class="font-specimen">
+                    <h3 class="text-2xl font-mono font-bold mb-4 text-cyber-300">JetBrains Mono - 等宽字体</h3>
+                    <div class="space-y-3">
+                        <p class="text-lg font-mono font-light">HP: 100/100</p>
+                        <p class="text-lg font-mono font-normal">Ammo: 30/30</p>
+                        <p class="text-lg font-mono font-medium">Kills: 15</p>
+                        <p class="text-lg font-mono font-semibold">Score: 2,450</p>
+                        <p class="text-lg font-mono font-bold">TIME: 02:45</p>
+                    </div>
+                    <div class="font-stats">
+                        字体特性：等宽字符、数字对齐、编程优化<br>
+                        应用场景：数值显示、计时器、代码、数据面板<br>
+                        字重范围：300-700 | 特殊符号：完整支持
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Scale -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">字体层级系统</h2>
+
+            <div class="space-y-6">
+                <!-- Display Sizes -->
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-6xl font-military font-bold text-military-300">Display XL</span>
+                        <div class="text-right font-stats">
+                            60px (3.75rem)<br>
+                            Line Height: 1<br>
+                            Weight: 700
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">用于游戏 Logo 和超大标题（桌面端）</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-5xl font-military font-bold text-military-300">Display Large</span>
+                        <div class="text-right font-stats">
+                            48px (3rem)<br>
+                            Line Height: 1<br>
+                            Weight: 700
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">用于主要标题和游戏标识</p>
+                </div>
+
+                <!-- Heading Sizes -->
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-4xl font-military font-bold text-cyber-400">Heading 1</span>
+                        <div class="text-right font-stats">
+                            36px (2.25rem)<br>
+                            Line Height: 2.5rem<br>
+                            Weight: 700
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">页面主标题，关卡名称</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-3xl font-military font-semibold text-cyber-400">Heading 2</span>
+                        <div class="text-right font-stats">
+                            30px (1.875rem)<br>
+                            Line Height: 2.25rem<br>
+                            Weight: 600
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">章节标题，模式选择</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-2xl font-military font-semibold text-cyber-400">Heading 3</span>
+                        <div class="text-right font-stats">
+                            24px (1.5rem)<br>
+                            Line Height: 2rem<br>
+                            Weight: 600
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">小节标题，卡片标题</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-xl font-military font-semibold text-tactical-200">Heading 4</span>
+                        <div class="text-right font-stats">
+                            20px (1.25rem)<br>
+                            Line Height: 1.75rem<br>
+                            Weight: 600
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">组件标题，功能区标题</p>
+                </div>
+
+                <!-- Body Text -->
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-lg font-military font-medium text-tactical-200">Body Large</span>
+                        <div class="text-right font-stats">
+                            18px (1.125rem)<br>
+                            Line Height: 1.75rem<br>
+                            Weight: 500
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">重要正文，介绍文本</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-base font-military font-normal text-tactical-200">Body Medium</span>
+                        <div class="text-right font-stats">
+                            16px (1rem)<br>
+                            Line Height: 1.5rem<br>
+                            Weight: 400
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">标准正文，描述文本，按钮文字</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-sm font-military font-normal text-tactical-300">Body Small</span>
+                        <div class="text-right font-stats">
+                            14px (0.875rem)<br>
+                            Line Height: 1.25rem<br>
+                            Weight: 400
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">辅助文本，标签，次要信息</p>
+                </div>
+
+                <div class="font-specimen">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <span class="text-xs font-military font-normal text-tactical-400">Caption</span>
+                        <div class="text-right font-stats">
+                            12px (0.75rem)<br>
+                            Line Height: 1rem<br>
+                            Weight: 400
+                        </div>
+                    </div>
+                    <p class="text-sm text-tactical-400">图片说明，版权信息，极小文本</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game-Specific Typography -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">游戏专用字体样式</h2>
+
+            <!-- UI Numbers -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="font-specimen">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">数值显示样式</h3>
+
+                    <div class="space-y-4">
+                        <!-- Health Display -->
+                        <div class="flex items-center justify-between p-3 bg-success-900/20 rounded border border-success-600/30">
+                            <span class="text-success-300 text-sm">生命值</span>
+                            <span class="text-success-400 font-mono font-bold text-xl">87</span>
+                        </div>
+
+                        <!-- Damage Numbers -->
+                        <div class="flex items-center justify-between p-3 bg-alert-900/20 rounded border border-alert-600/30">
+                            <span class="text-alert-300 text-sm">伤害</span>
+                            <span class="text-alert-400 font-mono font-bold text-xl text-glow">-23</span>
+                        </div>
+
+                        <!-- Score Display -->
+                        <div class="flex items-center justify-between p-3 bg-cyber-900/20 rounded border border-cyber-600/30">
+                            <span class="text-cyber-300 text-sm">得分</span>
+                            <span class="text-cyber-400 font-mono font-bold text-2xl">2,450</span>
+                        </div>
+
+                        <!-- Timer -->
+                        <div class="flex items-center justify-between p-3 bg-tactical-800 rounded border border-tactical-600">
+                            <span class="text-tactical-300 text-sm">时间</span>
+                            <span class="text-white font-mono font-bold text-xl">02:45</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Text -->
+                <div class="font-specimen">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">状态文本样式</h3>
+
+                    <div class="space-y-4">
+                        <!-- Mission Status -->
+                        <div class="text-center p-4 bg-success-900/20 rounded border border-success-600/30">
+                            <div class="text-success-400 font-military font-bold text-lg uppercase tracking-widest text-tactical-scan">
+                                MISSION COMPLETE
+                            </div>
+                            <div class="text-success-300 text-sm mt-1">任务完成</div>
+                        </div>
+
+                        <!-- Alert Status -->
+                        <div class="text-center p-4 bg-alert-900/20 rounded border border-alert-600/30">
+                            <div class="text-alert-400 font-military font-bold text-lg uppercase tracking-widest animate-pulse">
+                                UNDER ATTACK
+                            </div>
+                            <div class="text-alert-300 text-sm mt-1">正在受到攻击</div>
+                        </div>
+
+                        <!-- Loading Status -->
+                        <div class="text-center p-4 bg-cyber-900/20 rounded border border-cyber-600/30">
+                            <div class="text-cyber-400 font-military font-bold text-lg uppercase tracking-widest text-cyber-glow">
+                                RELOADING...
+                            </div>
+                            <div class="text-cyber-300 text-sm mt-1">重新装弹中</div>
+                        </div>
+
+                        <!-- Weapon Info -->
+                        <div class="text-center p-4 bg-military-900/20 rounded border border-military-600/30">
+                            <div class="text-military-300 font-military font-bold text-base uppercase tracking-wide">
+                                AK-47 ASSAULT RIFLE
+                            </div>
+                            <div class="text-military-400 text-xs mt-1">突击步枪</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mobile Typography -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">移动端字体优化</h2>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+                <!-- Mobile Scale -->
+                <div class="font-specimen">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">移动端字体层级</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-3xl font-military font-bold text-cyber-400">H1 Mobile</span>
+                            <span class="text-xs font-mono text-tactical-400">24px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-2xl font-military font-semibold text-cyber-400">H2 Mobile</span>
+                            <span class="text-xs font-mono text-tactical-400">20px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-xl font-military font-semibold text-tactical-200">H3 Mobile</span>
+                            <span class="text-xs font-mono text-tactical-400">18px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-lg font-military font-medium text-tactical-200">Body Large</span>
+                            <span class="text-xs font-mono text-tactical-400">16px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-base font-military font-normal text-tactical-200">Body Regular</span>
+                            <span class="text-xs font-mono text-tactical-400">14px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-sm font-military font-normal text-tactical-300">Small Text</span>
+                            <span class="text-xs font-mono text-tactical-400">12px</span>
+                        </div>
+
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-game-xs font-military font-normal text-tactical-400">Caption</span>
+                            <span class="text-xs font-mono text-tactical-400">10px</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-tactical-800/50 rounded text-sm text-tactical-400">
+                        <h4 class="font-semibold mb-2 text-tactical-300">移动端优化原则：</h4>
+                        <ul class="space-y-1">
+                            <li>• 最小字体 12px，确保可读性</li>
+                            <li>• 触摸目标最小 44px 高度</li>
+                            <li>• 行高 1.4-1.6 倍，适合小屏阅读</li>
+                            <li>• 字间距适当增加，提升可读性</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Mobile Preview -->
+                <div class="flex justify-center">
+                    <div class="mobile-preview">
+                        <div class="p-6 pt-8">
+                            <!-- Mobile Game UI Demo -->
+                            <div class="text-center mb-6">
+                                <h1 class="text-game-3xl font-military font-bold text-cyber-400 mb-2">GTI-2D</h1>
+                                <p class="text-game-sm text-tactical-400">战术射击游戏</p>
+                            </div>
+
+                            <!-- Status Bar -->
+                            <div class="bg-tactical-800 rounded-lg p-3 mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-game-sm text-tactical-300">生命值</span>
+                                    <span class="text-game-base font-mono text-success-400">85/100</span>
+                                </div>
+                                <div class="w-full bg-tactical-700 rounded h-2">
+                                    <div class="bg-success-500 h-full rounded" style="width: 85%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Ammo Display -->
+                            <div class="bg-tactical-800 rounded-lg p-3 mb-4">
+                                <div class="text-center">
+                                    <div class="text-game-2xl font-mono font-bold text-cyber-400">24</div>
+                                    <div class="text-game-xs text-tactical-400 uppercase tracking-wider">AMMO</div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="space-y-3 mb-4">
+                                <button class="w-full py-3 bg-military-700 text-cyber-400 rounded border border-cyber-400/30 text-game-base font-semibold">
+                                    开始游戏
+                                </button>
+                                <button class="w-full py-3 bg-tactical-700 text-tactical-200 rounded border border-tactical-600 text-game-sm">
+                                    设置选项
+                                </button>
+                            </div>
+
+                            <!-- Score Display -->
+                            <div class="text-center bg-tactical-800 rounded-lg p-4">
+                                <div class="text-game-xs text-tactical-400 uppercase tracking-widest mb-1">BEST SCORE</div>
+                                <div class="text-game-xl font-mono font-bold text-military-300">2,450</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chinese Typography -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">中英文混排优化</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Mixed Text Examples -->
+                <div class="font-specimen">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">中英文混排示例</h3>
+
+                    <div class="space-y-4">
+                        <div class="p-4 bg-tactical-800/50 rounded">
+                            <p class="text-lg font-military leading-relaxed">
+                                使用 <span class="text-cyber-400 font-semibold">AK-47</span> 突击步枪完成 <span class="text-success-400 font-semibold">Mission Alpha</span> 任务。
+                            </p>
+                            <div class="font-stats">
+                                良好的中英文混排 - 字间距适中，视觉平衡
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-tactical-800/50 rounded">
+                            <p class="text-base font-military leading-relaxed">
+                                当前装备：<span class="text-military-400 font-semibold">M4A1 Carbine</span>（弹药 <span class="font-mono text-alert-400">30/120</span>）
+                            </p>
+                            <div class="font-stats">
+                                数字使用等宽字体，保持对齐
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-tactical-800/50 rounded">
+                            <p class="text-sm font-military leading-relaxed text-tactical-300">
+                                击败敌人获得 <span class="text-success-400 font-mono">+150</span> 经验值，
+                                解锁新的 <span class="text-cyber-400">Tactical Scope</span> 配件。
+                            </p>
+                            <div class="font-stats">
+                                小字体保持可读性，重要信息突出显示
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography Rules -->
+                <div class="font-specimen">
+                    <h3 class="text-xl font-semibold mb-6 text-military-300">排版规则</h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-semibold text-success-400 mb-2">✓ 推荐做法</h4>
+                            <ul class="space-y-2 text-sm text-tactical-300">
+                                <li class="flex items-start">
+                                    <span class="text-success-400 mr-2">•</span>
+                                    中英文之间保持适当间距
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-success-400 mr-2">•</span>
+                                    数字使用等宽字体显示
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-success-400 mr-2">•</span>
+                                    英文专有名词加粗或变色强调
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-success-400 mr-2">•</span>
+                                    行高设置为 1.5-1.6 倍
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-alert-400 mb-2">✗ 避免做法</h4>
+                            <ul class="space-y-2 text-sm text-tactical-300">
+                                <li class="flex items-start">
+                                    <span class="text-alert-400 mr-2">•</span>
+                                    中英文紧贴，缺乏呼吸感
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-alert-400 mr-2">•</span>
+                                    数字和中文使用不同字体
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-alert-400 mr-2">•</span>
+                                    过多颜色变化干扰阅读
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-alert-400 mr-2">•</span>
+                                    行高过小，文字拥挤
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-cyber-900/20 rounded">
+                            <h4 class="text-sm font-semibold text-cyber-400 mb-2">字体回退策略</h4>
+                            <div class="font-mono text-xs text-tactical-400">
+                                font-family: 'Inter', 'PingFang SC',<br>
+                                'Hiragino Sans GB', 'Microsoft YaHei',<br>
+                                system-ui, sans-serif;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accessibility -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">可访问性与性能</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Readability -->
+                <div class="font-specimen">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">可读性优化</h3>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-success-900/20 rounded border-l-4 border-success-500">
+                            <strong class="text-success-400">字体大小</strong><br>
+                            移动端最小 12px<br>
+                            桌面端最小 14px
+                        </div>
+
+                        <div class="p-3 bg-success-900/20 rounded border-l-4 border-success-500">
+                            <strong class="text-success-400">行间距</strong><br>
+                            正文 1.5-1.6 倍<br>
+                            标题 1.2-1.3 倍
+                        </div>
+
+                        <div class="p-3 bg-success-900/20 rounded border-l-4 border-success-500">
+                            <strong class="text-success-400">字符长度</strong><br>
+                            每行 45-75 字符<br>
+                            移动端 35-45 字符
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance -->
+                <div class="font-specimen">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">性能优化</h3>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-cyber-900/20 rounded border-l-4 border-cyber-400">
+                            <strong class="text-cyber-400">字体加载</strong><br>
+                            使用 font-display: swap<br>
+                            预加载关键字体
+                        </div>
+
+                        <div class="p-3 bg-cyber-900/20 rounded border-l-4 border-cyber-400">
+                            <strong class="text-cyber-400">字体子集</strong><br>
+                            只加载所需字符集<br>
+                            分离中英文字体
+                        </div>
+
+                        <div class="p-3 bg-cyber-900/20 rounded border-l-4 border-cyber-400">
+                            <strong class="text-cyber-400">缓存策略</strong><br>
+                            长期缓存字体文件<br>
+                            CDN 加速分发
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accessibility -->
+                <div class="font-specimen">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">无障碍访问</h3>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-tactical-700/50 rounded border-l-4 border-tactical-400">
+                            <strong class="text-tactical-200">缩放支持</strong><br>
+                            支持 200% 缩放<br>
+                            使用相对单位 rem
+                        </div>
+
+                        <div class="p-3 bg-tactical-700/50 rounded border-l-4 border-tactical-400">
+                            <strong class="text-tactical-200">对比度</strong><br>
+                            文本对比度 ≥ 4.5:1<br>
+                            大字体 ≥ 3:1
+                        </div>
+
+                        <div class="p-3 bg-tactical-700/50 rounded border-l-4 border-tactical-400">
+                            <strong class="text-tactical-200">语义化</strong><br>
+                            正确的 HTML 层级<br>
+                            屏幕阅读器友好
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Examples -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">CSS 代码示例</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Tailwind Classes -->
+                <div class="font-specimen">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">Tailwind CSS 类名</h3>
+
+                    <div class="bg-tactical-900 rounded p-4 overflow-x-auto">
+                        <pre class="text-sm text-tactical-300"><code>/* 标题样式 */
+.game-title {
+  @apply text-4xl font-military font-bold
+         text-cyber-400 tracking-tight;
+}
+
+/* 正文样式 */
+.game-body {
+  @apply text-base font-military
+         text-tactical-200 leading-relaxed;
+}
+
+/* 数值显示 */
+.game-number {
+  @apply font-mono font-bold text-xl
+         text-cyber-400 tabular-nums;
+}
+
+/* 状态文本 */
+.game-status {
+  @apply text-sm font-military font-semibold
+         uppercase tracking-widest;
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- CSS Variables -->
+                <div class="font-specimen">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">CSS 自定义属性</h3>
+
+                    <div class="bg-tactical-900 rounded p-4 overflow-x-auto">
+                        <pre class="text-sm text-tactical-300"><code>:root {
+  /* 字体家族 */
+  --font-military: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* 字体大小 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+
+  /* 移动端大小 */
+  --text-mobile-lg: 1rem;
+  --text-mobile-xl: 1.125rem;
+
+  /* 行高 */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-tactical-800 border-t border-cyber-400/20 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-tactical-400 text-sm">GTI-2D 字体系统 - 移动端优化设计</p>
+                <p class="text-tactical-500 text-xs mt-2">Typography • Mobile First • Performance Optimized</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Preview Toggle
+        const previewToggle = document.getElementById('previewToggle');
+        const mobilePreview = document.querySelector('.mobile-preview');
+        let showingMobile = false;
+
+        previewToggle.addEventListener('click', () => {
+            showingMobile = !showingMobile;
+            if (showingMobile) {
+                mobilePreview.style.transform = 'scale(0.8)';
+                mobilePreview.style.margin = '20px auto';
+                previewToggle.textContent = '桌面端预览';
+            } else {
+                mobilePreview.style.transform = 'scale(1)';
+                mobilePreview.style.margin = '0 auto';
+                previewToggle.textContent = '移动端预览';
+            }
+        });
+
+        // Font size adjuster for testing
+        let fontSize = 1;
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === '=') {
+                    e.preventDefault();
+                    fontSize = Math.min(1.5, fontSize + 0.1);
+                    document.body.style.fontSize = `${fontSize * 100}%`;
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    fontSize = Math.max(0.8, fontSize - 0.1);
+                    document.body.style.fontSize = `${fontSize * 100}%`;
+                } else if (e.key === '0') {
+                    e.preventDefault();
+                    fontSize = 1;
+                    document.body.style.fontSize = '100%';
+                }
+            }
+        });
+
+        // Add interactive demos
+        document.querySelectorAll('.font-specimen').forEach(specimen => {
+            specimen.addEventListener('click', function() {
+                // Highlight the clicked specimen
+                document.querySelectorAll('.font-specimen').forEach(s => {
+                    s.style.borderColor = 'rgba(0, 206, 209, 0.2)';
+                });
+                this.style.borderColor = 'rgba(0, 206, 209, 0.6)';
+
+                // Copy font properties to clipboard
+                const styles = window.getComputedStyle(this.querySelector('[class*="text-"]'));
+                const fontInfo = {
+                    family: styles.fontFamily,
+                    size: styles.fontSize,
+                    weight: styles.fontWeight,
+                    lineHeight: styles.lineHeight
+                };
+
+                console.log('Font properties:', fontInfo);
+            });
+        });
+
+        // Simulate loading states
+        setTimeout(() => {
+            document.querySelectorAll('.text-tactical-scan').forEach(el => {
+                el.style.animation = 'scan 3s ease-in-out infinite';
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

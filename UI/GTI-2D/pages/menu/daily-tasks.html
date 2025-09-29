@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日任务 - GTI-2D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4', 100: '#e9ebe4', 200: '#d4d7ca', 300: '#b6bca7',
+                            400: '#95a082', 500: '#7a8564', 600: '#616b4f', 700: '#556B2F',
+                            800: '#485a28', 900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff', 100: '#ccf7fe', 200: '#9aeffd', 300: '#58e1fa',
+                            400: '#00CED1', 500: '#00b4b8', 600: '#039094', 700: '#0a7377',
+                            800: '#115e61', 900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2', 100: '#fdeee4', 200: '#fadac4', 300: '#f6bf99',
+                            400: '#f1976c', 500: '#FF6347', 600: '#dd4e2f', 700: '#b63e25',
+                            800: '#943525', 900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#228B22', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#2F4F4F',
+                            800: '#1e293b', 900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-in': 'bounceIn 0.6s ease-out',
+                        'reward-float': 'rewardFloat 2s ease-in-out',
+                        'progress-fill': 'progressFill 1s ease-out',
+                        'check-mark': 'checkMark 0.5s ease-out',
+                        'timer-pulse': 'timerPulse 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(0, 206, 209, 0.8)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.1)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        rewardFloat: {
+                            '0%': { transform: 'translateY(0px)', opacity: '1' },
+                            '100%': { transform: 'translateY(-50px)', opacity: '0' }
+                        },
+                        progressFill: {
+                            '0%': { width: '0%' },
+                            '100%': { width: 'var(--progress-width)' }
+                        },
+                        checkMark: {
+                            '0%': { transform: 'scale(0) rotate(45deg)', opacity: '0' },
+                            '100%': { transform: 'scale(1) rotate(45deg)', opacity: '1' }
+                        },
+                        timerPulse: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.5' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .task-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.1);
+        }
+
+        .task-card.completed {
+            background: rgba(34, 139, 34, 0.1);
+            border-color: rgba(34, 139, 34, 0.3);
+        }
+
+        .task-card.completed::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(34, 139, 34, 0.2), transparent);
+            animation: shimmer 2s ease-in-out;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .progress-bar {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #475569;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 8px;
+            position: relative;
+            transition: width 1s ease-out;
+        }
+
+        .progress-fill.daily {
+            background: linear-gradient(90deg, #00CED1, #58e1fa);
+        }
+
+        .progress-fill.weekly {
+            background: linear-gradient(90deg, #556B2F, #7a8564);
+        }
+
+        .progress-fill.special {
+            background: linear-gradient(90deg, #FF6347, #f1976c);
+        }
+
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 4px;
+        }
+
+        .reward-exp {
+            background: rgba(0, 206, 209, 0.2);
+            color: #00CED1;
+        }
+
+        .reward-coin {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        .reward-item {
+            background: rgba(85, 107, 47, 0.2);
+            color: #7a8564;
+        }
+
+        .check-in-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .check-in-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .check-in-day.past {
+            background: #228B22;
+            color: white;
+        }
+
+        .check-in-day.today {
+            background: #00CED1;
+            color: #0f172a;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .check-in-day.future {
+            background: #475569;
+            color: #94a3b8;
+        }
+
+        .check-in-day.missed {
+            background: #FF6347;
+            color: white;
+            opacity: 0.6;
+        }
+
+        .check-in-day:hover:not(.past) {
+            transform: scale(1.1);
+        }
+
+        .activity-meter {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .activity-ring {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .activity-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .activity-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .activity-ring .background {
+            stroke: #475569;
+        }
+
+        .activity-ring .progress {
+            stroke: #00CED1;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+
+        .activity-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .countdown-timer {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #00CED1;
+        }
+
+        .countdown-timer.warning {
+            color: #FF6347;
+            animation: timer-pulse 1s ease-in-out infinite;
+        }
+
+        .floating-reward {
+            position: fixed;
+            z-index: 1000;
+            pointer-events: none;
+            font-weight: bold;
+            animation: reward-float 2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button onclick="history.back()" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">每日任务</h1>
+                        <p class="text-xs text-tactical-400">Daily Tasks</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Countdown Timer -->
+                    <div class="text-center">
+                        <div class="text-xs text-tactical-400">任务重置</div>
+                        <div class="countdown-timer" id="resetTimer">23:42:15</div>
+                    </div>
+                    <button id="collectAllBtn" class="px-4 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold text-sm" disabled>
+                        💰 一键领取
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Top Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <!-- Today's Progress -->
+            <div class="bg-tactical-800 rounded-lg border border-cyber-400/20 p-6 text-center">
+                <div class="activity-meter mx-auto mb-4">
+                    <div class="activity-ring">
+                        <svg>
+                            <circle class="background" cx="60" cy="60" r="52"></circle>
+                            <circle class="progress" cx="60" cy="60" r="52"
+                                    stroke-dasharray="327" stroke-dashoffset="98" id="activityProgress"></circle>
+                        </svg>
+                        <div class="activity-center">
+                            <div class="text-2xl font-bold text-cyber-400">70%</div>
+                            <div class="text-xs text-tactical-400">今日活跃度</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Completion -->
+            <div class="bg-tactical-800 rounded-lg border border-success-400/20 p-6">
+                <div class="text-center mb-4">
+                    <div class="text-3xl mb-2">✅</div>
+                    <div class="text-2xl font-bold text-success-400">5/8</div>
+                    <div class="text-sm text-tactical-400">任务完成</div>
+                </div>
+                <div class="progress-bar h-3">
+                    <div class="progress-fill daily" style="width: 62.5%"></div>
+                </div>
+            </div>
+
+            <!-- Weekly Streak -->
+            <div class="bg-tactical-800 rounded-lg border border-military-400/20 p-6">
+                <div class="text-center mb-4">
+                    <div class="text-3xl mb-2">🔥</div>
+                    <div class="text-2xl font-bold text-military-400">7</div>
+                    <div class="text-sm text-tactical-400">连续天数</div>
+                </div>
+                <div class="flex justify-center space-x-1">
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-military-600 rounded"></div>
+                    <div class="w-2 h-8 bg-cyber-400 rounded animate-glow"></div>
+                </div>
+            </div>
+
+            <!-- Total Rewards -->
+            <div class="bg-tactical-800 rounded-lg border border-alert-400/20 p-6">
+                <div class="text-center">
+                    <div class="text-3xl mb-2">💰</div>
+                    <div class="text-2xl font-bold text-alert-400">12,450</div>
+                    <div class="text-sm text-tactical-400">今日奖励</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+                    <div class="text-center">
+                        <div class="font-mono text-cyber-400">+2,450</div>
+                        <div class="text-tactical-500">经验值</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="font-mono text-yellow-400">+10,000</div>
+                        <div class="text-tactical-500">金币</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Tabs -->
+        <div class="bg-tactical-800/50 rounded-lg p-1 mb-6">
+            <div class="grid grid-cols-3 lg:grid-cols-5 gap-1">
+                <button class="task-tab active py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="daily">
+                    每日任务 <span class="bg-cyber-600 text-white text-xs px-2 py-1 rounded-full ml-2">5/8</span>
+                </button>
+                <button class="task-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="weekly">
+                    周常任务 <span class="bg-military-600 text-white text-xs px-2 py-1 rounded-full ml-2">2/5</span>
+                </button>
+                <button class="task-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="special">
+                    特殊任务 <span class="bg-alert-600 text-white text-xs px-2 py-1 rounded-full ml-2">1/3</span>
+                </button>
+                <button class="task-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="checkin">
+                    签到奖励
+                </button>
+                <button class="task-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="achievements">
+                    成就任务 <span class="bg-tactical-600 text-tactical-300 text-xs px-2 py-1 rounded-full ml-2">3/10</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Task Content -->
+        <div class="task-content">
+            <!-- Daily Tasks -->
+            <div id="daily-tasks" class="task-section">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Completed Task -->
+                    <div class="task-card completed bg-tactical-800 rounded-lg border p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🎯</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <h3 class="text-lg font-semibold text-tactical-100 mr-2">完成5次击杀</h3>
+                                        <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-sm">✓</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-tactical-400 mb-3">在任意游戏模式中击杀5名敌人</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 100%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 5/5</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+500 经验</span>
+                                        <span class="reward-badge reward-coin">+1,000 金币</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-success-600 text-white rounded-lg font-semibold text-sm" onclick="claimReward(this, 500, 1000)">
+                                已完成
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Task -->
+                    <div class="task-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-cyber-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🏃</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">生存10分钟</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">在单局游戏中生存超过10分钟</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 73%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 7:18/10:00</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+750 经验</span>
+                                        <span class="reward-badge reward-coin">+1,500 金币</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- More Active Tasks -->
+                    <div class="task-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-military-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🎖️</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">获得3次胜利</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">在任意模式中获得3次胜利</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 66%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 2/3</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+1,000 经验</span>
+                                        <span class="reward-badge reward-coin">+2,000 金币</span>
+                                        <span class="reward-badge reward-item">+武器箱</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="task-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-alert-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">💥</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">使用爆炸物击杀</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">使用手榴弹或其他爆炸物击杀敌人</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 0%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 0/2</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+300 经验</span>
+                                        <span class="reward-badge reward-coin">+800 金币</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Tasks -->
+            <div id="weekly-tasks" class="task-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="task-card bg-tactical-800 rounded-lg border border-military-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-military-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">📈</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">本周击杀50名敌人</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">累计击杀数达到50</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill weekly" style="width: 74%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 37/50</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+2,500 经验</span>
+                                        <span class="reward-badge reward-coin">+5,000 金币</span>
+                                        <span class="reward-badge reward-item">+稀有装备箱</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="task-card bg-tactical-800 rounded-lg border border-military-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-success-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🏆</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">连续7天登录</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">连续7天每天至少登录一次</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill weekly" style="width: 100%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 7/7</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+1,500 经验</span>
+                                        <span class="reward-badge reward-coin">+10,000 金币</span>
+                                        <span class="reward-badge reward-item">+传说武器箱</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-success-600 text-white rounded-lg font-semibold text-sm" onclick="claimReward(this, 1500, 10000)">
+                                领取奖励
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Tasks -->
+            <div id="special-tasks" class="task-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="task-card bg-tactical-800 rounded-lg border border-alert-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-alert-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🌟</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">限时挑战</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">在限时模式中获得第一名</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill special" style="width: 100%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 1/1</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+3,000 经验</span>
+                                        <span class="reward-badge reward-coin">+15,000 金币</span>
+                                        <span class="reward-badge reward-item">+独特皮肤</span>
+                                    </div>
+
+                                    <div class="mt-3 text-xs text-alert-400">
+                                        ⏰ 剩余时间: 2天 14小时
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-success-600 text-white rounded-lg font-semibold text-sm" onclick="claimReward(this, 3000, 15000)">
+                                领取奖励
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="task-card bg-tactical-800 rounded-lg border border-alert-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-military-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">⚔️</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">团队协作</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">与好友组队获得3次胜利</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill special" style="width: 33%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 1/3</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+2,000 经验</span>
+                                        <span class="reward-badge reward-coin">+8,000 金币</span>
+                                        <span class="reward-badge reward-item">+友谊徽章</span>
+                                    </div>
+
+                                    <div class="mt-3 text-xs text-alert-400">
+                                        ⏰ 剩余时间: 5天 8小时
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check-in Rewards -->
+            <div id="checkin-tasks" class="task-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Check-in Calendar -->
+                    <div class="bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <h3 class="text-xl font-semibold text-military-300 mb-6">本月签到</h3>
+
+                        <div class="check-in-calendar mb-6">
+                            <div class="text-center text-xs text-tactical-400 font-semibold">一</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">二</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">三</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">四</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">五</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">六</div>
+                            <div class="text-center text-xs text-tactical-400 font-semibold">日</div>
+
+                            <!-- Week 1 -->
+                            <div class="check-in-day future">1</div>
+                            <div class="check-in-day past">2</div>
+                            <div class="check-in-day past">3</div>
+                            <div class="check-in-day past">4</div>
+                            <div class="check-in-day past">5</div>
+                            <div class="check-in-day past">6</div>
+                            <div class="check-in-day past">7</div>
+
+                            <!-- Week 2 -->
+                            <div class="check-in-day past">8</div>
+                            <div class="check-in-day past">9</div>
+                            <div class="check-in-day past">10</div>
+                            <div class="check-in-day past">11</div>
+                            <div class="check-in-day past">12</div>
+                            <div class="check-in-day past">13</div>
+                            <div class="check-in-day past">14</div>
+
+                            <!-- Week 3 -->
+                            <div class="check-in-day past">15</div>
+                            <div class="check-in-day past">16</div>
+                            <div class="check-in-day past">17</div>
+                            <div class="check-in-day past">18</div>
+                            <div class="check-in-day past">19</div>
+                            <div class="check-in-day past">20</div>
+                            <div class="check-in-day past">21</div>
+
+                            <!-- Week 4 -->
+                            <div class="check-in-day past">22</div>
+                            <div class="check-in-day past">23</div>
+                            <div class="check-in-day past">24</div>
+                            <div class="check-in-day past">25</div>
+                            <div class="check-in-day past">26</div>
+                            <div class="check-in-day past">27</div>
+                            <div class="check-in-day today" onclick="checkIn(this)">28</div>
+
+                            <!-- Week 5 -->
+                            <div class="check-in-day future">29</div>
+                            <div class="check-in-day future">30</div>
+                            <div class="check-in-day future">31</div>
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-cyber-400 mb-2">连续签到 27 天</div>
+                            <div class="text-sm text-tactical-400">本月累计奖励</div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Rewards -->
+                    <div class="bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <h3 class="text-xl font-semibold text-military-300 mb-6">月度奖励</h3>
+
+                        <div class="space-y-4">
+                            <!-- Day 7 Reward -->
+                            <div class="flex items-center justify-between p-4 bg-success-900/20 border border-success-600/30 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                        <span class="text-success-400">7</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-success-400">第7天奖励</div>
+                                        <div class="text-sm text-tactical-400">1,000经验 + 5,000金币</div>
+                                    </div>
+                                </div>
+                                <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm">✓</span>
+                                </div>
+                            </div>
+
+                            <!-- Day 14 Reward -->
+                            <div class="flex items-center justify-between p-4 bg-success-900/20 border border-success-600/30 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                        <span class="text-success-400">14</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-success-400">第14天奖励</div>
+                                        <div class="text-sm text-tactical-400">2,000经验 + 装备箱</div>
+                                    </div>
+                                </div>
+                                <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm">✓</span>
+                                </div>
+                            </div>
+
+                            <!-- Day 21 Reward -->
+                            <div class="flex items-center justify-between p-4 bg-success-900/20 border border-success-600/30 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                        <span class="text-success-400">21</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-success-400">第21天奖励</div>
+                                        <div class="text-sm text-tactical-400">3,000经验 + 稀有武器</div>
+                                    </div>
+                                </div>
+                                <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm">✓</span>
+                                </div>
+                            </div>
+
+                            <!-- Day 30 Reward -->
+                            <div class="flex items-center justify-between p-4 bg-tactical-700 border border-tactical-600 rounded-lg">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-alert-500/20 rounded-lg flex items-center justify-center">
+                                        <span class="text-alert-400">30</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-alert-400">第30天大奖</div>
+                                        <div class="text-sm text-tactical-400">5,000经验 + 传说皮肤</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-tactical-400">还需2天</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievement Tasks -->
+            <div id="achievements-tasks" class="task-section hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="task-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-cyber-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🏅</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">新手毕业</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">达到10级并完成新手教程</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 100%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">已完成</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+1,000 经验</span>
+                                        <span class="reward-badge reward-coin">+3,000 金币</span>
+                                        <span class="reward-badge reward-item">+新手奖章</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-success-600 text-white rounded-lg font-semibold text-sm" onclick="claimReward(this, 1000, 3000)">
+                                领取奖励
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="task-card bg-tactical-800 rounded-lg border border-cyber-400/20 p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <div class="w-12 h-12 bg-military-400/20 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl">🎯</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-tactical-100 mb-2">神枪手</h3>
+                                    <p class="text-sm text-tactical-400 mb-3">累计爆头击杀100次</p>
+
+                                    <div class="progress-bar h-3 mb-3">
+                                        <div class="progress-fill daily" style="width: 68%"></div>
+                                    </div>
+                                    <div class="text-xs text-tactical-400 mb-3">进度: 68/100</div>
+
+                                    <div class="flex flex-wrap">
+                                        <span class="reward-badge reward-exp">+2,500 经验</span>
+                                        <span class="reward-badge reward-coin">+8,000 金币</span>
+                                        <span class="reward-badge reward-item">+狙击镜</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="px-4 py-2 bg-tactical-700 text-tactical-300 rounded-lg font-semibold text-sm" disabled>
+                                进行中
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Reward Notification -->
+    <div id="rewardNotification" class="fixed bottom-6 right-6 z-50 hidden">
+        <div class="bg-success-600 text-white px-6 py-4 rounded-lg shadow-lg animate-bounce-in">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🎉</span>
+                <div>
+                    <div class="font-semibold">奖励已领取！</div>
+                    <div class="text-sm" id="rewardText">+500 经验, +1,000 金币</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.task-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tab states
+                document.querySelectorAll('.task-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-military-700', 'text-cyber-400');
+                    t.classList.add('text-tactical-400');
+                });
+
+                tab.classList.add('active', 'bg-military-700', 'text-cyber-400');
+                tab.classList.remove('text-tactical-400');
+
+                // Show corresponding content
+                const targetTab = tab.dataset.tab;
+                document.querySelectorAll('.task-section').forEach(section => {
+                    section.classList.add('hidden');
+                });
+
+                document.getElementById(`${targetTab}-tasks`).classList.remove('hidden');
+            });
+        });
+
+        // Claim reward function
+        function claimReward(button, exp, coins) {
+            // Disable button
+            button.disabled = true;
+            button.textContent = '已领取';
+            button.classList.remove('bg-success-600');
+            button.classList.add('bg-tactical-700', 'text-tactical-400');
+
+            // Show floating reward
+            showFloatingReward(button, exp, coins);
+
+            // Show notification
+            showRewardNotification(exp, coins);
+
+            // Update task card to completed state
+            const taskCard = button.closest('.task-card');
+            taskCard.classList.add('completed');
+
+            // Update counters
+            updateTaskCounters();
+        }
+
+        function showFloatingReward(button, exp, coins) {
+            const rect = button.getBoundingClientRect();
+
+            const expReward = document.createElement('div');
+            expReward.className = 'floating-reward text-cyber-400';
+            expReward.textContent = `+${exp} EXP`;
+            expReward.style.left = rect.left + 'px';
+            expReward.style.top = rect.top + 'px';
+            document.body.appendChild(expReward);
+
+            const coinReward = document.createElement('div');
+            coinReward.className = 'floating-reward text-yellow-400';
+            coinReward.textContent = `+${coins} 金币`;
+            coinReward.style.left = rect.left + 50 + 'px';
+            coinReward.style.top = rect.top + 20 + 'px';
+            document.body.appendChild(coinReward);
+
+            setTimeout(() => {
+                if (expReward.parentNode) expReward.parentNode.removeChild(expReward);
+                if (coinReward.parentNode) coinReward.parentNode.removeChild(coinReward);
+            }, 2000);
+        }
+
+        function showRewardNotification(exp, coins) {
+            const notification = document.getElementById('rewardNotification');
+            const rewardText = document.getElementById('rewardText');
+
+            rewardText.textContent = `+${exp} 经验, +${coins} 金币`;
+            notification.classList.remove('hidden');
+
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        function updateTaskCounters() {
+            // This would update the task completion counters in the tabs
+            console.log('Updating task counters...');
+        }
+
+        // Check-in function
+        function checkIn(dayElement) {
+            if (dayElement.classList.contains('today')) {
+                dayElement.classList.remove('today');
+                dayElement.classList.add('past');
+
+                // Show check-in reward
+                showFloatingReward(dayElement, 200, 500);
+                showRewardNotification(200, 500);
+
+                // Update next day
+                const nextDay = dayElement.nextElementSibling;
+                if (nextDay && nextDay.classList.contains('future')) {
+                    nextDay.classList.remove('future');
+                    nextDay.classList.add('today');
+                }
+            }
+        }
+
+        // Countdown timer
+        function updateCountdownTimer() {
+            const timerElement = document.getElementById('resetTimer');
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = timeString;
+
+            // Add warning style when less than 1 hour
+            if (hours < 1) {
+                timerElement.classList.add('warning');
+            } else {
+                timerElement.classList.remove('warning');
+            }
+        }
+
+        // Update timer every second
+        setInterval(updateCountdownTimer, 1000);
+        updateCountdownTimer();
+
+        // Collect all rewards
+        document.getElementById('collectAllBtn').addEventListener('click', () => {
+            const availableRewards = document.querySelectorAll('button:contains("领取奖励")');
+            let totalExp = 0;
+            let totalCoins = 0;
+
+            availableRewards.forEach(button => {
+                if (button.textContent === '领取奖励') {
+                    // Simulate claiming all available rewards
+                    totalExp += 1000; // Placeholder
+                    totalCoins += 2000; // Placeholder
+                    claimReward(button, 1000, 2000);
+                }
+            });
+
+            if (totalExp > 0) {
+                showRewardNotification(totalExp, totalCoins);
+            }
+        });
+
+        // Activity ring animation
+        function animateActivityRing() {
+            const progressCircle = document.getElementById('activityProgress');
+            const radius = 52;
+            const circumference = 2 * Math.PI * radius;
+            const progress = 70; // 70%
+            const offset = circumference - (progress / 100) * circumference;
+
+            progressCircle.style.strokeDasharray = circumference;
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(animateActivityRing, 500);
+        });
+
+        console.log('Daily Tasks System Loaded');
+    </script>
+</body>
+</html>

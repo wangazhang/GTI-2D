@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 组件库</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                        'loading': 'loading 1.5s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'shake': 'shake 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        },
+                        loading: {
+                            '0%, 100%': { transform: 'translateX(-100%)' },
+                            '50%': { transform: 'translateX(100%)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-5px)' },
+                            '75%': { transform: 'translateX(5px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .component-demo {
+            border: 1px solid rgba(0, 206, 209, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background: rgba(47, 79, 79, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .component-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.5), transparent);
+            animation: tactical-scan 3s linear infinite;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            border: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .progress-bar {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: loading 2s ease-in-out infinite;
+        }
+
+        .health-critical {
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        .button-tactical {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .button-tactical::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .button-tactical:hover::before {
+            left: 100%;
+        }
+
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .card-glow:hover {
+            box-shadow:
+                0 0 20px rgba(0, 206, 209, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .input-glow:focus {
+            box-shadow:
+                0 0 10px rgba(0, 206, 209, 0.5),
+                0 0 20px rgba(0, 206, 209, 0.2);
+        }
+
+        /* Game-specific animations */
+        @keyframes damage {
+            0% { color: #FF6347; transform: translateY(0) scale(1); }
+            50% { color: #ff8566; transform: translateY(-20px) scale(1.2); }
+            100% { color: #FF6347; transform: translateY(-30px) scale(0.8); opacity: 0; }
+        }
+
+        @keyframes heal {
+            0% { color: #228B22; transform: translateY(0) scale(1); }
+            50% { color: #4ade80; transform: translateY(-15px) scale(1.1); }
+            100% { color: #228B22; transform: translateY(-25px) scale(0.9); opacity: 0; }
+        }
+
+        .damage-number {
+            animation: damage 2s ease-out forwards;
+            position: absolute;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .heal-number {
+            animation: heal 2s ease-out forwards;
+            position: absolute;
+            font-weight: bold;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-military-700 rounded border-2 border-cyber-400 flex items-center justify-center">
+                        <span class="text-cyber-400 font-bold text-sm">C</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">GTI-2D 组件库</h1>
+                        <p class="text-xs text-tactical-400">Game UI Component Library</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="codeToggle" class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded border border-cyber-400/30 transition-all duration-200 text-sm">
+                        显示代码
+                    </button>
+                    <a href="design-guide.html" class="text-tactical-400 hover:text-cyber-400 transition-colors text-sm">← 设计指南</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-tactical-800/50 border-b border-cyber-400/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8 overflow-x-auto">
+                <a href="#buttons" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">按钮</a>
+                <a href="#progress" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">进度条</a>
+                <a href="#forms" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">表单</a>
+                <a href="#modals" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">模态框</a>
+                <a href="#cards" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">卡片</a>
+                <a href="#hud" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">HUD界面</a>
+                <a href="#navigation" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">导航</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Buttons Section -->
+        <section id="buttons" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">按钮组件</h2>
+
+            <!-- Primary Buttons -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">主要按钮</h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <button class="button-tactical px-6 py-3 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded transition-all duration-300 font-semibold min-h-[44px]">
+                        开始游戏
+                    </button>
+
+                    <button class="button-tactical px-6 py-3 bg-cyber-400 hover:bg-cyber-500 text-tactical-900 rounded transition-all duration-300 font-semibold min-h-[44px]">
+                        加入战斗
+                    </button>
+
+                    <button class="button-tactical px-6 py-3 bg-alert-500 hover:bg-alert-600 text-white rounded transition-all duration-300 font-semibold min-h-[44px]">
+                        退出游戏
+                    </button>
+
+                    <button class="button-tactical px-6 py-3 bg-success-500 hover:bg-success-600 text-white rounded transition-all duration-300 font-semibold min-h-[44px]">
+                        任务完成
+                    </button>
+                </div>
+
+                <!-- Button States -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <button class="px-4 py-2 bg-military-700 text-cyber-400 border border-cyber-400/30 rounded opacity-50 cursor-not-allowed" disabled>
+                        禁用状态
+                    </button>
+
+                    <button class="px-4 py-2 bg-military-700 text-cyber-400 border border-cyber-400/30 rounded animate-pulse">
+                        加载中...
+                    </button>
+
+                    <button class="px-4 py-2 bg-military-700 text-cyber-400 border border-cyber-400 rounded animate-glow">
+                        激活状态
+                    </button>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code><!-- 主要按钮 -->
+&lt;button class="px-6 py-3 bg-military-700 hover:bg-military-600
+               text-cyber-400 border border-cyber-400/30 rounded
+               transition-all duration-300 font-semibold min-h-[44px]"&gt;
+    开始游戏
+&lt;/button&gt;
+
+<!-- 次要按钮 -->
+&lt;button class="px-6 py-3 bg-cyber-400 hover:bg-cyber-500
+               text-tactical-900 rounded transition-all
+               duration-300 font-semibold min-h-[44px]"&gt;
+    加入战斗
+&lt;/button&gt;
+
+<!-- 禁用状态 -->
+&lt;button class="px-4 py-2 bg-military-700 text-cyber-400
+               border border-cyber-400/30 rounded opacity-50
+               cursor-not-allowed" disabled&gt;
+    禁用状态
+&lt;/button&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>游戏主菜单、战斗界面、设置面板。所有按钮最小高度44px，符合移动端触摸标准。
+                </p>
+            </div>
+
+            <!-- Icon Buttons -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">图标按钮</h3>
+
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button class="w-12 h-12 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <span class="text-cyber-400 text-xl">⚙️</span>
+                    </button>
+
+                    <button class="w-12 h-12 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <span class="text-success-400 text-xl">▶️</span>
+                    </button>
+
+                    <button class="w-12 h-12 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <span class="text-alert-400 text-xl">⏸️</span>
+                    </button>
+
+                    <button class="w-12 h-12 bg-tactical-700 hover:bg-tactical-600 border border-tactical-500 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <span class="text-tactical-300 text-xl">🔊</span>
+                    </button>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;button class="w-12 h-12 bg-tactical-700 hover:bg-tactical-600
+               border border-tactical-500 rounded-lg flex items-center
+               justify-center transition-all duration-200"&gt;
+    &lt;span class="text-cyber-400 text-xl"&gt;⚙️&lt;/span&gt;
+&lt;/button&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>工具栏、快捷操作、游戏控制。图标按钮保持48×48px最小尺寸。
+                </p>
+            </div>
+        </section>
+
+        <!-- Progress Bars Section -->
+        <section id="progress" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">进度条组件</h2>
+
+            <!-- Health Bars -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">生命值条</h3>
+
+                <div class="space-y-6">
+                    <!-- Normal Health -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">生命值</span>
+                            <span class="text-sm font-mono text-success-400">85/100</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-4 border border-tactical-600 progress-bar">
+                            <div class="bg-gradient-to-r from-success-600 to-success-400 h-full rounded-full transition-all duration-500" style="width: 85%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Low Health -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">生命值 (危险)</span>
+                            <span class="text-sm font-mono text-alert-400">25/100</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-4 border border-tactical-600 health-critical">
+                            <div class="bg-gradient-to-r from-alert-600 to-alert-400 h-full rounded-full transition-all duration-500" style="width: 25%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Shield Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">护甲值</span>
+                            <span class="text-sm font-mono text-cyber-400">60/100</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-4 border border-tactical-600">
+                            <div class="bg-gradient-to-r from-cyber-600 to-cyber-400 h-full rounded-full transition-all duration-500" style="width: 60%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ammo Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">弹药</span>
+                            <span class="text-sm font-mono text-military-400">18/30</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-4 border border-tactical-600">
+                            <div class="bg-gradient-to-r from-military-600 to-military-400 h-full rounded-full transition-all duration-500" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code><!-- 生命值条 -->
+&lt;div&gt;
+    &lt;div class="flex justify-between items-center mb-2"&gt;
+        &lt;span class="text-sm font-semibold text-tactical-200"&gt;生命值&lt;/span&gt;
+        &lt;span class="text-sm font-mono text-success-400"&gt;85/100&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="w-full bg-tactical-700 rounded-full h-4
+               border border-tactical-600 progress-bar"&gt;
+        &lt;div class="bg-gradient-to-r from-success-600 to-success-400
+                   h-full rounded-full transition-all duration-500"
+                   style="width: 85%"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>玩家状态显示、技能冷却、装弹进度。低生命值自动闪烁警告。
+                </p>
+            </div>
+
+            <!-- Loading Progress -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">加载进度条</h3>
+
+                <div class="space-y-6">
+                    <!-- Loading Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">加载游戏资源</span>
+                            <span class="text-sm font-mono text-cyber-400">67%</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-3 border border-cyber-400/30 overflow-hidden">
+                            <div class="bg-gradient-to-r from-cyber-600 to-cyber-400 h-full rounded-full transition-all duration-300 progress-bar" style="width: 67%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Indeterminate Progress -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-tactical-200">连接服务器</span>
+                            <span class="text-sm text-tactical-400">请稍候...</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-2 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-transparent via-cyber-400 to-transparent animate-loading"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code><!-- 确定进度条 -->
+&lt;div class="w-full bg-tactical-700 rounded-full h-3
+           border border-cyber-400/30 overflow-hidden"&gt;
+    &lt;div class="bg-gradient-to-r from-cyber-600 to-cyber-400
+               h-full rounded-full transition-all duration-300
+               progress-bar" style="width: 67%"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+<!-- 不确定进度条 -->
+&lt;div class="w-full bg-tactical-700 rounded-full h-2 overflow-hidden"&gt;
+    &lt;div class="h-full bg-gradient-to-r from-transparent
+               via-cyber-400 to-transparent animate-loading"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>游戏加载、文件下载、网络连接。支持确定和不确定进度显示。
+                </p>
+            </div>
+        </section>
+
+        <!-- Forms Section -->
+        <section id="forms" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">表单组件</h2>
+
+            <!-- Input Fields -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">输入框</h3>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <!-- Text Input -->
+                        <div>
+                            <label class="block text-sm font-semibold text-tactical-200 mb-2">玩家名称</label>
+                            <input type="text" placeholder="请输入玩家名称"
+                                   class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-all duration-200 input-glow min-h-[44px]">
+                        </div>
+
+                        <!-- Password Input -->
+                        <div>
+                            <label class="block text-sm font-semibold text-tactical-200 mb-2">密码</label>
+                            <input type="password" placeholder="请输入密码"
+                                   class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-all duration-200 input-glow min-h-[44px]">
+                        </div>
+
+                        <!-- Select -->
+                        <div>
+                            <label class="block text-sm font-semibold text-tactical-200 mb-2">难度等级</label>
+                            <select class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600 rounded-lg text-tactical-100 focus:border-cyber-400 focus:outline-none transition-all duration-200 min-h-[44px]">
+                                <option value="">选择难度</option>
+                                <option value="easy">简单</option>
+                                <option value="normal">普通</option>
+                                <option value="hard">困难</option>
+                                <option value="expert">专家</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Textarea -->
+                        <div>
+                            <label class="block text-sm font-semibold text-tactical-200 mb-2">战术备注</label>
+                            <textarea placeholder="输入战术说明..." rows="4"
+                                      class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600 rounded-lg text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-all duration-200 input-glow resize-none"></textarea>
+                        </div>
+
+                        <!-- Range Slider -->
+                        <div>
+                            <label class="block text-sm font-semibold text-tactical-200 mb-2">音量设置</label>
+                            <input type="range" min="0" max="100" value="75"
+                                   class="w-full h-2 bg-tactical-700 rounded-lg appearance-none cursor-pointer slider">
+                            <div class="flex justify-between text-xs text-tactical-400 mt-1">
+                                <span>0</span>
+                                <span>75</span>
+                                <span>100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- 文本输入框 --&gt;
+&lt;input type="text" placeholder="请输入玩家名称"
+       class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600
+              rounded-lg text-tactical-100 placeholder-tactical-500
+              focus:border-cyber-400 focus:outline-none transition-all
+              duration-200 input-glow min-h-[44px]"&gt;
+
+&lt;!-- 选择框 --&gt;
+&lt;select class="w-full px-4 py-3 bg-tactical-800 border border-tactical-600
+              rounded-lg text-tactical-100 focus:border-cyber-400
+              focus:outline-none transition-all duration-200 min-h-[44px]"&gt;
+    &lt;option value=""&gt;选择难度&lt;/option&gt;
+    &lt;option value="easy"&gt;简单&lt;/option&gt;
+    &lt;option value="normal"&gt;普通&lt;/option&gt;
+&lt;/select&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>用户注册、游戏设置、队伍创建。所有输入元素最小高度44px。
+                </p>
+            </div>
+
+            <!-- Checkboxes and Radios -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">选择控件</h3>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-sm font-semibold text-tactical-300 mb-4">复选框</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="checkbox" checked class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 rounded focus:ring-cyber-400">
+                                <span class="text-tactical-200">启用音效</span>
+                            </label>
+
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="checkbox" class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 rounded focus:ring-cyber-400">
+                                <span class="text-tactical-200">显示伤害数字</span>
+                            </label>
+
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="checkbox" checked class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 rounded focus:ring-cyber-400">
+                                <span class="text-tactical-200">自动拾取物品</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-sm font-semibold text-tactical-300 mb-4">单选框</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="radio" name="graphics" value="low" class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 focus:ring-cyber-400">
+                                <span class="text-tactical-200">低画质</span>
+                            </label>
+
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="radio" name="graphics" value="medium" checked class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 focus:ring-cyber-400">
+                                <span class="text-tactical-200">中画质</span>
+                            </label>
+
+                            <label class="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-tactical-800/50 transition-colors">
+                                <input type="radio" name="graphics" value="high" class="w-5 h-5 text-cyber-400 bg-tactical-700 border-tactical-500 focus:ring-cyber-400">
+                                <span class="text-tactical-200">高画质</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- 复选框 --&gt;
+&lt;label class="flex items-center space-x-3 cursor-pointer p-3
+              rounded-lg hover:bg-tactical-800/50 transition-colors"&gt;
+    &lt;input type="checkbox" checked
+           class="w-5 h-5 text-cyber-400 bg-tactical-700
+                  border-tactical-500 rounded focus:ring-cyber-400"&gt;
+    &lt;span class="text-tactical-200"&gt;启用音效&lt;/span&gt;
+&lt;/label&gt;
+
+&lt;!-- 单选框 --&gt;
+&lt;label class="flex items-center space-x-3 cursor-pointer p-3
+              rounded-lg hover:bg-tactical-800/50 transition-colors"&gt;
+    &lt;input type="radio" name="graphics" value="medium" checked
+           class="w-5 h-5 text-cyber-400 bg-tactical-700
+                  border-tactical-500 focus:ring-cyber-400"&gt;
+    &lt;span class="text-tactical-200"&gt;中画质&lt;/span&gt;
+&lt;/label&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>游戏设置、选项配置、权限选择。增大点击区域提升移动端体验。
+                </p>
+            </div>
+        </section>
+
+        <!-- Modals Section -->
+        <section id="modals" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">模态框组件</h2>
+
+            <!-- Modal Demo -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">对话框和弹出层</h3>
+
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button id="infoModal" class="px-4 py-2 bg-cyber-400 hover:bg-cyber-500 text-tactical-900 rounded transition-all duration-200 font-semibold">
+                        信息弹窗
+                    </button>
+
+                    <button id="confirmModal" class="px-4 py-2 bg-alert-500 hover:bg-alert-600 text-white rounded transition-all duration-200 font-semibold">
+                        确认对话框
+                    </button>
+
+                    <button id="settingsModal" class="px-4 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded transition-all duration-200 font-semibold">
+                        设置面板
+                    </button>
+                </div>
+
+                <!-- Modal Templates (Hidden) -->
+                <!-- Info Modal -->
+                <div id="infoModalTemplate" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+                    <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full animate-float">
+                        <div class="p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-cyber-400/20 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-cyber-400 text-xl">ℹ️</span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-cyber-400">任务信息</h3>
+                            </div>
+                            <p class="text-tactical-200 mb-6">
+                                恭喜！您已成功完成 "Alpha" 任务，获得 1500 经验值和特殊装备奖励。
+                            </p>
+                            <div class="flex justify-end">
+                                <button class="px-4 py-2 bg-cyber-400 hover:bg-cyber-500 text-tactical-900 rounded transition-all duration-200 font-semibold modal-close">
+                                    确定
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirm Modal -->
+                <div id="confirmModalTemplate" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+                    <div class="bg-tactical-800 rounded-lg border border-alert-400/30 max-w-md w-full">
+                        <div class="p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-alert-500/20 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-alert-400 text-xl">⚠️</span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-alert-400">确认退出</h3>
+                            </div>
+                            <p class="text-tactical-200 mb-6">
+                                您确定要退出当前游戏吗？未保存的进度将会丢失。
+                            </p>
+                            <div class="flex justify-end space-x-3">
+                                <button class="px-4 py-2 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 rounded transition-all duration-200 modal-close">
+                                    取消
+                                </button>
+                                <button class="px-4 py-2 bg-alert-500 hover:bg-alert-600 text-white rounded transition-all duration-200 modal-close">
+                                    确定退出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Modal -->
+                <div id="settingsModalTemplate" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+                    <div class="bg-tactical-800 rounded-lg border border-military-600/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-xl font-semibold text-military-300">游戏设置</h3>
+                                <button class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors modal-close">
+                                    <span class="text-tactical-400">✕</span>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-tactical-200 mb-3">音频设置</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm text-tactical-300 mb-1">主音量</label>
+                                            <input type="range" min="0" max="100" value="80" class="w-full">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-tactical-300 mb-1">音效音量</label>
+                                            <input type="range" min="0" max="100" value="90" class="w-full">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="font-semibold text-tactical-200 mb-3">图像设置</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm text-tactical-300 mb-1">画质</label>
+                                            <select class="w-full px-3 py-2 bg-tactical-700 border border-tactical-600 rounded text-tactical-100">
+                                                <option>高</option>
+                                                <option selected>中</option>
+                                                <option>低</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="flex items-center space-x-2">
+                                                <input type="checkbox" checked class="text-cyber-400 bg-tactical-700 border-tactical-500 rounded">
+                                                <span class="text-sm text-tactical-300">启用阴影</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-tactical-700">
+                                <button class="px-6 py-2 bg-tactical-700 hover:bg-tactical-600 text-tactical-200 rounded transition-all duration-200 modal-close">
+                                    取消
+                                </button>
+                                <button class="px-6 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded transition-all duration-200 modal-close">
+                                    保存设置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- 模态框容器 --&gt;
+&lt;div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"&gt;
+    &lt;div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full"&gt;
+        &lt;div class="p-6"&gt;
+            &lt;div class="flex items-center mb-4"&gt;
+                &lt;div class="w-10 h-10 bg-cyber-400/20 rounded-full
+                           flex items-center justify-center mr-3"&gt;
+                    &lt;span class="text-cyber-400 text-xl"&gt;ℹ️&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;h3 class="text-lg font-semibold text-cyber-400"&gt;任务信息&lt;/h3&gt;
+            &lt;/div&gt;
+            &lt;p class="text-tactical-200 mb-6"&gt;
+                恭喜！您已成功完成任务...
+            &lt;/p&gt;
+            &lt;div class="flex justify-end"&gt;
+                &lt;button class="px-4 py-2 bg-cyber-400 hover:bg-cyber-500
+                               text-tactical-900 rounded transition-all
+                               duration-200 font-semibold"&gt;
+                    确定
+                &lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>任务完成提示、确认操作、游戏设置面板。支持键盘ESC关闭和背景点击关闭。
+                </p>
+            </div>
+        </section>
+
+        <!-- Cards Section -->
+        <section id="cards" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">卡片组件</h2>
+
+            <!-- Weapon Cards -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">装备卡片</h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Weapon Card -->
+                    <div class="bg-tactical-800 rounded-lg border border-military-600 p-6 card-glow transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-military-700/50 rounded-lg flex items-center justify-center">
+                                <span class="text-2xl">🔫</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-tactical-400 uppercase tracking-wide">突击步枪</div>
+                                <div class="text-lg font-bold text-military-300">AK-47</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-tactical-400">伤害</span>
+                                <span class="text-alert-400 font-mono">35</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-tactical-400">射程</span>
+                                <span class="text-cyber-400 font-mono">150m</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-tactical-400">射速</span>
+                                <span class="text-success-400 font-mono">600/min</span>
+                            </div>
+                        </div>
+
+                        <button class="w-full py-2 bg-military-700 hover:bg-military-600 text-cyber-400 rounded transition-all duration-200 font-semibold">
+                            装备
+                        </button>
+                    </div>
+
+                    <!-- Player Stats Card -->
+                    <div class="bg-tactical-800 rounded-lg border border-cyber-600 p-6 card-glow transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-cyber-400/20 rounded-full flex items-center justify-center">
+                                <span class="text-2xl">👤</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-tactical-400 uppercase tracking-wide">排名</div>
+                                <div class="text-lg font-bold text-cyber-400">#142</div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <div class="text-xl font-bold text-tactical-100">TacticalGamer</div>
+                            <div class="text-sm text-tactical-400">等级 25</div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-tactical-400">击杀数</span>
+                                <span class="text-success-400 font-mono">1,247</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-tactical-400">胜率</span>
+                                <span class="text-cyber-400 font-mono">78.5%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mission Card -->
+                    <div class="bg-tactical-800 rounded-lg border border-success-600 p-6 card-glow transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center">
+                                <span class="text-2xl">🎯</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-success-400 uppercase tracking-wide font-semibold">进行中</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="text-lg font-bold text-tactical-100 mb-1">渗透任务</div>
+                            <div class="text-sm text-tactical-400">潜入敌方基地获取情报</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs text-tactical-400 mb-1">
+                                <span>进度</span>
+                                <span>3/5</span>
+                            </div>
+                            <div class="w-full bg-tactical-700 rounded-full h-2">
+                                <div class="bg-success-500 h-full rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-tactical-400">
+                            奖励: <span class="text-success-400">+2000 XP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- 装备卡片 --&gt;
+&lt;div class="bg-tactical-800 rounded-lg border border-military-600
+           p-6 card-glow transition-all duration-300"&gt;
+    &lt;div class="flex items-center justify-between mb-4"&gt;
+        &lt;div class="w-12 h-12 bg-military-700/50 rounded-lg
+                   flex items-center justify-center"&gt;
+            &lt;span class="text-2xl"&gt;🔫&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class="text-right"&gt;
+            &lt;div class="text-xs text-tactical-400 uppercase tracking-wide"&gt;突击步枪&lt;/div&gt;
+            &lt;div class="text-lg font-bold text-military-300"&gt;AK-47&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="space-y-2 mb-4"&gt;
+        &lt;div class="flex justify-between text-sm"&gt;
+            &lt;span class="text-tactical-400"&gt;伤害&lt;/span&gt;
+            &lt;span class="text-alert-400 font-mono"&gt;35&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;button class="w-full py-2 bg-military-700 hover:bg-military-600
+                   text-cyber-400 rounded transition-all duration-200
+                   font-semibold"&gt;
+        装备
+    &lt;/button&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>装备展示、玩家信息、任务面板。悬停效果增强交互反馈。
+                </p>
+            </div>
+        </section>
+
+        <!-- HUD Section -->
+        <section id="hud" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">HUD 界面组件</h2>
+
+            <!-- Game HUD Demo -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">游戏 HUD 界面</h3>
+
+                <!-- HUD Container -->
+                <div class="relative bg-tactical-900/50 rounded-lg p-6 min-h-[400px] tactical-grid">
+                    <!-- Top HUD -->
+                    <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
+                        <!-- Player Info -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-cyber-400/30">
+                            <div class="text-xs text-tactical-400 mb-1">PLAYER</div>
+                            <div class="text-sm font-semibold text-cyber-400">TacticalGamer</div>
+                            <div class="text-xs text-tactical-400">Level 25</div>
+                        </div>
+
+                        <!-- Mission Timer -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-alert-400/30 text-center">
+                            <div class="text-xs text-tactical-400 mb-1">TIME</div>
+                            <div class="text-xl font-mono font-bold text-alert-400" id="missionTimer">05:42</div>
+                        </div>
+
+                        <!-- Score -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-success-400/30 text-center">
+                            <div class="text-xs text-tactical-400 mb-1">SCORE</div>
+                            <div class="text-lg font-mono font-bold text-success-400">2,450</div>
+                        </div>
+                    </div>
+
+                    <!-- Center Crosshair -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div class="w-8 h-8 border-2 border-cyber-400/70 rounded-full flex items-center justify-center animate-pulse">
+                            <div class="w-2 h-2 bg-cyber-400 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Left HUD -->
+                    <div class="absolute bottom-4 left-4">
+                        <!-- Health Bar -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-success-400/30 mb-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="text-xs text-tactical-400">HEALTH</div>
+                                <div class="text-sm font-mono text-success-400">87/100</div>
+                            </div>
+                            <div class="w-32 bg-tactical-700 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-success-600 to-success-400 h-full rounded-full" style="width: 87%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Ammo Counter -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-military-400/30">
+                            <div class="text-xs text-tactical-400 mb-1">AMMO</div>
+                            <div class="text-2xl font-mono font-bold text-military-300">24<span class="text-tactical-400">/30</span></div>
+                            <div class="text-xs text-tactical-400">AK-47</div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Right HUD -->
+                    <div class="absolute bottom-4 right-4">
+                        <!-- Mini Map -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-cyber-400/30 mb-3">
+                            <div class="text-xs text-tactical-400 mb-2">MAP</div>
+                            <div class="w-24 h-24 bg-tactical-900 rounded border border-tactical-600 relative">
+                                <!-- Player Dot -->
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-cyber-400 rounded-full animate-pulse"></div>
+                                <!-- Enemy Dots -->
+                                <div class="absolute top-2 right-2 w-1.5 h-1.5 bg-alert-500 rounded-full"></div>
+                                <div class="absolute bottom-3 left-3 w-1.5 h-1.5 bg-alert-500 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- Objective -->
+                        <div class="bg-tactical-800/80 rounded-lg p-3 border border-success-400/30">
+                            <div class="text-xs text-success-400 mb-1">OBJECTIVE</div>
+                            <div class="text-xs text-tactical-300">渗透敌方基地</div>
+                            <div class="text-xs text-tactical-400 mt-1">3/5 完成</div>
+                        </div>
+                    </div>
+
+                    <!-- Damage Numbers Demo -->
+                    <div id="damageArea" class="absolute top-1/3 left-1/3 w-32 h-32 cursor-pointer flex items-center justify-center text-tactical-500 text-xs border-2 border-dashed border-tactical-600 rounded">
+                        点击测试伤害数字
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- HUD 容器 --&gt;
+&lt;div class="relative bg-tactical-900/50 rounded-lg p-6 min-h-[400px] tactical-grid"&gt;
+    &lt;!-- 顶部信息栏 --&gt;
+    &lt;div class="absolute top-4 left-4 right-4 flex justify-between items-start"&gt;
+        &lt;div class="bg-tactical-800/80 rounded-lg p-3 border border-cyber-400/30"&gt;
+            &lt;div class="text-xs text-tactical-400 mb-1"&gt;PLAYER&lt;/div&gt;
+            &lt;div class="text-sm font-semibold text-cyber-400"&gt;TacticalGamer&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 生命值条 --&gt;
+    &lt;div class="absolute bottom-4 left-4"&gt;
+        &lt;div class="bg-tactical-800/80 rounded-lg p-3 border border-success-400/30"&gt;
+            &lt;div class="flex items-center justify-between mb-2"&gt;
+                &lt;div class="text-xs text-tactical-400"&gt;HEALTH&lt;/div&gt;
+                &lt;div class="text-sm font-mono text-success-400"&gt;87/100&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="w-32 bg-tactical-700 rounded-full h-3"&gt;
+                &lt;div class="bg-gradient-to-r from-success-600 to-success-400
+                           h-full rounded-full" style="width: 87%"&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>游戏主界面、战斗HUD、状态显示。所有元素使用半透明背景保持游戏画面可见。
+                </p>
+            </div>
+        </section>
+
+        <!-- Navigation Section -->
+        <section id="navigation" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-cyber-400">导航组件</h2>
+
+            <!-- Tab Navigation -->
+            <div class="component-demo">
+                <h3 class="text-xl font-semibold mb-6 text-military-300">标签导航</h3>
+
+                <div class="bg-tactical-800/50 rounded-lg p-6 border border-cyber-400/20">
+                    <!-- Tab Headers -->
+                    <div class="flex space-x-1 mb-6 bg-tactical-900/50 rounded-lg p-1">
+                        <button class="tab-button active px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="inventory">
+                            背包
+                        </button>
+                        <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="weapons">
+                            武器
+                        </button>
+                        <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="skills">
+                            技能
+                        </button>
+                        <button class="tab-button px-4 py-2 rounded-lg font-semibold transition-all duration-200" data-tab="stats">
+                            统计
+                        </button>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div class="tab-content" id="inventory">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-tactical-800 border border-tactical-600 rounded-lg p-4 text-center">
+                                <div class="text-2xl mb-2">💊</div>
+                                <div class="text-xs text-tactical-400">医疗包</div>
+                                <div class="text-sm text-tactical-200">x3</div>
+                            </div>
+                            <div class="bg-tactical-800 border border-tactical-600 rounded-lg p-4 text-center">
+                                <div class="text-2xl mb-2">🔋</div>
+                                <div class="text-xs text-tactical-400">电池</div>
+                                <div class="text-sm text-tactical-200">x8</div>
+                            </div>
+                            <div class="bg-tactical-800 border border-tactical-600 rounded-lg p-4 text-center">
+                                <div class="text-2xl mb-2">🛡️</div>
+                                <div class="text-xs text-tactical-400">护甲</div>
+                                <div class="text-sm text-tactical-200">x1</div>
+                            </div>
+                            <div class="bg-tactical-800 border border-tactical-600 rounded-lg p-4 text-center opacity-50">
+                                <div class="text-2xl mb-2">📦</div>
+                                <div class="text-xs text-tactical-400">空位</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content hidden" id="weapons">
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-4 p-4 bg-tactical-800 rounded-lg border border-military-600">
+                                <div class="text-3xl">🔫</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-military-300">AK-47 突击步枪</div>
+                                    <div class="text-sm text-tactical-400">伤害: 35 | 射程: 150m</div>
+                                </div>
+                                <div class="text-sm text-success-400">已装备</div>
+                            </div>
+                            <div class="flex items-center space-x-4 p-4 bg-tactical-800 rounded-lg border border-tactical-600">
+                                <div class="text-3xl">🔫</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-tactical-200">M4A1 卡宾枪</div>
+                                    <div class="text-sm text-tactical-400">伤害: 30 | 射程: 200m</div>
+                                </div>
+                                <button class="px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-sm">装备</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content hidden" id="skills">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-tactical-800 rounded-lg border border-success-600/30">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-success-400">快速装填</span>
+                                    <span class="text-xs bg-success-500 text-white px-2 py-1 rounded">MAX</span>
+                                </div>
+                                <div class="text-sm text-tactical-400 mb-2">减少装填时间 50%</div>
+                                <div class="w-full bg-tactical-700 rounded-full h-2">
+                                    <div class="bg-success-500 h-full rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-tactical-800 rounded-lg border border-cyber-600/30">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-semibold text-cyber-400">精准射击</span>
+                                    <span class="text-xs bg-cyber-500 text-tactical-900 px-2 py-1 rounded">3/5</span>
+                                </div>
+                                <div class="text-sm text-tactical-400 mb-2">提高命中率 30%</div>
+                                <div class="w-full bg-tactical-700 rounded-full h-2">
+                                    <div class="bg-cyber-400 h-full rounded-full" style="width: 60%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content hidden" id="stats">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-4 bg-tactical-800 rounded-lg border border-tactical-600">
+                                <div class="text-2xl font-mono font-bold text-success-400">1,247</div>
+                                <div class="text-xs text-tactical-400 uppercase">击杀</div>
+                            </div>
+                            <div class="text-center p-4 bg-tactical-800 rounded-lg border border-tactical-600">
+                                <div class="text-2xl font-mono font-bold text-alert-400">156</div>
+                                <div class="text-xs text-tactical-400 uppercase">死亡</div>
+                            </div>
+                            <div class="text-center p-4 bg-tactical-800 rounded-lg border border-tactical-600">
+                                <div class="text-2xl font-mono font-bold text-cyber-400">78.5%</div>
+                                <div class="text-xs text-tactical-400 uppercase">胜率</div>
+                            </div>
+                            <div class="text-center p-4 bg-tactical-800 rounded-lg border border-tactical-600">
+                                <div class="text-2xl font-mono font-bold text-military-400">42h</div>
+                                <div class="text-xs text-tactical-400 uppercase">游戏时长</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-block hidden" data-code>
+                    <pre class="text-tactical-300"><code>&lt;!-- 标签导航 --&gt;
+&lt;div class="flex space-x-1 mb-6 bg-tactical-900/50 rounded-lg p-1"&gt;
+    &lt;button class="px-4 py-2 rounded-lg font-semibold transition-all
+                   duration-200 bg-military-700 text-cyber-400"
+                   data-tab="inventory"&gt;
+        背包
+    &lt;/button&gt;
+    &lt;button class="px-4 py-2 rounded-lg font-semibold transition-all
+                   duration-200 text-tactical-400 hover:text-tactical-200"
+                   data-tab="weapons"&gt;
+        武器
+    &lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- 标签内容 --&gt;
+&lt;div class="tab-content" id="inventory"&gt;
+    &lt;div class="grid grid-cols-2 md:grid-cols-4 gap-4"&gt;
+        &lt;div class="bg-tactical-800 border border-tactical-600
+                   rounded-lg p-4 text-center"&gt;
+            &lt;div class="text-2xl mb-2"&gt;💊&lt;/div&gt;
+            &lt;div class="text-xs text-tactical-400"&gt;医疗包&lt;/div&gt;
+            &lt;div class="text-sm text-tactical-200"&gt;x3&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+
+                <p class="text-sm text-tactical-400 mt-4">
+                    <strong>使用场景：</strong>游戏菜单、背包界面、设置面板。支持键盘切换和触摸滑动。
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-tactical-800 border-t border-cyber-400/20 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-tactical-400 text-sm">GTI-2D 游戏UI组件库 - 专为移动端游戏优化</p>
+                <p class="text-tactical-500 text-xs mt-2">Game Components • Mobile Optimized • Tactical Design</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Code Toggle
+        const codeToggle = document.getElementById('codeToggle');
+        const codeBlocks = document.querySelectorAll('.code-block');
+        let showCode = false;
+
+        codeToggle.addEventListener('click', () => {
+            showCode = !showCode;
+            codeBlocks.forEach(block => {
+                if (showCode) {
+                    block.classList.remove('hidden');
+                } else {
+                    block.classList.add('hidden');
+                }
+            });
+            codeToggle.textContent = showCode ? '隐藏代码' : '显示代码';
+        });
+
+        // Modal System
+        const modalButtons = ['infoModal', 'confirmModal', 'settingsModal'];
+        modalButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            const modal = document.getElementById(buttonId + 'Template');
+
+            if (button && modal) {
+                button.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+        });
+
+        // Close modals
+        document.querySelectorAll('.modal-close').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const modal = e.target.closest('[id*="Modal"]');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        // Close modal on background click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        // Tab Navigation
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+
+                // Update button states
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active', 'bg-military-700', 'text-cyber-400');
+                    btn.classList.add('text-tactical-400', 'hover:text-tactical-200');
+                });
+
+                button.classList.add('active', 'bg-military-700', 'text-cyber-400');
+                button.classList.remove('text-tactical-400', 'hover:text-tactical-200');
+
+                // Update content visibility
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                const targetContent = document.getElementById(targetTab);
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Mission Timer
+        let missionTime = 342; // 5:42 in seconds
+        const timerElement = document.getElementById('missionTimer');
+
+        setInterval(() => {
+            if (missionTime > 0) {
+                missionTime--;
+                const minutes = Math.floor(missionTime / 60);
+                const seconds = missionTime % 60;
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+
+        // Damage Numbers Demo
+        const damageArea = document.getElementById('damageArea');
+        let damageCounter = 0;
+
+        damageArea.addEventListener('click', (e) => {
+            const rect = damageArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const isDamage = Math.random() > 0.3;
+            const value = isDamage ? Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 20) + 5;
+
+            const numberEl = document.createElement('div');
+            numberEl.textContent = isDamage ? `-${value}` : `+${value}`;
+            numberEl.className = isDamage ? 'damage-number' : 'heal-number';
+            numberEl.style.left = `${x}px`;
+            numberEl.style.top = `${y}px`;
+            numberEl.style.position = 'absolute';
+            numberEl.style.pointerEvents = 'none';
+            numberEl.style.zIndex = '10';
+
+            damageArea.appendChild(numberEl);
+
+            setTimeout(() => {
+                if (numberEl.parentNode) {
+                    numberEl.parentNode.removeChild(numberEl);
+                }
+            }, 2000);
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active navigation highlighting
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('border-cyber-400', 'text-cyber-400');
+                link.classList.add('border-transparent', 'text-tactical-300');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.remove('border-transparent', 'text-tactical-300');
+                    link.classList.add('border-cyber-400', 'text-cyber-400');
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // ESC to close modals
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id*="Modal"]:not(.hidden)').forEach(modal => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                });
+            }
+
+            // Tab navigation with number keys
+            if (e.key >= '1' && e.key <= '4') {
+                const tabIndex = parseInt(e.key) - 1;
+                const tabButtons = document.querySelectorAll('.tab-button');
+                if (tabButtons[tabIndex]) {
+                    tabButtons[tabIndex].click();
+                }
+            }
+        });
+
+        // Component interaction demos
+        document.querySelectorAll('.component-demo').forEach(demo => {
+            demo.addEventListener('mouseenter', () => {
+                demo.style.borderColor = 'rgba(0, 206, 209, 0.4)';
+            });
+
+            demo.addEventListener('mouseleave', () => {
+                demo.style.borderColor = 'rgba(0, 206, 209, 0.2)';
+            });
+        });
+
+        // Initialize page
+        console.log('GTI-2D Components Library Loaded');
+    </script>
+</body>
+</html>

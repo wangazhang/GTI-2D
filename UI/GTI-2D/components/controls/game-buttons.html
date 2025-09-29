@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 游戏按钮组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .game-button {
+            position: relative;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.8), rgba(47, 79, 79, 0.6));
+            border: 2px solid transparent;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+            user-select: none;
+            touch-action: manipulation;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .game-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--button-color, #00CED1), transparent, var(--button-color, #00CED1));
+            border-radius: inherit;
+            padding: 2px;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            opacity: 0.6;
+        }
+
+        .game-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-button.pressed {
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 按钮类型样式 */
+        .btn-fire { --button-color: #FF6347; }
+        .btn-skill { --button-color: #00CED1; }
+        .btn-system { --button-color: #556B2F; }
+        .btn-danger { --button-color: #FF6347; }
+        .btn-success { --button-color: #228B22; }
+
+        /* 按钮尺寸 */
+        .btn-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+
+        .btn-medium {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+
+        .btn-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            font-size: 1.25rem;
+        }
+
+        .btn-wide {
+            min-width: 120px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* 冷却时间效果 */
+        .cooldown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-radius: inherit;
+            transition: opacity 0.2s ease;
+        }
+
+        .cooldown-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.3), rgba(0, 206, 209, 0.6));
+            border-radius: inherit;
+            transition: width 0.1s linear;
+        }
+
+        /* 连击计数器 */
+        .combo-counter {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FF6347;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: combo-pulse 0.3s ease;
+        }
+
+        @keyframes combo-pulse {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 按钮状态指示器 */
+        .status-indicator {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--status-color, #808080);
+            box-shadow: 0 0 8px var(--status-color, #808080);
+        }
+
+        .status-ready { --status-color: #228B22; }
+        .status-charging { --status-color: #FFD700; }
+        .status-cooldown { --status-color: #FF6347; }
+
+        /* 充能效果 */
+        .charging-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: inherit;
+            background: conic-gradient(from 0deg, var(--button-color, #00CED1) 0deg, transparent 90deg, transparent 270deg, var(--button-color, #00CED1) 360deg);
+            opacity: 0.6;
+            animation: charge-spin 1s linear infinite;
+        }
+
+        @keyframes charge-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 长按进度条 */
+        .hold-progress {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .hold-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #00CED1);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        /* 触摸反馈涟漪 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 射击按钮特殊效果 */
+        .btn-fire.firing {
+            animation: fire-flash 0.1s ease;
+        }
+
+        @keyframes fire-flash {
+            0%, 100% {
+                background: linear-gradient(145deg, rgba(47, 79, 79, 0.8), rgba(47, 79, 79, 0.6));
+            }
+            50% {
+                background: linear-gradient(145deg, rgba(255, 99, 71, 0.6), rgba(255, 99, 71, 0.4));
+                box-shadow: 0 0 20px rgba(255, 99, 71, 0.8);
+            }
+        }
+
+        /* 按钮组样式 */
+        .button-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .button-cluster {
+            display: grid;
+            gap: 6px;
+        }
+
+        .cluster-2x2 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .cluster-cross {
+            grid-template-areas:
+                ". up ."
+                "left center right"
+                ". down .";
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        /* 按钮标签 */
+        .button-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* 响应式按钮 */
+        @media (max-width: 768px) {
+            .btn-medium {
+                width: 50px;
+                height: 50px;
+                font-size: 0.9rem;
+            }
+
+            .btn-large {
+                width: 70px;
+                height: 70px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 能量条 */
+        .energy-bar {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 2px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00CED1, #228B22);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">游戏按钮组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用按钮，支持冷却时间、长按操作和连击检测</p>
+        </div>
+
+        <!-- 射击按钮演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">射击按钮</h3>
+            <div class="flex flex-wrap items-center gap-8">
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-fire btn-large" data-button-type="fire" data-button-id="primary-fire">
+                            🔫
+                            <div class="button-label">射击</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-fire btn-medium" data-button-type="secondary-fire" data-button-id="secondary-fire">
+                            🎯
+                            <div class="button-label">瞄准</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-fire btn-medium" data-button-type="grenade" data-button-id="grenade">
+                            💣
+                            <div class="button-label">手雷</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技能按钮演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">技能按钮</h3>
+            <div class="flex flex-wrap items-center gap-8">
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-skill btn-large" data-button-type="skill" data-button-id="ultimate" data-cooldown="15">
+                            ⚡
+                            <div class="status-indicator status-ready"></div>
+                            <div class="button-label">终极技能</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-skill btn-medium" data-button-type="skill" data-button-id="shield" data-cooldown="8">
+                            🛡️
+                            <div class="status-indicator status-ready"></div>
+                            <div class="button-label">护盾</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="game-button-container">
+                        <div class="game-button btn-skill btn-medium" data-button-type="skill" data-button-id="heal" data-cooldown="12">
+                            💊
+                            <div class="status-indicator status-ready"></div>
+                            <div class="button-label">治疗</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统按钮演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">系统按钮</h3>
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="game-button btn-system btn-wide" data-button-type="system" data-button-id="pause">
+                    ⏸️ 暂停
+                </div>
+                <div class="game-button btn-system btn-wide" data-button-type="system" data-button-id="settings">
+                    ⚙️ 设置
+                </div>
+                <div class="game-button btn-system btn-wide" data-button-type="system" data-button-id="map">
+                    🗺️ 地图
+                </div>
+                <div class="game-button btn-system btn-wide" data-button-type="system" data-button-id="inventory">
+                    🎒 背包
+                </div>
+            </div>
+        </div>
+
+        <!-- 按钮组合演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">按钮组合</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 2x2 按钮组 -->
+                <div class="text-center">
+                    <h4 class="text-lg text-tactical-300 mb-4">2x2 技能组</h4>
+                    <div class="button-cluster cluster-2x2 inline-grid">
+                        <div class="game-button btn-skill btn-medium" data-button-id="skill-1">⚔️</div>
+                        <div class="game-button btn-skill btn-medium" data-button-id="skill-2">🏹</div>
+                        <div class="game-button btn-skill btn-medium" data-button-id="skill-3">🔥</div>
+                        <div class="game-button btn-skill btn-medium" data-button-id="skill-4">❄️</div>
+                    </div>
+                </div>
+
+                <!-- 十字方向按钮 -->
+                <div class="text-center">
+                    <h4 class="text-lg text-tactical-300 mb-4">方向控制</h4>
+                    <div class="button-cluster cluster-cross inline-grid">
+                        <div class="game-button btn-system btn-small" data-button-id="up" style="grid-area: up;">↑</div>
+                        <div class="game-button btn-system btn-small" data-button-id="left" style="grid-area: left;">←</div>
+                        <div class="game-button btn-system btn-small" data-button-id="center" style="grid-area: center;">●</div>
+                        <div class="game-button btn-system btn-small" data-button-id="right" style="grid-area: right;">→</div>
+                        <div class="game-button btn-system btn-small" data-button-id="down" style="grid-area: down;">↓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 特殊效果演示 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">特殊效果</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">长按充能</div>
+                    <div class="game-button btn-skill btn-large" data-button-type="hold" data-button-id="charge" data-hold-time="3">
+                        ⚡
+                        <div class="hold-progress">
+                            <div class="hold-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">连击计数</div>
+                    <div class="game-button btn-fire btn-large" data-button-type="combo" data-button-id="combo">
+                        👊
+                        <div class="combo-counter" style="display: none;">0</div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">能量消耗</div>
+                    <div class="game-button btn-skill btn-large" data-button-type="energy" data-button-id="energy" data-energy-cost="25">
+                        🔮
+                        <div class="energy-bar">
+                            <div class="energy-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">充能效果</div>
+                    <div class="game-button btn-skill btn-large disabled" data-button-id="charging">
+                        🔋
+                        <div class="charging-effect"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建游戏按钮实例
+const fireButton = new GameButton('fire-button', {
+    type: 'fire',
+    size: 'large',
+    icon: '🔫',
+    label: '射击',
+    cooldown: 0,
+    autoRepeat: true,
+    repeatInterval: 100,
+    hapticFeedback: true,
+    soundEffect: 'shoot.wav'
+});
+
+// 创建技能按钮
+const skillButton = new GameButton('skill-button', {
+    type: 'skill',
+    size: 'medium',
+    icon: '⚡',
+    label: '雷击',
+    cooldown: 8000,
+    energyCost: 50,
+    maxEnergy: 100,
+    currentEnergy: 100
+});
+
+// 创建长按按钮
+const holdButton = new GameButton('hold-button', {
+    type: 'hold',
+    size: 'large',
+    icon: '🔥',
+    label: '充能攻击',
+    holdTime: 3000,
+    showProgress: true
+});
+
+// 监听事件
+fireButton.on('press', () => {
+    console.log('开火！');
+    // 执行射击逻辑
+});
+
+skillButton.on('press', () => {
+    if (skillButton.canUse()) {
+        console.log('释放技能');
+        skillButton.startCooldown();
+        skillButton.consumeEnergy(50);
+    }
+});
+
+holdButton.on('hold', (progress) => {
+    if (progress >= 100) {
+        console.log('充能完成，释放强力攻击！');
+    }
+});
+
+// 更新按钮状态
+skillButton.setEnergy(75);
+skillButton.setCooldown(5000);
+
+// 连击系统
+fireButton.on('combo', (count) => {
+    console.log('连击数:', count);
+    if (count >= 10) {
+        console.log('连击奖励！');
+    }
+});
+
+// 启用/禁用按钮
+skillButton.disable();
+skillButton.enable();
+
+// 设置按钮样式
+fireButton.setStyle('danger');
+skillButton.setGlow(true);</code></pre>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">控制面板</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="startAllCooldowns()">开始冷却</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="resetAllButtons()">重置按钮</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="toggleAllButtons()">切换状态</button>
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="testCombo()">测试连击</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * GameButton - 游戏按钮组件
+         */
+        class GameButton {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    type: 'normal',        // fire, skill, system, hold, combo
+                    size: 'medium',        // small, medium, large, wide
+                    icon: '⚪',
+                    label: '',
+                    cooldown: 0,           // 冷却时间(ms)
+                    energyCost: 0,         // 能量消耗
+                    maxEnergy: 100,        // 最大能量
+                    currentEnergy: 100,    // 当前能量
+                    holdTime: 1000,        // 长按时间(ms)
+                    autoRepeat: false,     // 自动重复
+                    repeatInterval: 100,   // 重复间隔(ms)
+                    hapticFeedback: true,  // 触觉反馈
+                    soundEffect: null,     // 音效文件
+                    showProgress: true,    // 显示进度
+                    maxCombo: 999,         // 最大连击数
+                    comboTimeout: 1000,    // 连击超时(ms)
+                    disabled: false,       // 是否禁用
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    pressed: false,
+                    cooldownActive: false,
+                    cooldownTimer: null,
+                    holdTimer: null,
+                    holdProgress: 0,
+                    comboCount: 0,
+                    comboTimer: null,
+                    repeatTimer: null,
+                    currentEnergy: this.config.currentEnergy,
+                    lastPressTime: 0
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            createElements() {
+                const element = this.container.querySelector('.game-button') || this.container;
+
+                // 如果容器本身就是按钮，直接使用
+                if (element.classList.contains('game-button')) {
+                    this.button = element;
+                } else {
+                    // 否则在容器中查找或创建按钮
+                    this.button = element.querySelector('.game-button');
+                    if (!this.button) {
+                        this.button = document.createElement('div');
+                        this.button.className = `game-button btn-${this.config.type} btn-${this.config.size}`;
+                        this.button.innerHTML = this.config.icon;
+                        element.appendChild(this.button);
+                    }
+                }
+
+                // 添加必要的UI元素
+                this.ensureUIElements();
+                this.updateDisplay();
+            }
+
+            ensureUIElements() {
+                // 冷却遮罩
+                if (!this.button.querySelector('.cooldown-overlay')) {
+                    const cooldownOverlay = document.createElement('div');
+                    cooldownOverlay.className = 'cooldown-overlay';
+                    cooldownOverlay.innerHTML = '<div class="cooldown-progress"></div><span class="cooldown-text">0</span>';
+                    cooldownOverlay.style.display = 'none';
+                    this.button.appendChild(cooldownOverlay);
+                }
+
+                // 长按进度条
+                if (this.config.type === 'hold' && !this.button.querySelector('.hold-progress')) {
+                    const holdProgress = document.createElement('div');
+                    holdProgress.className = 'hold-progress';
+                    holdProgress.innerHTML = '<div class="hold-progress-fill"></div>';
+                    this.button.appendChild(holdProgress);
+                }
+
+                // 连击计数器
+                if (this.config.type === 'combo' && !this.button.querySelector('.combo-counter')) {
+                    const comboCounter = document.createElement('div');
+                    comboCounter.className = 'combo-counter';
+                    comboCounter.style.display = 'none';
+                    this.button.appendChild(comboCounter);
+                }
+
+                // 能量条
+                if (this.config.energyCost > 0 && !this.button.querySelector('.energy-bar')) {
+                    const energyBar = document.createElement('div');
+                    energyBar.className = 'energy-bar';
+                    energyBar.innerHTML = '<div class="energy-fill"></div>';
+                    this.button.appendChild(energyBar);
+                }
+
+                // 状态指示器
+                if (['skill', 'system'].includes(this.config.type) && !this.button.querySelector('.status-indicator')) {
+                    const statusIndicator = document.createElement('div');
+                    statusIndicator.className = 'status-indicator status-ready';
+                    this.button.appendChild(statusIndicator);
+                }
+
+                this.elements = {
+                    cooldownOverlay: this.button.querySelector('.cooldown-overlay'),
+                    cooldownProgress: this.button.querySelector('.cooldown-progress'),
+                    cooldownText: this.button.querySelector('.cooldown-text'),
+                    holdProgress: this.button.querySelector('.hold-progress'),
+                    holdProgressFill: this.button.querySelector('.hold-progress-fill'),
+                    comboCounter: this.button.querySelector('.combo-counter'),
+                    energyBar: this.button.querySelector('.energy-bar'),
+                    energyFill: this.button.querySelector('.energy-fill'),
+                    statusIndicator: this.button.querySelector('.status-indicator')
+                };
+            }
+
+            bindEvents() {
+                // 鼠标事件
+                this.button.addEventListener('mousedown', this.handlePressStart.bind(this));
+                this.button.addEventListener('mouseup', this.handlePressEnd.bind(this));
+                this.button.addEventListener('mouseleave', this.handlePressEnd.bind(this));
+
+                // 触摸事件
+                this.button.addEventListener('touchstart', this.handlePressStart.bind(this), { passive: false });
+                this.button.addEventListener('touchend', this.handlePressEnd.bind(this), { passive: false });
+                this.button.addEventListener('touchcancel', this.handlePressEnd.bind(this), { passive: false });
+
+                // 防止右键菜单
+                this.button.addEventListener('contextmenu', (e) => e.preventDefault());
+
+                // 防止选中文本
+                this.button.addEventListener('selectstart', (e) => e.preventDefault());
+            }
+
+            handlePressStart(e) {
+                e.preventDefault();
+
+                if (this.config.disabled || this.state.cooldownActive || !this.canUse()) {
+                    return;
+                }
+
+                this.state.pressed = true;
+                this.button.classList.add('pressed');
+
+                // 触觉反馈
+                if (this.config.hapticFeedback && navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+
+                // 涟漪效果
+                this.createRipple(e);
+
+                // 处理不同类型的按钮
+                this.handleButtonPress(e);
+
+                this.emit('pressStart', this.getButtonData());
+            }
+
+            handlePressEnd(e) {
+                if (!this.state.pressed) return;
+
+                this.state.pressed = false;
+                this.button.classList.remove('pressed');
+
+                // 清除定时器
+                if (this.state.holdTimer) {
+                    clearTimeout(this.state.holdTimer);
+                    this.state.holdTimer = null;
+                }
+
+                if (this.state.repeatTimer) {
+                    clearInterval(this.state.repeatTimer);
+                    this.state.repeatTimer = null;
+                }
+
+                // 重置长按进度
+                if (this.config.type === 'hold') {
+                    this.resetHoldProgress();
+                }
+
+                this.emit('pressEnd', this.getButtonData());
+            }
+
+            handleButtonPress(e) {
+                const now = Date.now();
+
+                switch (this.config.type) {
+                    case 'fire':
+                        this.handleFireButton();
+                        break;
+                    case 'skill':
+                        this.handleSkillButton();
+                        break;
+                    case 'hold':
+                        this.handleHoldButton();
+                        break;
+                    case 'combo':
+                        this.handleComboButton(now);
+                        break;
+                    default:
+                        this.handleNormalButton();
+                        break;
+                }
+
+                this.state.lastPressTime = now;
+            }
+
+            handleFireButton() {
+                // 射击按钮特殊效果
+                this.button.classList.add('firing');
+                setTimeout(() => {
+                    this.button.classList.remove('firing');
+                }, 100);
+
+                this.emit('press', this.getButtonData());
+
+                // 自动重复射击
+                if (this.config.autoRepeat) {
+                    this.state.repeatTimer = setInterval(() => {
+                        if (this.state.pressed && this.canUse()) {
+                            this.emit('press', this.getButtonData());
+                        }
+                    }, this.config.repeatInterval);
+                }
+            }
+
+            handleSkillButton() {
+                if (this.canUseSkill()) {
+                    this.emit('press', this.getButtonData());
+
+                    // 消耗能量
+                    if (this.config.energyCost > 0) {
+                        this.consumeEnergy(this.config.energyCost);
+                    }
+
+                    // 开始冷却
+                    if (this.config.cooldown > 0) {
+                        this.startCooldown();
+                    }
+                }
+            }
+
+            handleHoldButton() {
+                this.state.holdProgress = 0;
+                this.updateHoldProgress();
+
+                this.state.holdTimer = setInterval(() => {
+                    this.state.holdProgress += (100 / this.config.holdTime) * 100;
+
+                    if (this.state.holdProgress >= 100) {
+                        this.state.holdProgress = 100;
+                        clearInterval(this.state.holdTimer);
+                        this.emit('holdComplete', this.getButtonData());
+                    }
+
+                    this.updateHoldProgress();
+                    this.emit('hold', this.state.holdProgress);
+                }, 100);
+            }
+
+            handleComboButton(now) {
+                // 检查连击超时
+                if (now - this.state.lastPressTime > this.config.comboTimeout) {
+                    this.state.comboCount = 0;
+                }
+
+                this.state.comboCount++;
+                this.updateComboDisplay();
+
+                this.emit('press', this.getButtonData());
+                this.emit('combo', this.state.comboCount);
+
+                // 重置连击定时器
+                if (this.state.comboTimer) {
+                    clearTimeout(this.state.comboTimer);
+                }
+
+                this.state.comboTimer = setTimeout(() => {
+                    this.state.comboCount = 0;
+                    this.updateComboDisplay();
+                }, this.config.comboTimeout);
+            }
+
+            handleNormalButton() {
+                this.emit('press', this.getButtonData());
+            }
+
+            createRipple(e) {
+                const ripple = document.createElement('div');
+                ripple.classList.add('ripple');
+
+                const rect = this.button.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (clientY - rect.top - size / 2) + 'px';
+
+                this.button.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+
+            updateDisplay() {
+                this.updateCooldownDisplay();
+                this.updateEnergyDisplay();
+                this.updateStatusIndicator();
+            }
+
+            updateCooldownDisplay() {
+                if (!this.elements.cooldownOverlay) return;
+
+                if (this.state.cooldownActive) {
+                    this.elements.cooldownOverlay.style.display = 'flex';
+                } else {
+                    this.elements.cooldownOverlay.style.display = 'none';
+                }
+            }
+
+            updateEnergyDisplay() {
+                if (!this.elements.energyFill) return;
+
+                const percentage = (this.state.currentEnergy / this.config.maxEnergy) * 100;
+                this.elements.energyFill.style.width = percentage + '%';
+            }
+
+            updateHoldProgress() {
+                if (!this.elements.holdProgressFill) return;
+
+                this.elements.holdProgressFill.style.width = this.state.holdProgress + '%';
+            }
+
+            updateComboDisplay() {
+                if (!this.elements.comboCounter) return;
+
+                if (this.state.comboCount > 0) {
+                    this.elements.comboCounter.textContent = this.state.comboCount;
+                    this.elements.comboCounter.style.display = 'flex';
+                } else {
+                    this.elements.comboCounter.style.display = 'none';
+                }
+            }
+
+            updateStatusIndicator() {
+                if (!this.elements.statusIndicator) return;
+
+                this.elements.statusIndicator.className = 'status-indicator ';
+
+                if (this.state.cooldownActive) {
+                    this.elements.statusIndicator.className += 'status-cooldown';
+                } else if (this.canUse()) {
+                    this.elements.statusIndicator.className += 'status-ready';
+                } else {
+                    this.elements.statusIndicator.className += 'status-charging';
+                }
+            }
+
+            resetHoldProgress() {
+                this.state.holdProgress = 0;
+                this.updateHoldProgress();
+            }
+
+            // 公共API
+            canUse() {
+                return !this.config.disabled && !this.state.cooldownActive && this.hasEnoughEnergy();
+            }
+
+            canUseSkill() {
+                return this.canUse();
+            }
+
+            hasEnoughEnergy() {
+                return this.config.energyCost === 0 || this.state.currentEnergy >= this.config.energyCost;
+            }
+
+            startCooldown() {
+                if (this.config.cooldown <= 0) return;
+
+                this.state.cooldownActive = true;
+                const startTime = Date.now();
+                const cooldownTime = this.config.cooldown;
+
+                this.updateCooldownProgress(100);
+
+                this.state.cooldownTimer = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const remaining = Math.max(0, cooldownTime - elapsed);
+                    const progress = (remaining / cooldownTime) * 100;
+
+                    this.updateCooldownProgress(progress);
+
+                    if (this.elements.cooldownText) {
+                        this.elements.cooldownText.textContent = Math.ceil(remaining / 1000);
+                    }
+
+                    if (remaining <= 0) {
+                        this.endCooldown();
+                    }
+                }, 50);
+
+                this.updateDisplay();
+                this.emit('cooldownStart', cooldownTime);
+            }
+
+            updateCooldownProgress(progress) {
+                if (this.elements.cooldownProgress) {
+                    this.elements.cooldownProgress.style.width = progress + '%';
+                }
+            }
+
+            endCooldown() {
+                this.state.cooldownActive = false;
+
+                if (this.state.cooldownTimer) {
+                    clearInterval(this.state.cooldownTimer);
+                    this.state.cooldownTimer = null;
+                }
+
+                this.updateDisplay();
+                this.emit('cooldownEnd');
+            }
+
+            consumeEnergy(amount) {
+                this.state.currentEnergy = Math.max(0, this.state.currentEnergy - amount);
+                this.updateEnergyDisplay();
+                this.emit('energyChange', this.state.currentEnergy);
+            }
+
+            restoreEnergy(amount) {
+                this.state.currentEnergy = Math.min(this.config.maxEnergy, this.state.currentEnergy + amount);
+                this.updateEnergyDisplay();
+                this.emit('energyChange', this.state.currentEnergy);
+            }
+
+            setEnergy(amount) {
+                this.state.currentEnergy = Math.max(0, Math.min(this.config.maxEnergy, amount));
+                this.updateEnergyDisplay();
+                this.emit('energyChange', this.state.currentEnergy);
+            }
+
+            disable() {
+                this.config.disabled = true;
+                this.button.classList.add('disabled');
+                this.updateDisplay();
+            }
+
+            enable() {
+                this.config.disabled = false;
+                this.button.classList.remove('disabled');
+                this.updateDisplay();
+            }
+
+            reset() {
+                this.endCooldown();
+                this.setEnergy(this.config.maxEnergy);
+                this.state.comboCount = 0;
+                this.updateComboDisplay();
+                this.enable();
+            }
+
+            getButtonData() {
+                return {
+                    type: this.config.type,
+                    pressed: this.state.pressed,
+                    cooldownActive: this.state.cooldownActive,
+                    energy: this.state.currentEnergy,
+                    comboCount: this.state.comboCount,
+                    holdProgress: this.state.holdProgress,
+                    canUse: this.canUse()
+                };
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        // 全局按钮实例
+        let gameButtons = new Map();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeButtons();
+        });
+
+        function initializeButtons() {
+            // 初始化所有游戏按钮
+            document.querySelectorAll('.game-button').forEach(buttonElement => {
+                const buttonId = buttonElement.dataset.buttonId;
+                const buttonType = buttonElement.dataset.buttonType || 'normal';
+                const cooldown = parseInt(buttonElement.dataset.cooldown) || 0;
+                const holdTime = parseInt(buttonElement.dataset.holdTime) || 1000;
+                const energyCost = parseInt(buttonElement.dataset.energyCost) || 0;
+
+                if (buttonId) {
+                    const gameButton = new GameButton(buttonElement.parentElement, {
+                        type: buttonType,
+                        cooldown: cooldown * 1000, // 转换为毫秒
+                        holdTime: holdTime * 1000,
+                        energyCost: energyCost,
+                        autoRepeat: buttonType === 'fire',
+                        repeatInterval: buttonType === 'fire' ? 150 : 500
+                    });
+
+                    gameButtons.set(buttonId, gameButton);
+
+                    // 绑定事件
+                    bindButtonEvents(gameButton, buttonId);
+                }
+            });
+        }
+
+        function bindButtonEvents(gameButton, buttonId) {
+            gameButton.on('press', (data) => {
+                console.log(`按钮 ${buttonId} 被按下`);
+                handleButtonAction(buttonId, data);
+            });
+
+            gameButton.on('combo', (count) => {
+                console.log(`连击数: ${count}`);
+                if (count > 1) {
+                    // 连击音效或视觉效果
+                }
+            });
+
+            gameButton.on('holdComplete', (data) => {
+                console.log(`长按完成: ${buttonId}`);
+            });
+
+            gameButton.on('cooldownStart', (time) => {
+                console.log(`冷却开始: ${buttonId}, 时间: ${time}ms`);
+            });
+
+            gameButton.on('cooldownEnd', () => {
+                console.log(`冷却结束: ${buttonId}`);
+            });
+        }
+
+        function handleButtonAction(buttonId, data) {
+            switch (buttonId) {
+                case 'primary-fire':
+                    // 主武器射击逻辑
+                    break;
+                case 'secondary-fire':
+                    // 副武器射击逻辑
+                    break;
+                case 'ultimate':
+                    // 终极技能逻辑
+                    break;
+                case 'shield':
+                    // 护盾技能逻辑
+                    break;
+                case 'heal':
+                    // 治疗技能逻辑
+                    break;
+                case 'pause':
+                    // 暂停游戏
+                    break;
+                // ... 其他按钮逻辑
+            }
+        }
+
+        // 控制函数
+        function startAllCooldowns() {
+            gameButtons.forEach((button, id) => {
+                if (button.config.cooldown > 0 && button.canUse()) {
+                    button.startCooldown();
+                }
+            });
+        }
+
+        function resetAllButtons() {
+            gameButtons.forEach(button => {
+                button.reset();
+            });
+        }
+
+        function toggleAllButtons() {
+            gameButtons.forEach(button => {
+                if (button.config.disabled) {
+                    button.enable();
+                } else {
+                    button.disable();
+                }
+            });
+        }
+
+        function testCombo() {
+            const comboButton = gameButtons.get('combo');
+            if (comboButton) {
+                // 模拟快速点击
+                let count = 0;
+                const interval = setInterval(() => {
+                    comboButton.handleButtonPress({ preventDefault: () => {} });
+                    count++;
+                    if (count >= 5) {
+                        clearInterval(interval);
+                    }
+                }, 200);
+            }
+        }
+    </script>
+</body>
+</html>

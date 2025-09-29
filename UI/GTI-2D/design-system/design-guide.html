@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 设计系统指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F', // 主色
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1', // 科技蓝
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347', // 警戒色
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22', // 成功色
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F', // 中性色
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['SF Mono', 'Menlo', 'monospace'],
+                    },
+                    spacing: {
+                        '18': '4.5rem',
+                        '88': '22rem',
+                        '128': '32rem',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'tactical-scan': 'tactical-scan 2s linear infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        'tactical-scan': {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --military-primary: #556B2F;
+            --cyber-primary: #00CED1;
+            --alert-primary: #FF6347;
+            --success-primary: #228B22;
+            --tactical-primary: #2F4F4F;
+        }
+
+        .theme-dark {
+            --military-primary: #7a8564;
+            --cyber-primary: #58e1fa;
+            --alert-primary: #f1976c;
+            --success-primary: #4ade80;
+            --tactical-primary: #64748b;
+        }
+
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .scanner-line {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanner-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.6), transparent);
+            animation: tactical-scan 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-military-700 rounded border-2 border-cyber-400 flex items-center justify-center">
+                        <span class="text-cyber-400 font-bold text-sm">G</span>
+                    </div>
+                    <h1 class="text-xl font-military font-bold text-cyber-400">GTI-2D 设计系统</h1>
+                </div>
+                <button id="themeToggle" class="px-4 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 rounded border border-cyber-400/30 transition-all duration-200">
+                    切换主题
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-tactical-800/50 border-b border-cyber-400/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8 overflow-x-auto">
+                <a href="#overview" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">概览</a>
+                <a href="#principles" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">设计原则</a>
+                <a href="#colors" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">色彩系统</a>
+                <a href="#typography" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">字体系统</a>
+                <a href="#spacing" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">间距布局</a>
+                <a href="#components" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">组件规范</a>
+                <a href="#accessibility" class="py-4 px-2 border-b-2 border-transparent hover:border-cyber-400 text-tactical-300 hover:text-cyber-400 transition-colors whitespace-nowrap">无障碍</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Overview Section -->
+        <section id="overview" class="mb-16">
+            <div class="tactical-grid rounded-lg p-8 bg-tactical-800/30 border border-cyber-400/20">
+                <h2 class="text-3xl font-military font-bold mb-6 text-cyber-400">项目概览</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-military-300">GTI-2D 战术射击游戏</h3>
+                        <p class="text-tactical-300 mb-4">
+                            2D俯视角战术射击微信小游戏，采用轻量化军事战术风格设计。
+                            专为移动端优化，提供沉浸式的战术游戏体验。
+                        </p>
+                        <ul class="space-y-2 text-tactical-300">
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-cyber-400 rounded-full mr-3"></span>
+                                移动端优先的响应式设计
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-cyber-400 rounded-full mr-3"></span>
+                                军事战术风视觉语言
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-cyber-400 rounded-full mr-3"></span>
+                                高性能微信小游戏框架
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="scanner-line bg-tactical-700 rounded-lg p-6 border border-military-600">
+                        <h4 class="text-lg font-semibold mb-3 text-alert-400">技术栈</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-tactical-400">前端</span>
+                                <p class="text-tactical-200">HTML + Tailwind CSS</p>
+                            </div>
+                            <div>
+                                <span class="text-tactical-400">脚本</span>
+                                <p class="text-tactical-200">原生 JavaScript</p>
+                            </div>
+                            <div>
+                                <span class="text-tactical-400">平台</span>
+                                <p class="text-tactical-200">微信小游戏</p>
+                            </div>
+                            <div>
+                                <span class="text-tactical-400">设备</span>
+                                <p class="text-tactical-200">移动端优化</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Principles -->
+        <section id="principles" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">设计原则</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">⚡</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">高效直观</h3>
+                    <p class="text-tactical-400 text-sm">界面信息层次清晰，玩家能够快速理解和操作，减少学习成本。</p>
+                </div>
+
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">🎯</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">战术专注</h3>
+                    <p class="text-tactical-400 text-sm">强调战术思维，UI设计支持快速决策和精准操作。</p>
+                </div>
+
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">📱</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">移动优先</h3>
+                    <p class="text-tactical-400 text-sm">专为触摸操作和小屏幕优化，确保最佳的移动端体验。</p>
+                </div>
+
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">🎨</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">视觉一致</h3>
+                    <p class="text-tactical-400 text-sm">统一的视觉语言和交互模式，打造连贯的用户体验。</p>
+                </div>
+
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">♿</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">包容设计</h3>
+                    <p class="text-tactical-400 text-sm">符合WCAG 2.1标准，确保不同能力用户都能良好使用。</p>
+                </div>
+
+                <div class="bg-tactical-800 rounded-lg p-6 border border-military-600 hover:border-cyber-400/50 transition-all duration-300">
+                    <div class="w-12 h-12 bg-military-700 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-cyber-400 text-xl">⚙️</span>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 text-military-300">性能优化</h3>
+                    <p class="text-tactical-400 text-sm">轻量级实现，保证游戏流畅运行和快速加载。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color System -->
+        <section id="colors" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">色彩系统</h2>
+
+            <!-- Primary Colors -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">主要色彩</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-military-700 p-4 rounded-lg text-center">
+                        <div class="h-16 bg-military-700 rounded mb-2 border border-cyber-400/20"></div>
+                        <p class="text-sm font-mono">#556B2F</p>
+                        <p class="text-xs text-tactical-400">军绿色</p>
+                    </div>
+                    <div class="bg-cyber-400 p-4 rounded-lg text-center text-tactical-900">
+                        <div class="h-16 bg-cyber-400 rounded mb-2"></div>
+                        <p class="text-sm font-mono">#00CED1</p>
+                        <p class="text-xs">科技蓝</p>
+                    </div>
+                    <div class="bg-alert-500 p-4 rounded-lg text-center text-white">
+                        <div class="h-16 bg-alert-500 rounded mb-2"></div>
+                        <p class="text-sm font-mono">#FF6347</p>
+                        <p class="text-xs">警戒色</p>
+                    </div>
+                    <div class="bg-success-500 p-4 rounded-lg text-center text-white">
+                        <div class="h-16 bg-success-500 rounded mb-2"></div>
+                        <p class="text-sm font-mono">#228B22</p>
+                        <p class="text-xs">成功色</p>
+                    </div>
+                    <div class="bg-tactical-700 p-4 rounded-lg text-center">
+                        <div class="h-16 bg-tactical-700 rounded mb-2 border border-cyber-400/20"></div>
+                        <p class="text-sm font-mono">#2F4F4F</p>
+                        <p class="text-xs text-tactical-400">中性色</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Guidelines -->
+            <div class="bg-tactical-800/50 rounded-lg p-6 border border-cyber-400/20">
+                <h4 class="text-lg font-semibold mb-4 text-military-300">使用指南</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                        <h5 class="font-semibold text-military-400 mb-2">军绿色 (Military)</h5>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 主要按钮和强调元素</li>
+                            <li>• 装备稀有度标识</li>
+                            <li>• 导航和品牌元素</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-cyber-400 mb-2">科技蓝 (Cyber)</h5>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 信息提示和高亮</li>
+                            <li>• 链接和可点击元素</li>
+                            <li>• 科技装备标识</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-alert-400 mb-2">警戒色 (Alert)</h5>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 危险状态和错误信息</li>
+                            <li>• 生命值危险警告</li>
+                            <li>• 删除和破坏性操作</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-success-400 mb-2">成功色 (Success)</h5>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 成功状态和完成提示</li>
+                            <li>• 击杀和得分显示</li>
+                            <li>• 正面反馈信息</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section id="typography" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">字体系统</h2>
+
+            <div class="space-y-6">
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-4xl font-military font-bold mb-2">H1 - 主标题</h3>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 2.25rem (36px) | font-weight: 700</p>
+                    <p class="text-tactical-300">用于页面主标题和重要标题</p>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-3xl font-military font-semibold mb-2">H2 - 次级标题</h3>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 1.875rem (30px) | font-weight: 600</p>
+                    <p class="text-tactical-300">用于章节标题和卡片标题</p>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h4 class="text-xl font-military font-semibold mb-2">H3 - 小节标题</h4>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 1.25rem (20px) | font-weight: 600</p>
+                    <p class="text-tactical-300">用于组件标题和功能分区</p>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <p class="text-base font-military mb-2">Body Text - 正文</p>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 1rem (16px) | font-weight: 400</p>
+                    <p class="text-tactical-300">用于正文内容和描述文本，这是最常用的文本样式，确保在移动设备上具有良好的可读性。</p>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <p class="text-sm font-military mb-2">Small Text - 小字</p>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 0.875rem (14px) | font-weight: 400</p>
+                    <p class="text-tactical-300">用于辅助信息和次要内容</p>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <p class="text-xs font-mono mb-2">Code/Data - 代码数据</p>
+                    <p class="text-tactical-400 text-sm mb-2">font-size: 0.75rem (12px) | font-family: monospace</p>
+                    <p class="text-tactical-300">用于数值显示、代码和数据</p>
+                </div>
+            </div>
+
+            <!-- Game-specific Typography -->
+            <div class="mt-8 bg-tactical-800 rounded-lg p-6 border border-military-600">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">游戏专用字体样式</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-alert-400 mb-2">数值显示</h4>
+                        <div class="space-y-2">
+                            <div class="text-2xl font-mono text-success-400">+1250</div>
+                            <div class="text-lg font-mono text-alert-400">-25 HP</div>
+                            <div class="text-base font-mono text-cyber-400">100/100</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-cyber-400 mb-2">状态文本</h4>
+                        <div class="space-y-2">
+                            <div class="text-sm font-military text-success-400 uppercase tracking-wide">MISSION COMPLETE</div>
+                            <div class="text-sm font-military text-alert-400 uppercase tracking-wide">UNDER ATTACK</div>
+                            <div class="text-sm font-military text-cyber-400 uppercase tracking-wide">RELOADING</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Spacing System -->
+        <section id="spacing" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">间距系统</h2>
+
+            <!-- Grid System -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">网格系统</h3>
+                <div class="tactical-grid bg-tactical-800/30 rounded-lg p-8 border border-cyber-400/20">
+                    <p class="text-tactical-300 mb-4">基于20px网格系统，确保视觉元素对齐一致</p>
+                    <div class="grid grid-cols-12 gap-4 h-32">
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">1</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">2</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">3</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">4</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">5</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">6</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">7</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">8</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">9</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">10</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">11</div>
+                        <div class="bg-military-700/50 rounded flex items-center justify-center text-xs">12</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spacing Scale -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">间距比例</h3>
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="w-1 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">0.25rem (4px)</span>
+                            <span class="ml-4 text-tactical-400">超小间距</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-2 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">0.5rem (8px)</span>
+                            <span class="ml-4 text-tactical-400">小间距</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">1rem (16px)</span>
+                            <span class="ml-4 text-tactical-400">基础间距</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-6 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">1.5rem (24px)</span>
+                            <span class="ml-4 text-tactical-400">中间距</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">2rem (32px)</span>
+                            <span class="ml-4 text-tactical-400">大间距</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-16 h-4 bg-cyber-400 mr-4"></div>
+                            <span class="font-mono text-sm">4rem (64px)</span>
+                            <span class="ml-4 text-tactical-400">超大间距</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Responsive Breakpoints -->
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-military-300">响应式断点</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-tactical-800 p-4 rounded-lg border border-military-600">
+                        <h4 class="font-semibold text-cyber-400 mb-2">Mobile</h4>
+                        <p class="text-sm text-tactical-400">< 640px</p>
+                        <p class="text-xs text-tactical-500 mt-1">主要目标设备</p>
+                    </div>
+                    <div class="bg-tactical-800 p-4 rounded-lg border border-military-600">
+                        <h4 class="font-semibold text-cyber-400 mb-2">Tablet</h4>
+                        <p class="text-sm text-tactical-400">640px - 1024px</p>
+                        <p class="text-xs text-tactical-500 mt-1">平板适配</p>
+                    </div>
+                    <div class="bg-tactical-800 p-4 rounded-lg border border-military-600">
+                        <h4 class="font-semibold text-cyber-400 mb-2">Desktop</h4>
+                        <p class="text-sm text-tactical-400">1024px - 1280px</p>
+                        <p class="text-xs text-tactical-500 mt-1">桌面端支持</p>
+                    </div>
+                    <div class="bg-tactical-800 p-4 rounded-lg border border-military-600">
+                        <h4 class="font-semibold text-cyber-400 mb-2">Large</h4>
+                        <p class="text-sm text-tactical-400">> 1280px</p>
+                        <p class="text-xs text-tactical-500 mt-1">大屏优化</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component Guidelines -->
+        <section id="components" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">组件规范</h2>
+
+            <!-- Button Examples -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">按钮组件</h3>
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <button class="px-4 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded transition-all duration-200 hover:glow">
+                            主要按钮
+                        </button>
+                        <button class="px-4 py-2 bg-cyber-400 hover:bg-cyber-500 text-tactical-900 rounded transition-all duration-200">
+                            次要按钮
+                        </button>
+                        <button class="px-4 py-2 bg-alert-500 hover:bg-alert-600 text-white rounded transition-all duration-200">
+                            危险按钮
+                        </button>
+                        <button class="px-4 py-2 bg-success-500 hover:bg-success-600 text-white rounded transition-all duration-200">
+                            成功按钮
+                        </button>
+                    </div>
+
+                    <div class="text-sm text-tactical-400">
+                        <h4 class="font-semibold mb-2">使用规范：</h4>
+                        <ul class="space-y-1">
+                            <li>• 最小点击区域：44px × 44px（符合移动端无障碍标准）</li>
+                            <li>• 按钮间距最小16px，确保误触防护</li>
+                            <li>• 使用hover和active状态提供视觉反馈</li>
+                            <li>• 重要操作使用主要按钮样式</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bars -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-military-300">进度条组件</h3>
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20 space-y-4">
+                    <!-- Health Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-tactical-300">生命值</span>
+                            <span class="text-sm font-mono text-success-400">75/100</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-3 border border-tactical-600">
+                            <div class="bg-gradient-to-r from-success-500 to-success-400 h-full rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Shield Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-tactical-300">护甲值</span>
+                            <span class="text-sm font-mono text-cyber-400">50/100</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-3 border border-tactical-600">
+                            <div class="bg-gradient-to-r from-cyber-400 to-cyber-300 h-full rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ammo Bar -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-tactical-300">弹药</span>
+                            <span class="text-sm font-mono text-alert-400">12/30</span>
+                        </div>
+                        <div class="w-full bg-tactical-700 rounded-full h-3 border border-tactical-600">
+                            <div class="bg-gradient-to-r from-alert-500 to-alert-400 h-full rounded-full" style="width: 40%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Elements -->
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-military-300">表单组件</h3>
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-tactical-300 mb-2">玩家名称</label>
+                            <input type="text" placeholder="请输入玩家名称"
+                                   class="w-full px-3 py-2 bg-tactical-700 border border-tactical-600 rounded text-tactical-100 placeholder-tactical-500 focus:border-cyber-400 focus:outline-none transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-tactical-300 mb-2">难度选择</label>
+                            <select class="w-full px-3 py-2 bg-tactical-700 border border-tactical-600 rounded text-tactical-100 focus:border-cyber-400 focus:outline-none transition-colors">
+                                <option>新手</option>
+                                <option>普通</option>
+                                <option>困难</option>
+                                <option>专家</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" id="sound" class="rounded border-tactical-600 text-cyber-400 focus:ring-cyber-400">
+                                <label for="sound" class="text-sm text-tactical-300">启用音效</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accessibility -->
+        <section id="accessibility" class="mb-16">
+            <h2 class="text-3xl font-military font-bold mb-8 text-cyber-400">无障碍设计</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">色彩对比度</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-military-700 rounded">
+                            <span class="text-cyber-400">主要文本</span>
+                            <span class="text-sm text-success-400">AA+</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-tactical-700 rounded">
+                            <span class="text-tactical-100">正文文本</span>
+                            <span class="text-sm text-success-400">AA+</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-alert-500 rounded">
+                            <span class="text-white">错误提示</span>
+                            <span class="text-sm text-success-400">AAA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-tactical-800/30 rounded-lg p-6 border border-cyber-400/20">
+                    <h3 class="text-lg font-semibold mb-4 text-military-300">交互设计</h3>
+                    <ul class="space-y-2 text-tactical-300 text-sm">
+                        <li class="flex items-start">
+                            <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3"></span>
+                            最小44px触摸目标
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3"></span>
+                            键盘导航支持
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3"></span>
+                            焦点状态可见
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3"></span>
+                            屏幕阅读器支持
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-2 h-2 bg-success-400 rounded-full mt-2 mr-3"></span>
+                            语义化HTML结构
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- WCAG Compliance -->
+            <div class="mt-8 bg-success-900/20 border border-success-600/30 rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4 text-success-400">WCAG 2.1 合规性</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-success-300">感知性</h4>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 充足的色彩对比度</li>
+                            <li>• 可缩放的文本</li>
+                            <li>• 不依赖颜色传达信息</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-success-300">可操作性</h4>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 键盘完全可访问</li>
+                            <li>• 合理的超时时间</li>
+                            <li>• 避免闪烁内容</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-success-300">可理解性</h4>
+                        <ul class="space-y-1 text-tactical-400">
+                            <li>• 清晰的页面结构</li>
+                            <li>• 一致的导航模式</li>
+                            <li>• 错误识别和建议</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-tactical-800 border-t border-cyber-400/20 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-tactical-400 text-sm">GTI-2D 设计系统 - 轻量化军事战术风格</p>
+                <p class="text-tactical-500 text-xs mt-2">遵循 WCAG 2.1 AA 标准 • 移动端优化 • 高性能实现</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        let isDark = true;
+
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.classList.toggle('theme-dark', !isDark);
+            themeToggle.textContent = isDark ? '切换主题' : '切换主题';
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active navigation highlighting
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('border-cyber-400', 'text-cyber-400');
+                link.classList.add('border-transparent', 'text-tactical-300');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.remove('border-transparent', 'text-tactical-300');
+                    link.classList.add('border-cyber-400', 'text-cyber-400');
+                }
+            });
+        });
+
+        // Add glow effect to buttons on hover
+        document.querySelectorAll('.hover\\:glow').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                element.style.animation = 'glow 2s ease-in-out infinite alternate';
+            });
+            element.addEventListener('mouseleave', () => {
+                element.style.animation = '';
+            });
+        });
+    </script>
+</body>
+</html>

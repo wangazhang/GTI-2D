@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排行榜 - GTI-2D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4', 100: '#e9ebe4', 200: '#d4d7ca', 300: '#b6bca7',
+                            400: '#95a082', 500: '#7a8564', 600: '#616b4f', 700: '#556B2F',
+                            800: '#485a28', 900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff', 100: '#ccf7fe', 200: '#9aeffd', 300: '#58e1fa',
+                            400: '#00CED1', 500: '#00b4b8', 600: '#039094', 700: '#0a7377',
+                            800: '#115e61', 900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2', 100: '#fdeee4', 200: '#fadac4', 300: '#f6bf99',
+                            400: '#f1976c', 500: '#FF6347', 600: '#dd4e2f', 700: '#b63e25',
+                            800: '#943525', 900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#228B22', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#2F4F4F',
+                            800: '#1e293b', 900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+                        'crown-bounce': 'crownBounce 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(0, 206, 209, 0.8)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        pulseGold: {
+                            '0%, 100%': { 'box-shadow': '0 0 10px rgba(255, 215, 0, 0.5)' },
+                            '50%': { 'box-shadow': '0 0 25px rgba(255, 215, 0, 0.8)' }
+                        },
+                        crownBounce: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tactical-grid {
+            background-image:
+                linear-gradient(rgba(0, 206, 209, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 206, 209, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .rank-card {
+            transition: all 0.3s ease;
+        }
+
+        .rank-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 206, 209, 0.2);
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            animation: pulse-gold 2s ease-in-out infinite;
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #c0c0c0, #e5e7eb);
+            color: #000;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #d97706);
+            color: #fff;
+        }
+
+        .trophy-gold {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+            animation: crown-bounce 2s ease-in-out infinite;
+        }
+
+        .trophy-silver {
+            color: #c0c0c0;
+            text-shadow: 0 0 8px rgba(192, 192, 192, 0.6);
+        }
+
+        .trophy-bronze {
+            color: #cd7f32;
+            text-shadow: 0 0 8px rgba(205, 127, 50, 0.6);
+        }
+
+        .my-rank {
+            border: 2px solid #00CED1;
+            background: rgba(0, 206, 209, 0.1);
+            box-shadow: 0 0 15px rgba(0, 206, 209, 0.3);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+        }
+
+        .friend-highlight {
+            background: rgba(85, 107, 47, 0.2);
+            border-color: #556B2F;
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 text-tactical-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-tactical-800 border-b border-cyber-400/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <button onclick="history.back()" class="w-10 h-10 bg-tactical-700 hover:bg-tactical-600 rounded-lg flex items-center justify-center transition-colors">
+                        <span class="text-cyber-400">←</span>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-cyber-400">排行榜</h1>
+                        <p class="text-xs text-tactical-400">Leaderboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="shareRankBtn" class="px-4 py-2 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg transition-colors font-semibold text-sm">
+                        🔗 分享排名
+                    </button>
+                    <button id="refreshBtn" class="w-10 h-10 bg-military-700 hover:bg-military-600 rounded-lg flex items-center justify-center transition-colors" title="刷新">
+                        <span class="text-cyber-400">↻</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- My Rank Card -->
+        <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 p-6 mb-6 my-rank">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <div class="w-16 h-16 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">我</span>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-cyber-400 rounded-full flex items-center justify-center text-xs font-bold text-tactical-900">
+                            25
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xl font-bold text-cyber-400">我的排名</div>
+                        <div class="text-2xl font-mono font-bold text-cyber-300">#142</div>
+                        <div class="text-sm text-tactical-400">本周上升 +8 位</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <div class="text-lg font-mono font-bold text-success-400">1,247</div>
+                            <div class="text-xs text-tactical-400">击杀</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-mono font-bold text-cyber-400">78.5%</div>
+                            <div class="text-xs text-tactical-400">胜率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-tactical-800/50 rounded-lg p-1 mb-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-1">
+                <button class="rank-tab active py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="weekly">
+                    本周排行
+                </button>
+                <button class="rank-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="monthly">
+                    本月排行
+                </button>
+                <button class="rank-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="season">
+                    赛季排行
+                </button>
+                <button class="rank-tab py-3 px-4 rounded-lg font-semibold transition-all duration-200" data-tab="friends">
+                    好友排行
+                </button>
+            </div>
+        </div>
+
+        <!-- Ranking Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Top 3 Podium -->
+            <div class="lg:col-span-1">
+                <h3 class="text-lg font-semibold text-military-300 mb-4">🏆 前三甲</h3>
+                <div class="space-y-4">
+                    <!-- Rank 1 -->
+                    <div class="rank-card bg-tactical-800 rounded-lg p-4 border-2 border-yellow-400 rank-1">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl trophy-gold">👑</div>
+                                <div>
+                                    <div class="font-bold text-lg">战神无敌</div>
+                                    <div class="text-sm opacity-80">等级 45</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-mono font-bold">#1</div>
+                                <div class="text-sm font-mono">3,567 分</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rank 2 -->
+                    <div class="rank-card bg-tactical-800 rounded-lg p-4 border-2 border-gray-400 rank-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl trophy-silver">🥈</div>
+                                <div>
+                                    <div class="font-bold text-lg">狙击之王</div>
+                                    <div class="text-sm opacity-80">等级 43</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-mono font-bold">#2</div>
+                                <div class="text-sm font-mono">3,234 分</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rank 3 -->
+                    <div class="rank-card bg-tactical-800 rounded-lg p-4 border-2 border-orange-600 rank-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl trophy-bronze">🥉</div>
+                                <div>
+                                    <div class="font-bold text-lg">钢铁意志</div>
+                                    <div class="text-sm opacity-80">等级 41</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-mono font-bold">#3</div>
+                                <div class="text-sm font-mono">2,987 分</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rewards Preview -->
+                <div class="mt-6 bg-tactical-800 rounded-lg p-4 border border-success-400/30">
+                    <h4 class="font-semibold text-success-400 mb-3">本周奖励</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-tactical-300">第1名</span>
+                            <span class="text-yellow-400">🏆 传说武器箱</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-tactical-300">第2-3名</span>
+                            <span class="text-gray-400">🎁 史诗装备箱</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-tactical-300">第4-10名</span>
+                            <span class="text-orange-400">📦 稀有材料箱</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-tactical-300">前100名</span>
+                            <span class="text-cyan-400">💎 经验加成卡</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Ranking List -->
+            <div class="lg:col-span-2">
+                <div class="bg-tactical-800 rounded-lg border border-cyber-400/20 overflow-hidden">
+                    <!-- Table Header -->
+                    <div class="bg-tactical-700 px-6 py-4 border-b border-tactical-600">
+                        <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-tactical-300">
+                            <div class="col-span-1">排名</div>
+                            <div class="col-span-4">玩家</div>
+                            <div class="col-span-2">击杀数</div>
+                            <div class="col-span-2">胜率</div>
+                            <div class="col-span-2">积分</div>
+                            <div class="col-span-1">操作</div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Items -->
+                    <div class="divide-y divide-tactical-700" id="rankingList">
+                        <!-- Rank 4 -->
+                        <div class="rank-item px-6 py-4 hover:bg-tactical-700/50 transition-colors">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <div class="col-span-1">
+                                    <div class="text-lg font-mono font-bold text-tactical-300">#4</div>
+                                </div>
+                                <div class="col-span-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-military-400 to-military-600 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-bold text-sm">火</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">火力支援</div>
+                                            <div class="text-xs text-tactical-400">等级 38</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-success-400">2,456</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-cyber-400">85.2%</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono font-bold text-tactical-100">2,834</div>
+                                </div>
+                                <div class="col-span-1">
+                                    <button class="px-2 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-xs transition-colors">
+                                        查看
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rank 5 (Friend) -->
+                        <div class="rank-item px-6 py-4 hover:bg-tactical-700/50 transition-colors friend-highlight">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <div class="col-span-1">
+                                    <div class="text-lg font-mono font-bold text-tactical-300">#5</div>
+                                </div>
+                                <div class="col-span-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-success-400 to-success-600 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-bold text-sm">战</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-military-300 flex items-center">
+                                                战术大师
+                                                <span class="ml-2 text-xs bg-military-700 text-military-300 px-2 py-1 rounded">好友</span>
+                                            </div>
+                                            <div class="text-xs text-tactical-400">等级 36</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-success-400">2,234</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-cyber-400">82.7%</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono font-bold text-tactical-100">2,567</div>
+                                </div>
+                                <div class="col-span-1">
+                                    <button class="px-2 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-xs transition-colors">
+                                        查看
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- More ranks... -->
+                        <div class="rank-item px-6 py-4 hover:bg-tactical-700/50 transition-colors">
+                            <div class="grid grid-cols-12 gap-4 items-center">
+                                <div class="col-span-1">
+                                    <div class="text-lg font-mono font-bold text-tactical-300">#6</div>
+                                </div>
+                                <div class="col-span-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-alert-400 to-alert-600 rounded-full flex items-center justify-center">
+                                            <span class="text-white font-bold text-sm">雷</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-tactical-100">雷霆一击</div>
+                                            <div class="text-xs text-tactical-400">等级 35</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-success-400">2,156</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono text-cyber-400">79.8%</div>
+                                </div>
+                                <div class="col-span-2">
+                                    <div class="font-mono font-bold text-tactical-100">2,456</div>
+                                </div>
+                                <div class="col-span-1">
+                                    <button class="px-2 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-xs transition-colors">
+                                        查看
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Continue with more ranks... -->
+                        <div class="px-6 py-8 text-center">
+                            <div class="text-tactical-400 mb-4">...</div>
+                            <button class="px-6 py-2 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold">
+                                查看更多排名
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <!-- Kill Leaderboard -->
+            <div class="bg-tactical-800 rounded-lg border border-alert-400/30 p-6">
+                <h3 class="text-lg font-semibold text-alert-400 mb-4">🎯 击杀排行</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-yellow-400 font-mono">#1</span>
+                            <span class="text-tactical-200">战神无敌</span>
+                        </div>
+                        <span class="font-mono text-alert-400">5,432</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-400 font-mono">#2</span>
+                            <span class="text-tactical-200">狙击之王</span>
+                        </div>
+                        <span class="font-mono text-alert-400">4,987</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-orange-400 font-mono">#3</span>
+                            <span class="text-tactical-200">钢铁意志</span>
+                        </div>
+                        <span class="font-mono text-alert-400">4,234</span>
+                    </div>
+                    <div class="border-t border-tactical-700 pt-2 text-sm text-tactical-400">
+                        我的击杀数: <span class="text-alert-400 font-mono">1,247</span> (#142)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Win Rate Leaderboard -->
+            <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 p-6">
+                <h3 class="text-lg font-semibold text-cyber-400 mb-4">📈 胜率排行</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-yellow-400 font-mono">#1</span>
+                            <span class="text-tactical-200">完美战士</span>
+                        </div>
+                        <span class="font-mono text-cyber-400">94.6%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-400 font-mono">#2</span>
+                            <span class="text-tactical-200">战术大师</span>
+                        </div>
+                        <span class="font-mono text-cyber-400">91.2%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-orange-400 font-mono">#3</span>
+                            <span class="text-tactical-200">狙击之王</span>
+                        </div>
+                        <span class="font-mono text-cyber-400">89.7%</span>
+                    </div>
+                    <div class="border-t border-tactical-700 pt-2 text-sm text-tactical-400">
+                        我的胜率: <span class="text-cyber-400 font-mono">78.5%</span> (#58)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survival Time Leaderboard -->
+            <div class="bg-tactical-800 rounded-lg border border-success-400/30 p-6">
+                <h3 class="text-lg font-semibold text-success-400 mb-4">⏱️ 生存时间</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-yellow-400 font-mono">#1</span>
+                            <span class="text-tactical-200">生存专家</span>
+                        </div>
+                        <span class="font-mono text-success-400">18:42</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-400 font-mono">#2</span>
+                            <span class="text-tactical-200">隐身高手</span>
+                        </div>
+                        <span class="font-mono text-success-400">16:28</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-orange-400 font-mono">#3</span>
+                            <span class="text-tactical-200">钢铁意志</span>
+                        </div>
+                        <span class="font-mono text-success-400">15:17</span>
+                    </div>
+                    <div class="border-t border-tactical-700 pt-2 text-sm text-tactical-400">
+                        我的最长生存: <span class="text-success-400 font-mono">8:34</span> (#89)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tactical-900/80 backdrop-blur-sm hidden">
+        <div class="bg-tactical-800 rounded-lg border border-cyber-400/30 max-w-md w-full animate-slide-up">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-cyber-400">分享我的排名</h3>
+                    <button onclick="closeShareModal()" class="w-8 h-8 bg-tactical-700 hover:bg-tactical-600 rounded flex items-center justify-center transition-colors">
+                        <span class="text-tactical-400">✕</span>
+                    </button>
+                </div>
+
+                <div class="text-center mb-6">
+                    <div class="w-24 h-24 bg-gradient-to-br from-cyber-400 to-cyber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white font-bold text-2xl">我</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-tactical-100 mb-1">我的排名 #142</h4>
+                    <p class="text-sm text-tactical-400">本周上升 +8 位</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="text-center p-3 bg-tactical-700 rounded-lg">
+                        <div class="text-lg font-mono font-bold text-success-400">1,247</div>
+                        <div class="text-xs text-tactical-400">击杀数</div>
+                    </div>
+                    <div class="text-center p-3 bg-tactical-700 rounded-lg">
+                        <div class="text-lg font-mono font-bold text-cyber-400">78.5%</div>
+                        <div class="text-xs text-tactical-400">胜率</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button class="w-full py-3 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">📱</span>
+                        分享到微信好友
+                    </button>
+                    <button class="w-full py-3 bg-military-700 hover:bg-military-600 text-cyber-400 border border-cyber-400/30 rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">🏃</span>
+                        分享到朋友圈
+                    </button>
+                    <button class="w-full py-3 bg-cyber-600 hover:bg-cyber-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center">
+                        <span class="mr-2">👥</span>
+                        分享到微信群
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.rank-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tab states
+                document.querySelectorAll('.rank-tab').forEach(t => {
+                    t.classList.remove('active', 'bg-military-700', 'text-cyber-400');
+                    t.classList.add('text-tactical-400');
+                });
+
+                tab.classList.add('active', 'bg-military-700', 'text-cyber-400');
+                tab.classList.remove('text-tactical-400');
+
+                // Simulate loading different rankings
+                const targetTab = tab.dataset.tab;
+                updateRankingContent(targetTab);
+            });
+        });
+
+        function updateRankingContent(tab) {
+            // Simulate different ranking data based on tab
+            console.log(`Loading ${tab} rankings...`);
+
+            // Add loading animation
+            const rankingList = document.getElementById('rankingList');
+            rankingList.style.opacity = '0.5';
+
+            setTimeout(() => {
+                rankingList.style.opacity = '1';
+            }, 300);
+        }
+
+        // Share modal
+        function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Refresh functionality
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.style.transform = 'rotate(360deg)';
+            refreshBtn.style.transition = 'transform 0.5s ease';
+
+            setTimeout(() => {
+                refreshBtn.style.transform = 'rotate(0deg)';
+                refreshBtn.style.transition = '';
+            }, 500);
+
+            // Simulate data refresh
+            console.log('Refreshing leaderboard data...');
+        });
+
+        // Event listeners
+        document.getElementById('shareRankBtn').addEventListener('click', openShareModal);
+
+        // Close modal on background click
+        document.getElementById('shareModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeShareModal();
+            }
+        });
+
+        // Simulate real-time rank updates
+        function simulateRankUpdates() {
+            const myRankElement = document.querySelector('.my-rank .text-2xl.font-mono.font-bold');
+            if (myRankElement) {
+                const currentRank = parseInt(myRankElement.textContent.replace('#', ''));
+                // Randomly fluctuate rank by ±1
+                const change = Math.random() > 0.5 ? 1 : -1;
+                const newRank = Math.max(1, currentRank + change);
+
+                if (newRank !== currentRank) {
+                    myRankElement.textContent = `#${newRank}`;
+                    myRankElement.classList.add('animate-glow');
+                    setTimeout(() => {
+                        myRankElement.classList.remove('animate-glow');
+                    }, 1000);
+                }
+            }
+        }
+
+        // Update ranks every 30 seconds (simulation)
+        setInterval(simulateRankUpdates, 30000);
+
+        // Initialize page
+        console.log('Leaderboard System Loaded');
+    </script>
+</body>
+</html>

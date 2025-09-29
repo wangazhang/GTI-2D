@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI-2D 进度指示器组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .progress-container {
+            position: relative;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 线性进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.8), rgba(47, 79, 79, 0.6));
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 206, 209, 0.6), transparent);
+            animation: scan-line 2s infinite;
+        }
+
+        @keyframes scan-line {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00CED1, #228B22);
+            border-radius: inherit;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg,
+                transparent 25%,
+                rgba(255, 255, 255, 0.2) 25%,
+                rgba(255, 255, 255, 0.2) 50%,
+                transparent 50%,
+                transparent 75%,
+                rgba(255, 255, 255, 0.2) 75%
+            );
+            background-size: 20px 20px;
+            animation: stripe-move 1s linear infinite;
+        }
+
+        @keyframes stripe-move {
+            0% { transform: translateX(-20px); }
+            100% { transform: translateX(0); }
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        /* 圆形进度条 */
+        .circular-progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .circular-progress svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress .progress-ring {
+            fill: none;
+            stroke: rgba(47, 79, 79, 0.8);
+            stroke-width: 8;
+        }
+
+        .circular-progress .progress-ring-fill {
+            fill: none;
+            stroke: #00CED1;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 0.3s ease;
+            filter: drop-shadow(0 0 5px rgba(0, 206, 209, 0.6));
+        }
+
+        .circular-progress .progress-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #00CED1;
+            font-weight: bold;
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 206, 209, 0.2);
+            border-top: 4px solid #00CED1;
+            border-radius: 50%;
+            animation: spinner-rotate 1s linear infinite;
+        }
+
+        @keyframes spinner-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 脉冲加载器 */
+        .pulse-loader {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #00CED1;
+            border-radius: 50%;
+            animation: pulse-bounce 1.4s infinite;
+        }
+
+        .pulse-dot:nth-child(1) { animation-delay: 0s; }
+        .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+        .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse-bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 步骤进度条 */
+        .step-progress {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .step-progress::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0, 206, 209, 0.3);
+            z-index: 1;
+        }
+
+        .step-item {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(47, 79, 79, 0.8);
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.completed {
+            background: #228B22;
+            border-color: #228B22;
+            color: white;
+        }
+
+        .step-circle.active {
+            background: #00CED1;
+            border-color: #00CED1;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 206, 209, 0.6);
+            animation: step-pulse 2s infinite;
+        }
+
+        @keyframes step-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            max-width: 80px;
+        }
+
+        .step-label.completed {
+            color: #228B22;
+        }
+
+        .step-label.active {
+            color: #00CED1;
+            font-weight: bold;
+        }
+
+        /* 经验值条 */
+        .xp-bar {
+            background: linear-gradient(145deg, rgba(47, 79, 79, 0.8), rgba(47, 79, 79, 0.6));
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            height: 24px;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            border-radius: inherit;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .xp-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: xp-shine 2s infinite;
+        }
+
+        @keyframes xp-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 倒计时器 */
+        .countdown-timer {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .countdown-ring {
+            width: 100%;
+            height: 100%;
+        }
+
+        .countdown-ring circle {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .countdown-ring .ring-bg {
+            stroke: rgba(47, 79, 79, 0.8);
+        }
+
+        .countdown-ring .ring-progress {
+            stroke: #FF6347;
+            stroke-linecap: round;
+            transform-origin: 50% 50%;
+            transform: rotate(-90deg);
+            transition: stroke-dasharray 1s linear;
+            filter: drop-shadow(0 0 8px rgba(255, 99, 71, 0.6));
+        }
+
+        .countdown-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF6347;
+            text-shadow: 0 0 5px rgba(255, 99, 71, 0.8);
+        }
+
+        /* 波浪加载器 */
+        .wave-loader {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(47, 79, 79, 0.8);
+            border-radius: 50%;
+            border: 2px solid rgba(0, 206, 209, 0.4);
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(0deg, #00CED1, rgba(0, 206, 209, 0.3));
+            border-radius: 50%;
+            animation: wave-rise 2s ease-in-out infinite;
+        }
+
+        .wave::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                135deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 60%
+            );
+            border-radius: 50%;
+            animation: wave-rotate 3s linear infinite;
+        }
+
+        @keyframes wave-rise {
+            0%, 100% { height: 20%; }
+            50% { height: 80%; }
+        }
+
+        @keyframes wave-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 进度指示器变体 */
+        .progress-small .progress-bar { height: 8px; }
+        .progress-small .progress-text { font-size: 0.7rem; }
+
+        .progress-large .progress-bar { height: 32px; }
+        .progress-large .progress-text { font-size: 1rem; }
+
+        .progress-glow .progress-fill {
+            box-shadow: 0 0 10px rgba(0, 206, 209, 0.6);
+        }
+
+        .progress-animated .progress-fill {
+            animation: progress-glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes progress-glow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.3); }
+        }
+
+        /* 分段进度条 */
+        .segmented-progress {
+            display: flex;
+            gap: 2px;
+            height: 20px;
+        }
+
+        .segment {
+            flex: 1;
+            background: rgba(47, 79, 79, 0.8);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .segment.filled {
+            background: linear-gradient(135deg, #00CED1, #228B22);
+            border-color: #00CED1;
+            box-shadow: 0 0 5px rgba(0, 206, 209, 0.4);
+        }
+
+        .segment.current {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #FFD700;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+            animation: segment-pulse 1s infinite;
+        }
+
+        @keyframes segment-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-tactical-900 p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- 页面标题 -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-cyber-400 mb-4">进度指示器组件</h1>
+            <p class="text-tactical-300">GTI-2D 游戏专用进度指示器，支持多种样式和动画效果</p>
+        </div>
+
+        <!-- 线性进度条 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">线性进度条</h3>
+            <div class="space-y-6">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-tactical-300">加载进度</span>
+                        <span class="text-cyber-400 font-bold">75%</span>
+                    </div>
+                    <div class="progress-container" id="linear-progress-1">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                            <div class="progress-text">75%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-tactical-300">匹配进度</span>
+                        <span class="text-cyber-400 font-bold">42%</span>
+                    </div>
+                    <div class="progress-container progress-glow" id="linear-progress-2">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 42%"></div>
+                            <div class="progress-text">寻找玩家...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-tactical-300">经验值</span>
+                        <span class="text-success-400 font-bold">1250 / 2000 XP</span>
+                    </div>
+                    <div class="progress-container" id="xp-progress">
+                        <div class="xp-bar">
+                            <div class="xp-fill" style="width: 62.5%"></div>
+                            <div class="progress-text">Lv.15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 圆形进度条 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">圆形进度条</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">技能冷却</div>
+                    <div class="circular-progress mx-auto" id="circular-progress-1">
+                        <svg>
+                            <circle class="progress-ring" cx="60" cy="60" r="45"></circle>
+                            <circle class="progress-ring-fill" cx="60" cy="60" r="45"></circle>
+                        </svg>
+                        <div class="progress-center">
+                            <div class="text-lg">68%</div>
+                            <div class="text-xs">冷却中</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">血量</div>
+                    <div class="circular-progress mx-auto" id="circular-progress-2">
+                        <svg>
+                            <circle class="progress-ring" cx="60" cy="60" r="45"></circle>
+                            <circle class="progress-ring-fill" cx="60" cy="60" r="45" stroke="#228B22"></circle>
+                        </svg>
+                        <div class="progress-center">
+                            <div class="text-lg">85</div>
+                            <div class="text-xs">HP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">护甲值</div>
+                    <div class="circular-progress mx-auto" id="circular-progress-3">
+                        <svg>
+                            <circle class="progress-ring" cx="60" cy="60" r="45"></circle>
+                            <circle class="progress-ring-fill" cx="60" cy="60" r="45" stroke="#FFD700"></circle>
+                        </svg>
+                        <div class="progress-center">
+                            <div class="text-lg">50</div>
+                            <div class="text-xs">护甲</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-2">充能</div>
+                    <div class="circular-progress mx-auto" id="circular-progress-4">
+                        <svg>
+                            <circle class="progress-ring" cx="60" cy="60" r="45"></circle>
+                            <circle class="progress-ring-fill" cx="60" cy="60" r="45" stroke="#FF6347"></circle>
+                        </svg>
+                        <div class="progress-center">
+                            <div class="text-lg">92%</div>
+                            <div class="text-xs">能量</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载指示器 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">加载指示器</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-4">旋转加载器</div>
+                    <div class="loading-spinner mx-auto"></div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-4">脉冲加载器</div>
+                    <div class="pulse-loader mx-auto">
+                        <div class="pulse-dot"></div>
+                        <div class="pulse-dot"></div>
+                        <div class="pulse-dot"></div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-4">波浪加载器</div>
+                    <div class="wave-loader mx-auto">
+                        <div class="wave"></div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-sm text-tactical-300 mb-4">倒计时器</div>
+                    <div class="countdown-timer mx-auto" id="countdown-timer">
+                        <svg class="countdown-ring">
+                            <circle class="ring-bg" cx="50" cy="50" r="40"></circle>
+                            <circle class="ring-progress" cx="50" cy="50" r="40"></circle>
+                        </svg>
+                        <div class="countdown-text">30</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤进度条 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">步骤进度条</h3>
+            <div class="space-y-8">
+                <!-- 任务进度 -->
+                <div>
+                    <div class="text-sm text-tactical-300 mb-4">任务进度</div>
+                    <div class="step-progress" id="task-steps">
+                        <div class="step-item">
+                            <div class="step-circle completed">✓</div>
+                            <div class="step-label completed">接受任务</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle completed">✓</div>
+                            <div class="step-label completed">收集材料</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle active">3</div>
+                            <div class="step-label active">消灭敌人</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">返回基地</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle">5</div>
+                            <div class="step-label">完成任务</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 游戏进度 -->
+                <div>
+                    <div class="text-sm text-tactical-300 mb-4">游戏阶段</div>
+                    <div class="step-progress" id="game-phases">
+                        <div class="step-item">
+                            <div class="step-circle completed">✓</div>
+                            <div class="step-label completed">准备阶段</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle active">⚔</div>
+                            <div class="step-label active">战斗阶段</div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-circle">🏆</div>
+                            <div class="step-label">结算阶段</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分段进度条 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">分段进度条</h3>
+            <div class="space-y-6">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-tactical-300">护甲分段</span>
+                        <span class="text-cyber-400 font-bold">3/5</span>
+                    </div>
+                    <div class="segmented-progress" id="armor-segments">
+                        <div class="segment filled"></div>
+                        <div class="segment filled"></div>
+                        <div class="segment current"></div>
+                        <div class="segment"></div>
+                        <div class="segment"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-tactical-300">弹夹容量</span>
+                        <span class="text-alert-400 font-bold">15/30</span>
+                    </div>
+                    <div class="segmented-progress" id="ammo-segments">
+                        <!-- 通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API 使用示例 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600 mb-8">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">使用示例</h3>
+            <pre class="bg-tactical-900 rounded p-4 text-cyber-300 text-sm overflow-x-auto"><code>// 创建线性进度条
+const progressBar = new ProgressIndicator('progress-container', {
+    type: 'linear',
+    size: 'medium',
+    animated: true,
+    showText: true,
+    showPercentage: true,
+    color: 'cyber',
+    backgroundColor: 'tactical'
+});
+
+// 创建圆形进度条
+const circularProgress = new ProgressIndicator('circular-container', {
+    type: 'circular',
+    size: 120,
+    strokeWidth: 8,
+    color: 'success',
+    showText: true,
+    textTemplate: '{value} / {max}'
+});
+
+// 创建步骤进度条
+const stepProgress = new ProgressIndicator('step-container', {
+    type: 'steps',
+    steps: [
+        { label: '开始', completed: true },
+        { label: '进行中', active: true },
+        { label: '完成', completed: false }
+    ]
+});
+
+// 创建倒计时器
+const countdown = new ProgressIndicator('countdown-container', {
+    type: 'countdown',
+    duration: 30000,  // 30秒
+    onComplete: () => {
+        console.log('倒计时结束！');
+    }
+});
+
+// 更新进度
+progressBar.setProgress(75);
+circularProgress.setProgress(50, 100);
+
+// 动画到目标值
+progressBar.animateTo(90, 1000); // 1秒动画
+
+// 监听事件
+progressBar.on('change', (progress) => {
+    console.log('进度变更:', progress);
+});
+
+progressBar.on('complete', () => {
+    console.log('进度完成！');
+});
+
+// 步骤控制
+stepProgress.nextStep();
+stepProgress.setStep(2);
+stepProgress.completeStep(1);
+
+// 分段进度条
+const segments = new ProgressIndicator('segments-container', {
+    type: 'segments',
+    segments: 10,
+    filled: 6
+});
+
+segments.fillSegment(7);
+segments.clearSegment(3);</code></pre>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="bg-tactical-800 rounded-lg p-6 border border-tactical-600">
+            <h3 class="text-xl font-bold text-cyber-400 mb-4">控制面板</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <button class="bg-success-600 text-white px-4 py-2 rounded" onclick="animateProgress()">动画演示</button>
+                <button class="bg-cyber-600 text-white px-4 py-2 rounded" onclick="startCountdown()">开始倒计时</button>
+                <button class="bg-military-600 text-white px-4 py-2 rounded" onclick="nextStep()">下一步</button>
+                <button class="bg-alert-600 text-white px-4 py-2 rounded" onclick="resetAll()">重置全部</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-tactical-300 mb-2">线性进度</label>
+                    <input type="range" id="linear-slider" min="0" max="100" value="75"
+                           class="w-full" onchange="updateLinearProgress(this.value)">
+                </div>
+                <div>
+                    <label class="block text-sm text-tactical-300 mb-2">圆形进度</label>
+                    <input type="range" id="circular-slider" min="0" max="100" value="68"
+                           class="w-full" onchange="updateCircularProgress(this.value)">
+                </div>
+                <div>
+                    <label class="block text-sm text-tactical-300 mb-2">经验值</label>
+                    <input type="range" id="xp-slider" min="0" max="2000" value="1250"
+                           class="w-full" onchange="updateXPProgress(this.value)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ProgressIndicator - 进度指示器组件
+         */
+        class ProgressIndicator {
+            constructor(containerId, options = {}) {
+                this.container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+                if (!this.container) {
+                    throw new Error('Container not found');
+                }
+
+                // 默认配置
+                this.config = {
+                    type: 'linear',        // linear, circular, steps, segments, countdown
+                    size: 'medium',        // small, medium, large 或数值
+                    value: 0,
+                    max: 100,
+                    min: 0,
+                    animated: true,
+                    showText: true,
+                    showPercentage: false,
+                    color: 'cyber',
+                    backgroundColor: 'tactical',
+                    strokeWidth: 8,
+                    duration: 1000,
+                    textTemplate: '{percentage}%',
+                    steps: [],
+                    segments: 10,
+                    ...options
+                };
+
+                // 状态
+                this.state = {
+                    currentValue: this.config.value,
+                    animating: false,
+                    currentStep: 0,
+                    filledSegments: 0
+                };
+
+                // 事件监听器
+                this.listeners = {};
+
+                this.init();
+            }
+
+            init() {
+                this.createElements();
+                this.updateDisplay();
+            }
+
+            createElements() {
+                switch (this.config.type) {
+                    case 'linear':
+                        this.createLinearProgress();
+                        break;
+                    case 'circular':
+                        this.createCircularProgress();
+                        break;
+                    case 'steps':
+                        this.createStepsProgress();
+                        break;
+                    case 'segments':
+                        this.createSegmentsProgress();
+                        break;
+                    case 'countdown':
+                        this.createCountdownTimer();
+                        break;
+                }
+            }
+
+            createLinearProgress() {
+                const sizeClass = typeof this.config.size === 'string' ? `progress-${this.config.size}` : '';
+
+                this.container.innerHTML = `
+                    <div class="progress-container ${sizeClass} ${this.config.animated ? 'progress-animated' : ''}">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                            ${this.config.showText ? '<div class="progress-text"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+
+                this.elements = {
+                    bar: this.container.querySelector('.progress-bar'),
+                    fill: this.container.querySelector('.progress-fill'),
+                    text: this.container.querySelector('.progress-text')
+                };
+            }
+
+            createCircularProgress() {
+                const size = typeof this.config.size === 'number' ? this.config.size : 120;
+                const radius = (size - this.config.strokeWidth * 2) / 2;
+                const circumference = radius * 2 * Math.PI;
+
+                this.container.innerHTML = `
+                    <div class="circular-progress" style="width: ${size}px; height: ${size}px;">
+                        <svg>
+                            <circle class="progress-ring" cx="${size/2}" cy="${size/2}" r="${radius}"></circle>
+                            <circle class="progress-ring-fill" cx="${size/2}" cy="${size/2}" r="${radius}"
+                                    style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${circumference};"></circle>
+                        </svg>
+                        ${this.config.showText ? '<div class="progress-center"><div class="progress-text"></div></div>' : ''}
+                    </div>
+                `;
+
+                this.elements = {
+                    svg: this.container.querySelector('svg'),
+                    ring: this.container.querySelector('.progress-ring'),
+                    fill: this.container.querySelector('.progress-ring-fill'),
+                    text: this.container.querySelector('.progress-text')
+                };
+
+                this.circumference = circumference;
+            }
+
+            createStepsProgress() {
+                let stepsHTML = '';
+                this.config.steps.forEach((step, index) => {
+                    const isCompleted = step.completed || index < this.state.currentStep;
+                    const isActive = index === this.state.currentStep;
+
+                    stepsHTML += `
+                        <div class="step-item">
+                            <div class="step-circle ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}">
+                                ${isCompleted ? '✓' : index + 1}
+                            </div>
+                            <div class="step-label ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}">
+                                ${step.label}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                this.container.innerHTML = `
+                    <div class="step-progress">
+                        ${stepsHTML}
+                    </div>
+                `;
+
+                this.elements = {
+                    steps: this.container.querySelectorAll('.step-item'),
+                    circles: this.container.querySelectorAll('.step-circle'),
+                    labels: this.container.querySelectorAll('.step-label')
+                };
+            }
+
+            createSegmentsProgress() {
+                let segmentsHTML = '';
+                for (let i = 0; i < this.config.segments; i++) {
+                    segmentsHTML += '<div class="segment"></div>';
+                }
+
+                this.container.innerHTML = `
+                    <div class="segmented-progress">
+                        ${segmentsHTML}
+                    </div>
+                `;
+
+                this.elements = {
+                    segments: this.container.querySelectorAll('.segment')
+                };
+            }
+
+            createCountdownTimer() {
+                const size = 100;
+                const radius = 40;
+                const circumference = radius * 2 * Math.PI;
+
+                this.container.innerHTML = `
+                    <div class="countdown-timer">
+                        <svg class="countdown-ring">
+                            <circle class="ring-bg" cx="50" cy="50" r="${radius}"></circle>
+                            <circle class="ring-progress" cx="50" cy="50" r="${radius}"
+                                    style="stroke-dasharray: ${circumference}; stroke-dashoffset: 0;"></circle>
+                        </svg>
+                        <div class="countdown-text">${Math.ceil(this.config.duration / 1000)}</div>
+                    </div>
+                `;
+
+                this.elements = {
+                    progress: this.container.querySelector('.ring-progress'),
+                    text: this.container.querySelector('.countdown-text')
+                };
+
+                this.circumference = circumference;
+            }
+
+            updateDisplay() {
+                switch (this.config.type) {
+                    case 'linear':
+                        this.updateLinearDisplay();
+                        break;
+                    case 'circular':
+                        this.updateCircularDisplay();
+                        break;
+                    case 'steps':
+                        this.updateStepsDisplay();
+                        break;
+                    case 'segments':
+                        this.updateSegmentsDisplay();
+                        break;
+                }
+            }
+
+            updateLinearDisplay() {
+                if (!this.elements.fill) return;
+
+                const percentage = this.getPercentage();
+                this.elements.fill.style.width = percentage + '%';
+
+                if (this.elements.text) {
+                    this.elements.text.textContent = this.formatText();
+                }
+            }
+
+            updateCircularDisplay() {
+                if (!this.elements.fill) return;
+
+                const percentage = this.getPercentage();
+                const offset = this.circumference - (percentage / 100) * this.circumference;
+                this.elements.fill.style.strokeDashoffset = offset;
+
+                if (this.elements.text) {
+                    this.elements.text.textContent = this.formatText();
+                }
+            }
+
+            updateStepsDisplay() {
+                this.elements.circles.forEach((circle, index) => {
+                    const isCompleted = index < this.state.currentStep;
+                    const isActive = index === this.state.currentStep;
+
+                    circle.className = `step-circle ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`;
+                    circle.textContent = isCompleted ? '✓' : index + 1;
+                });
+
+                this.elements.labels.forEach((label, index) => {
+                    const isCompleted = index < this.state.currentStep;
+                    const isActive = index === this.state.currentStep;
+
+                    label.className = `step-label ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`;
+                });
+            }
+
+            updateSegmentsDisplay() {
+                this.elements.segments.forEach((segment, index) => {
+                    segment.className = 'segment';
+
+                    if (index < this.state.filledSegments) {
+                        segment.classList.add('filled');
+                    } else if (index === this.state.filledSegments) {
+                        segment.classList.add('current');
+                    }
+                });
+            }
+
+            getPercentage() {
+                const range = this.config.max - this.config.min;
+                const value = this.state.currentValue - this.config.min;
+                return Math.max(0, Math.min(100, (value / range) * 100));
+            }
+
+            formatText() {
+                const percentage = Math.round(this.getPercentage());
+                return this.config.textTemplate
+                    .replace('{value}', this.state.currentValue)
+                    .replace('{max}', this.config.max)
+                    .replace('{min}', this.config.min)
+                    .replace('{percentage}', percentage);
+            }
+
+            // 公共API
+            setProgress(value, max) {
+                if (max !== undefined) {
+                    this.config.max = max;
+                }
+
+                const oldValue = this.state.currentValue;
+                this.state.currentValue = Math.max(this.config.min, Math.min(this.config.max, value));
+
+                this.updateDisplay();
+
+                if (oldValue !== this.state.currentValue) {
+                    this.emit('change', {
+                        value: this.state.currentValue,
+                        percentage: this.getPercentage()
+                    });
+                }
+
+                if (this.state.currentValue >= this.config.max) {
+                    this.emit('complete');
+                }
+            }
+
+            animateTo(targetValue, duration = this.config.duration) {
+                if (this.state.animating) return;
+
+                this.state.animating = true;
+                const startValue = this.state.currentValue;
+                const difference = targetValue - startValue;
+                const startTime = Date.now();
+
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // 使用缓动函数
+                    const easedProgress = this.easeOutCubic(progress);
+                    const currentValue = startValue + (difference * easedProgress);
+
+                    this.setProgress(currentValue);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.state.animating = false;
+                        this.emit('animationComplete');
+                    }
+                };
+
+                requestAnimationFrame(animate);
+            }
+
+            easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            // 步骤进度条方法
+            nextStep() {
+                if (this.config.type !== 'steps') return;
+
+                if (this.state.currentStep < this.config.steps.length - 1) {
+                    this.state.currentStep++;
+                    this.updateDisplay();
+                    this.emit('stepChange', this.state.currentStep);
+                }
+            }
+
+            previousStep() {
+                if (this.config.type !== 'steps') return;
+
+                if (this.state.currentStep > 0) {
+                    this.state.currentStep--;
+                    this.updateDisplay();
+                    this.emit('stepChange', this.state.currentStep);
+                }
+            }
+
+            setStep(stepIndex) {
+                if (this.config.type !== 'steps') return;
+
+                if (stepIndex >= 0 && stepIndex < this.config.steps.length) {
+                    this.state.currentStep = stepIndex;
+                    this.updateDisplay();
+                    this.emit('stepChange', this.state.currentStep);
+                }
+            }
+
+            // 分段进度条方法
+            setSegments(filled) {
+                if (this.config.type !== 'segments') return;
+
+                this.state.filledSegments = Math.max(0, Math.min(this.config.segments, filled));
+                this.updateDisplay();
+                this.emit('segmentsChange', this.state.filledSegments);
+            }
+
+            fillSegment(index) {
+                if (this.config.type !== 'segments') return;
+
+                if (index <= this.state.filledSegments) {
+                    this.state.filledSegments = index + 1;
+                    this.updateDisplay();
+                    this.emit('segmentFilled', index);
+                }
+            }
+
+            // 倒计时器方法
+            startCountdown() {
+                if (this.config.type !== 'countdown') return;
+
+                const startTime = Date.now();
+                const duration = this.config.duration;
+
+                const updateCountdown = () => {
+                    const elapsed = Date.now() - startTime;
+                    const remaining = Math.max(0, duration - elapsed);
+                    const progress = 1 - (remaining / duration);
+
+                    // 更新圆形进度
+                    const offset = this.circumference * progress;
+                    this.elements.progress.style.strokeDashoffset = -offset;
+
+                    // 更新文本
+                    const secondsRemaining = Math.ceil(remaining / 1000);
+                    this.elements.text.textContent = secondsRemaining;
+
+                    this.emit('countdown', {
+                        remaining: remaining,
+                        seconds: secondsRemaining,
+                        progress: progress * 100
+                    });
+
+                    if (remaining > 0) {
+                        requestAnimationFrame(updateCountdown);
+                    } else {
+                        this.emit('countdownComplete');
+                    }
+                };
+
+                requestAnimationFrame(updateCountdown);
+            }
+
+            reset() {
+                this.state.currentValue = this.config.min;
+                this.state.currentStep = 0;
+                this.state.filledSegments = 0;
+                this.state.animating = false;
+                this.updateDisplay();
+                this.emit('reset');
+            }
+
+            // 事件系统
+            on(event, callback) {
+                if (!this.listeners[event]) {
+                    this.listeners[event] = [];
+                }
+                this.listeners[event].push(callback);
+            }
+
+            off(event, callback) {
+                if (this.listeners[event]) {
+                    this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+                }
+            }
+
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            }
+        }
+
+        // 全局进度指示器实例
+        let progressIndicators = new Map();
+        let currentCountdown = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeProgressBars();
+            initializeAmmoSegments();
+        });
+
+        function initializeProgressBars() {
+            // 初始化圆形进度条
+            const circularProgresses = document.querySelectorAll('.circular-progress');
+            circularProgresses.forEach((element, index) => {
+                const progress = new ProgressIndicator(element, {
+                    type: 'circular',
+                    size: 120,
+                    value: [68, 85, 50, 92][index] || 50
+                });
+                progressIndicators.set(`circular-${index}`, progress);
+            });
+
+            // 初始化倒计时器
+            const countdownElement = document.getElementById('countdown-timer');
+            if (countdownElement) {
+                currentCountdown = new ProgressIndicator(countdownElement, {
+                    type: 'countdown',
+                    duration: 30000
+                });
+            }
+        }
+
+        function initializeAmmoSegments() {
+            const ammoContainer = document.getElementById('ammo-segments');
+            if (ammoContainer) {
+                let segmentsHTML = '';
+                for (let i = 0; i < 30; i++) {
+                    const filled = i < 15;
+                    segmentsHTML += `<div class="segment ${filled ? 'filled' : ''}"></div>`;
+                }
+                ammoContainer.innerHTML = segmentsHTML;
+            }
+        }
+
+        // 控制函数
+        function animateProgress() {
+            // 动画演示线性进度条
+            const linearProgress1 = document.getElementById('linear-progress-1');
+            const fill1 = linearProgress1.querySelector('.progress-fill');
+            const text1 = linearProgress1.querySelector('.progress-text');
+
+            let progress = 0;
+            const animate = () => {
+                progress += 2;
+                fill1.style.width = progress + '%';
+                text1.textContent = progress + '%';
+
+                if (progress < 100) {
+                    setTimeout(animate, 50);
+                } else {
+                    setTimeout(() => {
+                        progress = 0;
+                        fill1.style.width = '75%';
+                        text1.textContent = '75%';
+                    }, 1000);
+                }
+            };
+            animate();
+
+            // 动画圆形进度条
+            progressIndicators.forEach(indicator => {
+                if (indicator.config.type === 'circular') {
+                    indicator.animateTo(100, 2000);
+                    setTimeout(() => {
+                        indicator.setProgress(Math.random() * 100);
+                    }, 3000);
+                }
+            });
+        }
+
+        function startCountdown() {
+            if (currentCountdown) {
+                currentCountdown.startCountdown();
+            }
+        }
+
+        function nextStep() {
+            // 模拟任务步骤进度
+            const taskSteps = document.getElementById('task-steps');
+            const activeStep = taskSteps.querySelector('.step-circle.active');
+            const nextStep = activeStep.parentElement.nextElementSibling;
+
+            if (nextStep) {
+                // 当前步骤完成
+                activeStep.classList.remove('active');
+                activeStep.classList.add('completed');
+                activeStep.textContent = '✓';
+                activeStep.parentElement.querySelector('.step-label').classList.remove('active');
+                activeStep.parentElement.querySelector('.step-label').classList.add('completed');
+
+                // 下一步激活
+                const nextCircle = nextStep.querySelector('.step-circle');
+                const nextLabel = nextStep.querySelector('.step-label');
+                nextCircle.classList.add('active');
+                nextLabel.classList.add('active');
+            }
+        }
+
+        function resetAll() {
+            // 重置所有进度条
+            document.querySelectorAll('.progress-fill').forEach(fill => {
+                fill.style.width = '0%';
+            });
+
+            document.querySelectorAll('.progress-text').forEach(text => {
+                text.textContent = '0%';
+            });
+
+            // 重置圆形进度条
+            progressIndicators.forEach(indicator => {
+                indicator.reset();
+            });
+
+            // 重置步骤
+            document.querySelectorAll('.step-circle').forEach((circle, index) => {
+                circle.className = 'step-circle';
+                if (index === 0) {
+                    circle.classList.add('active');
+                }
+                circle.textContent = index + 1;
+            });
+
+            document.querySelectorAll('.step-label').forEach((label, index) => {
+                label.className = 'step-label';
+                if (index === 0) {
+                    label.classList.add('active');
+                }
+            });
+
+            // 重置分段
+            document.querySelectorAll('.segment').forEach(segment => {
+                segment.className = 'segment';
+            });
+
+            // 重置滑块
+            document.getElementById('linear-slider').value = 0;
+            document.getElementById('circular-slider').value = 0;
+            document.getElementById('xp-slider').value = 0;
+        }
+
+        function updateLinearProgress(value) {
+            const fill = document.querySelector('#linear-progress-1 .progress-fill');
+            const text = document.querySelector('#linear-progress-1 .progress-text');
+            fill.style.width = value + '%';
+            text.textContent = value + '%';
+        }
+
+        function updateCircularProgress(value) {
+            const indicator = progressIndicators.get('circular-0');
+            if (indicator) {
+                indicator.setProgress(value);
+            }
+        }
+
+        function updateXPProgress(value) {
+            const fill = document.querySelector('#xp-progress .xp-fill');
+            const text = document.querySelector('#xp-progress .progress-text');
+            const percentage = (value / 2000) * 100;
+            fill.style.width = percentage + '%';
+
+            const level = Math.floor(value / 133) + 1; // 假设每133XP升1级
+            text.textContent = `Lv.${level}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GTI-2D 战斗HUD界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'military': {
+                            50: '#f6f7f4',
+                            100: '#e9ebe4',
+                            200: '#d4d7ca',
+                            300: '#b6bca7',
+                            400: '#95a082',
+                            500: '#7a8564',
+                            600: '#616b4f',
+                            700: '#556B2F',
+                            800: '#485a28',
+                            900: '#3d4b22',
+                        },
+                        'cyber': {
+                            50: '#f0fdff',
+                            100: '#ccf7fe',
+                            200: '#9aeffd',
+                            300: '#58e1fa',
+                            400: '#00CED1',
+                            500: '#00b4b8',
+                            600: '#039094',
+                            700: '#0a7377',
+                            800: '#115e61',
+                            900: '#134e52',
+                        },
+                        'alert': {
+                            50: '#fef7f2',
+                            100: '#fdeee4',
+                            200: '#fadac4',
+                            300: '#f6bf99',
+                            400: '#f1976c',
+                            500: '#FF6347',
+                            600: '#dd4e2f',
+                            700: '#b63e25',
+                            800: '#943525',
+                            900: '#782f24',
+                        },
+                        'success': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#228B22',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        'tactical': {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#2F4F4F',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        'military': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'warning': 'warning 1.5s ease-in-out infinite alternate',
+                        'float': 'float 3s ease-in-out infinite',
+                        'damage': 'damage 2s ease-out forwards',
+                        'heal': 'heal 2s ease-out forwards',
+                        'pickup': 'pickup 1.5s ease-out forwards',
+                        'radar-sweep': 'radar-sweep 3s linear infinite',
+                        'ammo-warning': 'ammo-warning 0.8s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': {
+                                'box-shadow': '0 0 5px rgba(0, 206, 209, 0.5), 0 0 10px rgba(0, 206, 209, 0.3)',
+                            },
+                            '100%': {
+                                'box-shadow': '0 0 10px rgba(0, 206, 209, 0.8), 0 0 20px rgba(0, 206, 209, 0.5)',
+                            }
+                        },
+                        warning: {
+                            '0%': {
+                                'background-color': 'rgba(255, 99, 71, 0.8)',
+                                'border-color': 'rgba(255, 99, 71, 0.8)',
+                            },
+                            '100%': {
+                                'background-color': 'rgba(255, 99, 71, 0.3)',
+                                'border-color': 'rgba(255, 99, 71, 0.5)',
+                            }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        damage: {
+                            '0%': { color: '#FF6347', transform: 'translateY(0) scale(1)', opacity: '1' },
+                            '50%': { color: '#ff8566', transform: 'translateY(-20px) scale(1.2)', opacity: '0.9' },
+                            '100%': { color: '#FF6347', transform: 'translateY(-40px) scale(0.8)', opacity: '0' }
+                        },
+                        heal: {
+                            '0%': { color: '#228B22', transform: 'translateY(0) scale(1)', opacity: '1' },
+                            '50%': { color: '#4ade80', transform: 'translateY(-15px) scale(1.1)', opacity: '0.9' },
+                            '100%': { color: '#228B22', transform: 'translateY(-30px) scale(0.9)', opacity: '0' }
+                        },
+                        pickup: {
+                            '0%': { color: '#00CED1', transform: 'translateY(0) scale(1)', opacity: '1' },
+                            '50%': { color: '#58e1fa', transform: 'translateY(-10px) scale(1.1)', opacity: '0.8' },
+                            '100%': { color: '#00CED1', transform: 'translateY(-20px) scale(0.9)', opacity: '0' }
+                        },
+                        'radar-sweep': {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' }
+                        },
+                        'ammo-warning': {
+                            '0%': { color: '#FF6347', transform: 'scale(1)' },
+                            '100%': { color: '#ff8566', transform: 'scale(1.1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            touch-action: manipulation;
+        }
+
+        /* 虚拟摇杆样式 */
+        .joystick-container {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            border: 2px solid rgba(0, 206, 209, 0.3);
+            border-radius: 50%;
+            background: rgba(47, 79, 79, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .joystick-knob {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #00CED1, #0a7377);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 206, 209, 0.3);
+        }
+
+        .joystick-knob.active {
+            transform: translate(-50%, -50%) scale(0.9);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 206, 209, 0.5);
+        }
+
+        /* 射击按钮样式 */
+        .fire-button {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #FF6347, #b63e25);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 99, 71, 0.4);
+            transition: all 0.1s ease;
+        }
+
+        .fire-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 99, 71, 0.6);
+        }
+
+        .fire-button::before {
+            content: '🔥';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        /* 技能按钮样式 */
+        .skill-button {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #556B2F, #3d4b22);
+            border: 2px solid rgba(0, 206, 209, 0.4);
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .skill-button:active {
+            transform: scale(0.95);
+            border-color: rgba(0, 206, 209, 0.8);
+        }
+
+        .skill-button.cooldown::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(47, 79, 79, 0.8);
+            border-radius: 10px;
+            animation: cooldown 5s linear;
+        }
+
+        @keyframes cooldown {
+            from { height: 100%; }
+            to { height: 0%; }
+        }
+
+        /* 血量条危险状态 */
+        .health-critical {
+            animation: warning 1.5s ease-in-out infinite alternate;
+        }
+
+        /* 弹药不足警告 */
+        .ammo-low {
+            animation: ammo-warning 0.8s ease-in-out infinite alternate;
+        }
+
+        /* 小地图雷达扫描 */
+        .radar-sweep {
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to bottom, transparent, rgba(0, 206, 209, 0.8), transparent);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            animation: radar-sweep 3s linear infinite;
+        }
+
+        /* 浮动数字动画 */
+        .floating-number {
+            position: absolute;
+            font-weight: bold;
+            font-size: 18px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .damage-number {
+            animation: damage 2s ease-out forwards;
+        }
+
+        .heal-number {
+            animation: heal 2s ease-out forwards;
+        }
+
+        .pickup-number {
+            animation: pickup 1.5s ease-out forwards;
+        }
+
+        /* 队友状态指示器 */
+        .teammate-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .teammate-alive {
+            background: #228B22;
+            box-shadow: 0 0 4px rgba(34, 139, 34, 0.6);
+        }
+
+        .teammate-down {
+            background: #FF6347;
+            animation: pulse 2s infinite;
+        }
+
+        .teammate-dead {
+            background: #64748b;
+            opacity: 0.6;
+        }
+
+        /* 撤离点指示 */
+        .evacuation-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #00CED1;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 640px) {
+            .joystick-container {
+                width: 100px;
+                height: 100px;
+            }
+
+            .joystick-knob {
+                width: 50px;
+                height: 50px;
+            }
+
+            .fire-button {
+                width: 70px;
+                height: 70px;
+            }
+
+            .skill-button {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media (orientation: landscape) {
+            .hud-left, .hud-right {
+                width: auto;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-military">
+    <!-- 游戏场景背景 (模拟) -->
+    <div class="absolute inset-0 bg-gradient-to-br from-tactical-900 via-tactical-800 to-tactical-900">
+        <!-- 模拟游戏背景网格 -->
+        <div class="absolute inset-0" style="background-image: linear-gradient(rgba(0, 206, 209, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 206, 209, 0.05) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <!-- 模拟游戏元素 -->
+        <div class="absolute top-1/3 left-1/4 w-8 h-8 bg-alert-500 rounded animate-pulse opacity-60"></div>
+        <div class="absolute top-2/3 right-1/3 w-6 h-6 bg-success-500 rounded animate-pulse opacity-60"></div>
+        <div class="absolute bottom-1/3 left-1/2 w-4 h-4 bg-cyber-400 rounded animate-pulse opacity-60"></div>
+    </div>
+
+    <!-- HUD 界面层 -->
+    <div class="absolute inset-0 pointer-events-none">
+        <!-- 顶部 HUD -->
+        <div class="absolute top-4 left-0 right-0 px-4 flex items-start justify-between pointer-events-auto">
+            <!-- 左上角：生命值和护甲 -->
+            <div class="space-y-3">
+                <!-- 生命值条 -->
+                <div class="bg-tactical-800/90 rounded-lg p-3 border border-success-400/30 backdrop-filter backdrop-blur-md" id="healthContainer">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-tactical-400 font-semibold">HEALTH</div>
+                        <div class="text-sm font-mono text-success-400" id="healthText">85/100</div>
+                    </div>
+                    <div class="w-32 bg-tactical-700 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-success-600 to-success-400 h-full rounded-full transition-all duration-500" id="healthBar" style="width: 85%"></div>
+                    </div>
+                </div>
+
+                <!-- 护甲条 -->
+                <div class="bg-tactical-800/90 rounded-lg p-3 border border-cyber-400/30 backdrop-filter backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-xs text-tactical-400 font-semibold">ARMOR</div>
+                        <div class="text-sm font-mono text-cyber-400" id="armorText">60/100</div>
+                    </div>
+                    <div class="w-32 bg-tactical-700 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-cyber-600 to-cyber-400 h-full rounded-full transition-all duration-500" id="armorBar" style="width: 60%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央：击杀数和任务 -->
+            <div class="text-center space-y-3">
+                <!-- 击杀统计 -->
+                <div class="bg-tactical-800/90 rounded-lg px-4 py-2 border border-alert-400/30 backdrop-filter backdrop-blur-md">
+                    <div class="text-xs text-tactical-400 mb-1">KILLS</div>
+                    <div class="text-2xl font-mono font-bold text-alert-400" id="killCount">7</div>
+                </div>
+
+                <!-- 任务进度 -->
+                <div class="bg-tactical-800/90 rounded-lg p-3 border border-military-400/30 backdrop-filter backdrop-blur-md">
+                    <div class="text-xs text-military-400 mb-1">OBJECTIVE</div>
+                    <div class="text-xs text-tactical-200">渗透敌方基地</div>
+                    <div class="w-24 bg-tactical-700 rounded-full h-2 mt-2">
+                        <div class="bg-military-500 h-full rounded-full transition-all duration-500" style="width: 60%"></div>
+                    </div>
+                    <div class="text-xs text-tactical-400 mt-1">3/5</div>
+                </div>
+            </div>
+
+            <!-- 右上角：小地图 -->
+            <div class="bg-tactical-800/90 rounded-lg p-3 border border-cyber-400/30 backdrop-filter backdrop-blur-md">
+                <div class="text-xs text-tactical-400 mb-2 font-semibold">MAP</div>
+                <div class="w-24 h-24 bg-tactical-900/80 rounded border border-tactical-600 relative overflow-hidden">
+                    <!-- 雷达扫描线 -->
+                    <div class="radar-sweep"></div>
+                    <!-- 玩家位置 -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-cyber-400 rounded-full animate-pulse-slow"></div>
+                    <!-- 队友位置 -->
+                    <div class="absolute top-3 right-3 w-1.5 h-1.5 bg-success-400 rounded-full"></div>
+                    <div class="absolute bottom-4 left-2 w-1.5 h-1.5 bg-success-400 rounded-full"></div>
+                    <!-- 敌人位置 -->
+                    <div class="absolute top-6 left-6 w-1.5 h-1.5 bg-alert-500 rounded-full animate-pulse"></div>
+                    <!-- 撤离点 -->
+                    <div class="absolute bottom-2 right-2 w-2 h-2 bg-cyber-300 rounded-full animate-glow"></div>
+                </div>
+                <button class="text-xs text-cyber-400 hover:text-cyber-300 mt-1 transition-colors">放大地图</button>
+            </div>
+        </div>
+
+        <!-- 左侧队友状态 -->
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 space-y-3 pointer-events-auto">
+            <div class="bg-tactical-800/90 rounded-lg p-3 border border-success-400/20 backdrop-filter backdrop-blur-md">
+                <div class="text-xs text-tactical-400 mb-2 font-semibold">TEAM</div>
+                <div class="space-y-2">
+                    <!-- 队友1 -->
+                    <div class="flex items-center text-sm">
+                        <div class="teammate-indicator teammate-alive"></div>
+                        <div>
+                            <div class="text-success-400 font-semibold">Alpha</div>
+                            <div class="text-xs text-tactical-400">距离: 45m</div>
+                        </div>
+                    </div>
+                    <!-- 队友2 -->
+                    <div class="flex items-center text-sm">
+                        <div class="teammate-indicator teammate-down"></div>
+                        <div>
+                            <div class="text-alert-400 font-semibold">Bravo</div>
+                            <div class="text-xs text-alert-400">需要救援</div>
+                        </div>
+                    </div>
+                    <!-- 队友3 -->
+                    <div class="flex items-center text-sm">
+                        <div class="teammate-indicator teammate-dead"></div>
+                        <div>
+                            <div class="text-tactical-400 font-semibold">Charlie</div>
+                            <div class="text-xs text-tactical-500">已阵亡</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧物资收集 -->
+        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 space-y-3 pointer-events-auto">
+            <div class="bg-tactical-800/90 rounded-lg p-3 border border-military-400/20 backdrop-filter backdrop-blur-md">
+                <div class="text-xs text-tactical-400 mb-2 font-semibold">INVENTORY</div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <span class="text-lg mr-2">🔫</span>
+                            <span class="text-tactical-200">武器</span>
+                        </div>
+                        <span class="text-cyber-400 font-mono">2/3</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <span class="text-lg mr-2">💊</span>
+                            <span class="text-tactical-200">医疗</span>
+                        </div>
+                        <span class="text-success-400 font-mono">5/8</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <span class="text-lg mr-2">🔋</span>
+                            <span class="text-tactical-200">弹药</span>
+                        </div>
+                        <span class="text-military-400 font-mono">12/20</span>
+                    </div>
+                </div>
+                <button class="w-full mt-2 px-3 py-1 bg-military-700 hover:bg-military-600 text-cyber-400 rounded text-xs transition-colors">
+                    打开背包
+                </button>
+            </div>
+        </div>
+
+        <!-- 底部 HUD -->
+        <div class="absolute bottom-4 left-0 right-0 px-4 flex items-end justify-between pointer-events-auto">
+            <!-- 左下角：虚拟摇杆 -->
+            <div class="hud-left">
+                <div class="joystick-container" id="movementJoystick">
+                    <div class="joystick-knob" id="movementKnob"></div>
+                </div>
+                <div class="text-xs text-tactical-400 text-center mt-2">移动</div>
+            </div>
+
+            <!-- 中央：撤离点提示 -->
+            <div class="flex flex-col items-center" id="evacuationIndicator" style="display: none;">
+                <div class="evacuation-arrow"></div>
+                <div class="bg-cyber-400/90 rounded-lg px-3 py-1 backdrop-filter backdrop-blur-md">
+                    <div class="text-xs text-tactical-900 font-semibold">撤离点</div>
+                    <div class="text-xs text-tactical-900">120m</div>
+                </div>
+            </div>
+
+            <!-- 右下角：操作区域 -->
+            <div class="hud-right space-y-3">
+                <!-- 弹药计数器 -->
+                <div class="bg-tactical-800/90 rounded-lg p-3 border border-military-400/30 backdrop-filter backdrop-blur-md">
+                    <div class="text-xs text-tactical-400 mb-1 font-semibold">AMMO</div>
+                    <div class="text-2xl font-mono font-bold text-military-300" id="ammoCount">
+                        <span id="currentAmmo">18</span><span class="text-tactical-400">/30</span>
+                    </div>
+                    <div class="text-xs text-tactical-400">AK-47</div>
+                    <div class="flex items-center mt-2">
+                        <div class="text-xs text-tactical-400 mr-2">备弹:</div>
+                        <div class="text-xs text-military-400 font-mono">210</div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮组 -->
+                <div class="flex items-end space-x-3">
+                    <!-- 技能按钮 -->
+                    <div class="space-y-2">
+                        <button class="skill-button" id="grenadeBtn">
+                            <span class="text-lg">💣</span>
+                        </button>
+                        <button class="skill-button" id="healBtn">
+                            <span class="text-lg">🏥</span>
+                        </button>
+                    </div>
+
+                    <!-- 射击按钮 -->
+                    <div class="text-center">
+                        <button class="fire-button" id="fireButton"></button>
+                        <div class="text-xs text-tactical-400 mt-2">射击</div>
+                    </div>
+
+                    <!-- 辅助按钮 -->
+                    <div class="space-y-2">
+                        <button class="skill-button" id="aimBtn">
+                            <span class="text-lg">🎯</span>
+                        </button>
+                        <button class="skill-button" id="reloadBtn">
+                            <span class="text-lg">🔄</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中央十字准心 -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div class="w-8 h-8 border-2 border-cyber-400/70 rounded-full flex items-center justify-center animate-pulse-slow">
+                <div class="w-2 h-2 bg-cyber-400 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- 浮动数字容器 -->
+        <div id="floatingNumbers" class="absolute inset-0 pointer-events-none"></div>
+
+        <!-- 通知提示 -->
+        <div class="absolute top-20 right-4 space-y-2 pointer-events-auto" id="notifications">
+            <!-- 击杀通知示例 -->
+            <div class="bg-alert-500/90 rounded-lg px-4 py-2 border border-alert-400 backdrop-filter backdrop-blur-md animate-float">
+                <div class="text-sm text-white font-semibold">+50 XP</div>
+                <div class="text-xs text-alert-100">击杀敌人</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态数据
+        let gameState = {
+            health: 85,
+            maxHealth: 100,
+            armor: 60,
+            maxArmor: 100,
+            ammo: 18,
+            maxAmmo: 30,
+            reserveAmmo: 210,
+            kills: 7,
+            isAiming: false,
+            isReloading: false,
+            evacuationVisible: false
+        };
+
+        // 虚拟摇杆控制
+        class VirtualJoystick {
+            constructor(containerId, knobId) {
+                this.container = document.getElementById(containerId);
+                this.knob = document.getElementById(knobId);
+                this.centerX = 60; // 摇杆中心点
+                this.centerY = 60;
+                this.maxDistance = 30; // 最大偏移距离
+                this.isActive = false;
+
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // 触摸事件
+                this.container.addEventListener('touchstart', this.handleStart.bind(this), { passive: false });
+                this.container.addEventListener('touchmove', this.handleMove.bind(this), { passive: false });
+                this.container.addEventListener('touchend', this.handleEnd.bind(this), { passive: false });
+
+                // 鼠标事件（用于测试）
+                this.container.addEventListener('mousedown', this.handleStart.bind(this));
+                document.addEventListener('mousemove', this.handleMove.bind(this));
+                document.addEventListener('mouseup', this.handleEnd.bind(this));
+            }
+
+            handleStart(e) {
+                e.preventDefault();
+                this.isActive = true;
+                this.knob.classList.add('active');
+
+                // 触觉反馈
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+
+            handleMove(e) {
+                if (!this.isActive) return;
+                e.preventDefault();
+
+                const rect = this.container.getBoundingClientRect();
+                let clientX, clientY;
+
+                if (e.type.includes('touch')) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                const deltaX = clientX - rect.left - this.centerX;
+                const deltaY = clientY - rect.top - this.centerY;
+
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const limitedDistance = Math.min(distance, this.maxDistance);
+
+                let finalX = deltaX;
+                let finalY = deltaY;
+
+                if (distance > this.maxDistance) {
+                    finalX = (deltaX / distance) * this.maxDistance;
+                    finalY = (deltaY / distance) * this.maxDistance;
+                }
+
+                this.knob.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px))`;
+
+                // 发送移动数据给游戏引擎
+                const normalizedX = finalX / this.maxDistance;
+                const normalizedY = finalY / this.maxDistance;
+                this.onMove(normalizedX, normalizedY);
+            }
+
+            handleEnd(e) {
+                this.isActive = false;
+                this.knob.classList.remove('active');
+                this.knob.style.transform = 'translate(-50%, -50%)';
+                this.onMove(0, 0);
+            }
+
+            onMove(x, y) {
+                // 这里可以发送移动数据给游戏逻辑
+                console.log(`Movement: X=${x.toFixed(2)}, Y=${y.toFixed(2)}`);
+            }
+        }
+
+        // 初始化虚拟摇杆
+        const movementJoystick = new VirtualJoystick('movementJoystick', 'movementKnob');
+
+        // 射击按钮控制
+        const fireButton = document.getElementById('fireButton');
+        let isAutoFiring = false;
+        let autoFireInterval = null;
+
+        fireButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startFiring();
+        }, { passive: false });
+
+        fireButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopFiring();
+        }, { passive: false });
+
+        fireButton.addEventListener('mousedown', startFiring);
+        fireButton.addEventListener('mouseup', stopFiring);
+
+        function startFiring() {
+            if (gameState.ammo <= 0) {
+                showNotification('弹药不足', 'alert');
+                return;
+            }
+
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+
+            // 立即射击一次
+            fireBullet();
+
+            // 开始自动射击
+            isAutoFiring = true;
+            autoFireInterval = setInterval(() => {
+                if (gameState.ammo > 0) {
+                    fireBullet();
+                } else {
+                    stopFiring();
+                    showNotification('弹药不足', 'alert');
+                }
+            }, 150); // 每150ms射击一次
+        }
+
+        function stopFiring() {
+            isAutoFiring = false;
+            if (autoFireInterval) {
+                clearInterval(autoFireInterval);
+                autoFireInterval = null;
+            }
+        }
+
+        function fireBullet() {
+            if (gameState.ammo <= 0) return;
+
+            gameState.ammo--;
+            updateAmmoDisplay();
+
+            // 添加开火效果
+            showFloatingNumber('FIRE', 'damage', window.innerWidth / 2, window.innerHeight / 2);
+
+            if (navigator.vibrate) {
+                navigator.vibrate(25);
+            }
+
+            // 模拟击中效果（20%概率）
+            if (Math.random() < 0.2) {
+                setTimeout(() => {
+                    const damage = Math.floor(Math.random() * 30) + 20;
+                    showFloatingNumber(`-${damage}`, 'damage',
+                        Math.random() * window.innerWidth * 0.6 + window.innerWidth * 0.2,
+                        Math.random() * window.innerHeight * 0.4 + window.innerHeight * 0.3);
+
+                    // 可能击杀
+                    if (Math.random() < 0.1) {
+                        gameState.kills++;
+                        updateKillDisplay();
+                        showNotification('+50 XP 击杀敌人', 'success');
+                    }
+                }, 100);
+            }
+        }
+
+        // 技能按钮控制
+        document.getElementById('grenadeBtn').addEventListener('click', () => {
+            showFloatingNumber('手雷', 'pickup', window.innerWidth / 2, window.innerHeight / 3);
+            showNotification('投掷手雷', 'alert');
+            setCooldown('grenadeBtn', 10000);
+        });
+
+        document.getElementById('healBtn').addEventListener('click', () => {
+            if (gameState.health < gameState.maxHealth) {
+                const healAmount = Math.min(25, gameState.maxHealth - gameState.health);
+                gameState.health += healAmount;
+                updateHealthDisplay();
+                showFloatingNumber(`+${healAmount}`, 'heal', window.innerWidth / 4, window.innerHeight / 4);
+                showNotification('使用医疗包', 'success');
+                setCooldown('healBtn', 8000);
+            } else {
+                showNotification('生命值已满', 'info');
+            }
+        });
+
+        document.getElementById('aimBtn').addEventListener('click', () => {
+            gameState.isAiming = !gameState.isAiming;
+            const btn = document.getElementById('aimBtn');
+            if (gameState.isAiming) {
+                btn.style.backgroundColor = 'rgba(0, 206, 209, 0.3)';
+                showNotification('瞄准模式', 'info');
+            } else {
+                btn.style.backgroundColor = '';
+                showNotification('取消瞄准', 'info');
+            }
+        });
+
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            if (gameState.ammo < gameState.maxAmmo && gameState.reserveAmmo > 0) {
+                startReload();
+            } else if (gameState.reserveAmmo <= 0) {
+                showNotification('没有备弹', 'alert');
+            } else {
+                showNotification('弹药已满', 'info');
+            }
+        });
+
+        function startReload() {
+            if (gameState.isReloading) return;
+
+            gameState.isReloading = true;
+            const reloadBtn = document.getElementById('reloadBtn');
+            reloadBtn.style.opacity = '0.5';
+
+            showNotification('装填中...', 'info');
+
+            setTimeout(() => {
+                const neededAmmo = gameState.maxAmmo - gameState.ammo;
+                const reloadAmount = Math.min(neededAmmo, gameState.reserveAmmo);
+
+                gameState.ammo += reloadAmount;
+                gameState.reserveAmmo -= reloadAmount;
+                gameState.isReloading = false;
+
+                updateAmmoDisplay();
+                reloadBtn.style.opacity = '1';
+                showNotification('装填完成', 'success');
+            }, 2000);
+        }
+
+        // 设置技能冷却
+        function setCooldown(buttonId, duration) {
+            const btn = document.getElementById(buttonId);
+            btn.classList.add('cooldown');
+            btn.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                btn.classList.remove('cooldown');
+                btn.style.pointerEvents = 'auto';
+            }, duration);
+        }
+
+        // 更新显示函数
+        function updateHealthDisplay() {
+            const percentage = (gameState.health / gameState.maxHealth) * 100;
+            document.getElementById('healthBar').style.width = percentage + '%';
+            document.getElementById('healthText').textContent = `${gameState.health}/${gameState.maxHealth}`;
+
+            const container = document.getElementById('healthContainer');
+            if (gameState.health <= 25) {
+                container.classList.add('health-critical');
+            } else {
+                container.classList.remove('health-critical');
+            }
+        }
+
+        function updateAmmoDisplay() {
+            document.getElementById('currentAmmo').textContent = gameState.ammo;
+
+            if (gameState.ammo <= 5) {
+                document.getElementById('currentAmmo').classList.add('ammo-low');
+            } else {
+                document.getElementById('currentAmmo').classList.remove('ammo-low');
+            }
+        }
+
+        function updateKillDisplay() {
+            document.getElementById('killCount').textContent = gameState.kills;
+        }
+
+        // 浮动数字效果
+        function showFloatingNumber(text, type, x, y) {
+            const numberEl = document.createElement('div');
+            numberEl.textContent = text;
+            numberEl.className = `floating-number ${type}-number`;
+            numberEl.style.left = x + 'px';
+            numberEl.style.top = y + 'px';
+
+            document.getElementById('floatingNumbers').appendChild(numberEl);
+
+            setTimeout(() => {
+                if (numberEl.parentNode) {
+                    numberEl.parentNode.removeChild(numberEl);
+                }
+            }, 2000);
+        }
+
+        // 通知系统
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `bg-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-500/90 rounded-lg px-4 py-2 border border-${type === 'success' ? 'success' : type === 'alert' ? 'alert' : 'cyber'}-400 backdrop-filter backdrop-blur-md animate-float`;
+            notification.innerHTML = `
+                <div class="text-sm text-white font-semibold">${message}</div>
+            `;
+
+            document.getElementById('notifications').appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 撤离点显示控制
+        function toggleEvacuationIndicator() {
+            const indicator = document.getElementById('evacuationIndicator');
+            gameState.evacuationVisible = !gameState.evacuationVisible;
+            indicator.style.display = gameState.evacuationVisible ? 'flex' : 'none';
+        }
+
+        // 模拟游戏事件
+        function simulateGameEvents() {
+            // 随机生成游戏事件
+            setInterval(() => {
+                const events = [
+                    () => {
+                        // 受到伤害
+                        if (gameState.health > 10) {
+                            const damage = Math.floor(Math.random() * 15) + 5;
+                            gameState.health = Math.max(0, gameState.health - damage);
+                            updateHealthDisplay();
+                            showFloatingNumber(`-${damage}`, 'damage', window.innerWidth / 6, window.innerHeight / 6);
+                        }
+                    },
+                    () => {
+                        // 护甲损失
+                        if (gameState.armor > 0) {
+                            const damage = Math.floor(Math.random() * 10) + 5;
+                            gameState.armor = Math.max(0, gameState.armor - damage);
+                            document.getElementById('armorBar').style.width = (gameState.armor / gameState.maxArmor) * 100 + '%';
+                            document.getElementById('armorText').textContent = `${gameState.armor}/${gameState.maxArmor}`;
+                        }
+                    },
+                    () => {
+                        // 显示撤离点
+                        if (!gameState.evacuationVisible && Math.random() < 0.3) {
+                            toggleEvacuationIndicator();
+                            showNotification('撤离点已标记', 'success');
+                        }
+                    }
+                ];
+
+                if (Math.random() < 0.1) { // 10%概率触发事件
+                    const randomEvent = events[Math.floor(Math.random() * events.length)];
+                    randomEvent();
+                }
+            }, 2000);
+        }
+
+        // 页面加载完成初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 防止页面滚动
+            document.body.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+
+            // 初始化显示
+            updateHealthDisplay();
+            updateAmmoDisplay();
+            updateKillDisplay();
+
+            // 开始模拟游戏事件
+            simulateGameEvents();
+
+            // 显示欢迎消息
+            setTimeout(() => {
+                showNotification('战斗开始！', 'success');
+            }, 500);
+
+            console.log('GTI-2D Battle HUD initialized');
+        });
+
+        // 键盘控制支持（用于测试）
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    if (!isAutoFiring) startFiring();
+                    break;
+                case 'KeyR':
+                    document.getElementById('reloadBtn').click();
+                    break;
+                case 'KeyH':
+                    document.getElementById('healBtn').click();
+                    break;
+                case 'KeyG':
+                    document.getElementById('grenadeBtn').click();
+                    break;
+                case 'KeyE':
+                    toggleEvacuationIndicator();
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                stopFiring();
+            }
+        });
+    </script>
+</body>
+</html>
