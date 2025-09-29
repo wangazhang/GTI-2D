@@ -14,3 +14,7 @@ Always run tests before committing:
 ## Code Style
 
 Follow existing patterns in the codebase.
+
+## Behavior
+
+Talk to me in chinese
