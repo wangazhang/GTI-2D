@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{FEATURE_NAME}} - 设计系统指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '{{PRIMARY_50}}',
+                            100: '{{PRIMARY_100}}',
+                            500: '{{PRIMARY_500}}',
+                            600: '{{PRIMARY_600}}',
+                            700: '{{PRIMARY_700}}',
+                            900: '{{PRIMARY_900}}'
+                        },
+                        secondary: {
+                            50: '{{SECONDARY_50}}',
+                            100: '{{SECONDARY_100}}',
+                            500: '{{SECONDARY_500}}',
+                            600: '{{SECONDARY_600}}',
+                            700: '{{SECONDARY_700}}',
+                            900: '{{SECONDARY_900}}'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">{{FEATURE_NAME}} 设计系统</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="../index.html" class="text-gray-600 hover:text-gray-900 transition-colors">返回首页</a>
+                    <a href="colors.html" class="text-gray-600 hover:text-gray-900 transition-colors">色彩</a>
+                    <a href="typography.html" class="text-gray-600 hover:text-gray-900 transition-colors">字体</a>
+                    <a href="components.html" class="text-gray-600 hover:text-gray-900 transition-colors">组件</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- 设计原则 -->
+        <section class="mb-12 animate-fade-in">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">设计原则</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">简洁明了</h3>
+                    <p class="text-gray-600">界面设计简洁直观，减少用户认知负担，提高使用效率。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">一致性</h3>
+                    <p class="text-gray-600">保持视觉和交互的一致性，建立用户的使用习惯。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">用户友好</h3>
+                    <p class="text-gray-600">以用户需求为导向，提供清晰的操作反馈和指引。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 色彩系统 -->
+        <section class="mb-12 animate-slide-up">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">色彩系统</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <div class="w-full h-16 bg-primary-500 rounded mb-3"></div>
+                    <h4 class="font-medium text-gray-900">主色调</h4>
+                    <p class="text-sm text-gray-600">primary-500</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <div class="w-full h-16 bg-secondary-500 rounded mb-3"></div>
+                    <h4 class="font-medium text-gray-900">辅助色</h4>
+                    <p class="text-sm text-gray-600">secondary-500</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <div class="w-full h-16 bg-gray-500 rounded mb-3"></div>
+                    <h4 class="font-medium text-gray-900">中性色</h4>
+                    <p class="text-sm text-gray-600">gray-500</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <div class="w-full h-16 bg-red-500 rounded mb-3"></div>
+                    <h4 class="font-medium text-gray-900">警告色</h4>
+                    <p class="text-sm text-gray-600">red-500</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 字体系统 -->
+        <section class="mb-12 animate-slide-up">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">字体系统</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">主标题 - 2xl Bold</h3>
+                        <p class="text-sm text-gray-600">text-2xl font-bold</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-gray-900">副标题 - xl Semibold</h4>
+                        <p class="text-sm text-gray-600">text-xl font-semibold</p>
+                    </div>
+                    <div>
+                        <h5 class="text-lg font-medium text-gray-900">小标题 - lg Medium</h5>
+                        <p class="text-sm text-gray-600">text-lg font-medium</p>
+                    </div>
+                    <div>
+                        <p class="text-base text-gray-900">正文 - base Regular</p>
+                        <p class="text-sm text-gray-600">text-base</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">小字 - sm Regular</p>
+                        <p class="text-sm text-gray-600">text-sm</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 间距系统 -->
+        <section class="mb-12 animate-slide-up">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">间距系统</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-4 h-4 bg-blue-500"></div>
+                        <span class="text-gray-900">4px - spacing-1</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-8 h-4 bg-blue-500"></div>
+                        <span class="text-gray-900">8px - spacing-2</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-4 bg-blue-500"></div>
+                        <span class="text-gray-900">16px - spacing-4</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-24 h-4 bg-blue-500"></div>
+                        <span class="text-gray-900">24px - spacing-6</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-32 h-4 bg-blue-500"></div>
+                        <span class="text-gray-900">32px - spacing-8</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 基础组件 -->
+        <section class="mb-12 animate-scale-in">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">基础组件</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 按钮 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">按钮</h3>
+                    <div class="space-y-3">
+                        <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+                            主要按钮
+                        </button>
+                        <button class="bg-gray-200 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                            次要按钮
+                        </button>
+                        <button class="border border-primary-600 text-primary-600 px-4 py-2 rounded-lg hover:bg-primary-50 transition-colors">
+                            边框按钮
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 表单输入 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">表单输入</h3>
+                    <div class="space-y-3">
+                        <input type="text" placeholder="文本输入框"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+                            <option>选择器</option>
+                            <option>选项1</option>
+                            <option>选项2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 卡片 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">卡片</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <h4 class="font-medium text-gray-900 mb-2">卡片标题</h4>
+                        <p class="text-gray-600 text-sm">这是一个示例卡片组件，展示了基本的卡片布局和样式。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="../assets/scripts/main.js"></script>
+</body>
+</html>

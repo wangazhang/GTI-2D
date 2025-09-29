@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}} - {{FEATURE_NAME}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '{{PRIMARY_50}}',
+                            100: '{{PRIMARY_100}}',
+                            500: '{{PRIMARY_500}}',
+                            600: '{{PRIMARY_600}}',
+                            700: '{{PRIMARY_700}}',
+                            900: '{{PRIMARY_900}}'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="../index.html" class="text-xl font-semibold text-gray-900">{{FEATURE_NAME}}</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {{NAVIGATION_ITEMS}}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div class="animate-fade-in">
+            <!-- 页面标题 -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{PAGE_TITLE}}</h1>
+                <p class="text-gray-600">{{PAGE_DESCRIPTION}}</p>
+            </div>
+
+            <!-- 页面内容 -->
+            <div class="space-y-6">
+                {{PAGE_CONTENT}}
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-gray-600 text-sm">
+                © 2024 {{FEATURE_NAME}}. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/scripts/main.js"></script>
+    <script src="../assets/scripts/navigation.js"></script>
+    <script>
+        // 页面特定的JavaScript代码
+        {{PAGE_SCRIPTS}}
+    </script>
+</body>
+</html>
