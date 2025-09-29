@@ -1,10 +1,10 @@
 ---
 name: GTI-2D
 status: backlog
-updated: 2025-09-29T21:11:00Z
+updated: 2025-09-29T21:49:11Z
 progress: 0%
 prd: .claude/prds/GTI-2D.md
-github: local-repository-mode
+github: https://github.com/wangazhang/GTI-2D/issues/1
 ---
 
 # Epic: GTI-2D
@@ -209,21 +209,20 @@ GTI-2D是一款2D俯视角战术射击微信小游戏的技术实现史诗，采
 - **设置系统**: 完整的游戏设置，无障碍支持，性能优化选项
 
 ## Tasks Created ✅
-- [ ] 001.md - 项目环境搭建 (parallel: true, 8h)
-- [ ] 002.md - 后端架构搭建 (parallel: true, 16h)
-- [ ] 003.md - 网络通信系统 (parallel: false, 24h)
-- [ ] 004.md - 角色控制和移动系统 (parallel: false, 24h)
-- [ ] 005.md - 战斗和射击系统 (parallel: false, 24h)
-- [ ] 006.md - 装备和道具系统 (parallel: true, 16h)
-- [ ] 007.md - AI敌人系统 (parallel: false, 24h)
-- [ ] 008.md - 微信小游戏集成 (parallel: true, 16h)
-- [ ] 009.md - 房间匹配和撤离系统 (parallel: false, 24h)
-- [ ] 010.md - 性能优化和发布 (parallel: false, 16h)
+- [ ] #2 - 项目环境搭建 (parallel: true)
+- [ ] #3 - 战斗和射击系统 (parallel: false)
+- [ ] #4 - 后端架构搭建 (parallel: true)
+- [ ] #5 - 网络通信系统 (parallel: false)
+- [ ] #6 - 角色控制和移动系统 (parallel: false)
+- [ ] #7 - 装备和道具系统 (parallel: true)
+- [ ] #8 - AI敌人系统 (parallel: false)
+- [ ] #9 - 微信小游戏集成 (parallel: true)
+- [ ] #10 - 房间匹配和撤离系统 (parallel: false)
+- [ ] #11 - 性能优化和发布 (parallel: false)
 
-**总任务数**: 10个
-**并行任务**: 4个 (001, 002, 006, 008)
-**串行任务**: 6个 (003, 004, 005, 007, 009, 010)
-**预估总工作量**: 188小时 (约23.5人天)
+Total tasks: 10
+Parallel tasks: 4
+Sequential tasks: 6
 
 ## 关键依赖路径
 1. **基础设施** → 001,002 → 003 → 004 → 005 → 007 → 009 → 010
